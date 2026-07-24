@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Location Marketing Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.27.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.27.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        #map { width: 100%; height: 600px; border-radius: 8px; }
+        .sidebar { background: #f8f9fa; padding: 15px; border-radius: 6px; max-height: 500px; overflow-y: auto; }
+        .card { border: 1px solid #dee2e6; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .metric { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
+        .metric:last-child { border-bottom: none; }
+        .playback-controls { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6; }
+        .timeline-scrubber { width: 100%; margin: 10px 0; }
+        button { border-radius: 6px; font-weight: 500; transition: all 0.2s; }
+        .upload-zone { border: 2px dashed #0d6efd; padding: 40px; text-align: center; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .upload-zone:hover { background: #f0f7ff; border-color: #0056b3; }
+        .location-item { padding: 12px; border-left: 4px solid #0d6efd; margin: 8px 0; background: #fff; border-radius: 4px; }
+        .nav-tabs .nav-link { color: #666; border: none; border-bottom: 2px solid transparent; }
+        .nav-tabs .nav-link.active { color: #0d6efd; border-bottom-color: #0d6efd; background: none; }
+        .geofence-item { padding: 12px; border-left: 4px solid #28a745; margin: 8px 0; background: #fff; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h5">📍 Mobile Location Analytics</span>
+            <span class="text-white"><strong>Customer:</strong> {{ customerId }}</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link" :class="{ active: activeTab === 'upload' }" href="#" @click.prevent="activeTab = 'upload'">📤 Upload Data</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" :class="{ active: activeTab === 'map' }" href="#" @click.prevent="activeTab = 'map'">🗺️ Map & Playback</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" :class="{ active: activeTab === 'analytics' }" href="#" @click.prevent="activeTab = 'analytics'">📊 Analytics</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" :class="{ active: activeTab === 'geofences' }" href="#" @click.prevent="activeTab = 'geofences'">🎯 Geofences</a>
+            </li>
+        </ul>
+
+        <!-- TAB 1: UPLOAD DATA -->
+        <div v-if="activeTab === 'upload'" class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Import Location Data</h5>
+                        <p class="text-muted small">Required columns: device_id, timestamp, latitude, longitude</p>
+                        
+                        <div class="upload-zone" @click="$refs.fileInput.click()" @dragover.prevent @drop.prevent="handleDrop">
+                            <div>
+                                <p class="mb-2" style="font-size: 2rem;">📁</p>
+                                <p class="mb-2"><strong>Drag & drop your file</strong></p>
+                                <small class="text-muted">or click to browse (CSV or JSON)</small>
+                            </div>
+                            <input ref="fileInput" type="file" accept=".csv,.json" @change="handleFileSelect" style="display: none;">
+                        </div>
+
+                        <div v-if="selectedFile" class="alert alert-info mt-3">
+                            ✓ File selected: <strong>{{ selectedFile.name }}</strong> ({{ (selectedFile.size / 1024).toFixed(1) }} KB)
+                        </div>
+
+                        <div v-if="uploadProgress > 0" class="mt-3">
+                            <small class="text-muted">Uploading...</small>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" :style="{ width: uploadProgress + '%' }">{{ uploadProgress }}%</div>
+                            </div>
+                        </div>
+
+                        <button @click="uploadFile" class="btn btn-primary mt-3 w-100" :disabled="!selectedFile || uploading">
+                            <span v-if="uploading">⏳ Uploading...</span>
+                            <span v-else>Upload File</span>
+                        </button>
+
+                        <div v-if="uploadStatus" :class="{ 'alert alert-success': uploadStatus.success, 'alert alert-danger': !uploadStatus.success }" class="mt-3 mb-0">
+                            {{ uploadStatus.message }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Uploaded Devices</h5>
+                        <div v-if="devices.length > 0" class="sidebar">
+                            <div v-for="device in devices" :key="device.device_id" class="metric">
+                                <div style="flex: 1;">
+                                    <div><strong style="font-size: 0.95rem;">{{ device.device_id }}</strong></div>
+                                    <small class="text-muted">{{ device.event_count }} events</small>
+                                </div>
+                                <small class="text-muted text-nowrap">{{ formatDate(device.last_seen) }}</small>
+                            </div>
+                        </div>
+                        <div v-else class="text-muted text-center py-4">
+                            <small>No devices uploaded yet</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: MAP & PLAYBACK -->
+        <div v-if="activeTab === 'map'" class="row mb-4">
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div id="map"></div>
+                        
+                        <!-- Playback Controls -->
+                        <div class="playback-controls">
+                            <div class="d-flex gap-2 mb-3">
+                                <button @click="playPlayback" class="btn btn-sm btn-primary" :disabled="!selectedDevice || locationData.length === 0">
+                                    ▶️ Play
+                                </button>
+                                <button @click="pausePlayback" class="btn btn-sm btn-outline-primary">
+                                    ⏸️ Pause
+                                </button>
+                                <button @click="resetPlayback" class="btn btn-sm btn-outline-primary">
+                                    ⏹️ Reset
+                                </button>
+                                <select v-model="playbackSpeed" class="form-select form-select-sm" style="max-width: 100px;">
+                                    <option value="1">1x</option>
+                                    <option value="2">2x</option>
+                                    <option value="5">5x</option>
+                                    <option value="10">10x</option>
+                                </select>
+                            </div>
+                            
+                            <input type="range" v-model.number="playbackIndex" :max="Math.max(0, locationData.length - 1)" class="timeline-scrubber" @input="seekPlayback">
+                            
+                            <div class="text-center">
+                                <small class="text-muted">{{ playbackIndex }} / {{ locationData.length - 1 }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Device</h6>
+                        <select v-model="selectedDevice" @change="loadDeviceData" class="form-select form-select-sm">
+                            <option value="">-- Select Device --</option>
+                            <option v-for="device in devices" :key="device.device_id" :value="device.device_id">
+                                {{ device.device_id }} ({{ device.event_count }})
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Current Location</h6>
+                        <div v-if="currentLocation" class="location-item">
+                            <div><strong style="font-size: 0.9rem;">{{ currentLocation.address.substring(0, 35) }}</strong></div>
+                            <small class="text-muted">{{ formatDate(currentLocation.timestamp) }}</small>
+                            <div class="mt-2">
+                                <span v-if="currentLocation.dwell_time_seconds > 30" class="badge bg-warning text-dark">
+                                    {{ Math.round(currentLocation.dwell_time_seconds / 60) }}m
+                                </span>
+                                <span v-if="currentLocation.speed_mps > 1" class="badge bg-info">
+                                    {{ (currentLocation.speed_mps * 3.6).toFixed(1) }} km/h
+                                </span>
+                            </div>
+                        </div>
+                        <div v-else class="text-muted small text-center py-3">Select a device</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Date Filter</h6>
+                        <input type="date" v-model="filterStartDate" class="form-control form-control-sm mb-2">
+                        <input type="date" v-model="filterEndDate" class="form-control form-control-sm mb-2">
+                        <button @click="applyDateFilter" class="btn btn-sm btn-primary w-100">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: ANALYTICS -->
+        <div v-if="activeTab === 'analytics'" class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">📍 Dwell Time by Location</h5>
+                        <div class="sidebar">
+                            <div v-if="analytics.dwell_by_location.length > 0">
+                                <div v-for="location in analytics.dwell_by_location" :key="location.address" class="metric">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 0.9rem;"><strong>{{ location.address.substring(0, 32) }}</strong></div>
+                                        <small class="text-muted">{{ location.visit_count }} visits</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div><strong>{{ Math.round(location.avg_dwell_seconds / 60) }}m</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-muted text-center py-4">
+                                <small>No dwell data available</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">⏰ Activity by Hour</h5>
+                        <div class="sidebar">
+                            <div v-if="analytics.temporal_patterns.length > 0">
+                                <div v-for="pattern in analytics.temporal_patterns" :key="pattern.hour" class="metric">
+                                    <div style="font-weight: 500;">{{ String(Math.round(pattern.hour)).padStart(2, '0') }}:00</div>
+                                    <div class="progress flex-grow-1 mx-2" style="height: 16px;">
+                                        <div class="progress-bar bg-info" :style="{ width: (pattern.event_count / maxEvents) * 100 + '%' }"></div>
+                                    </div>
+                                    <small style="min-width: 40px; text-align: right;">{{ pattern.event_count }}</small>
+                                </div>
+                            </div>
+                            <div v-else class="text-muted text-center py-4">
+                                <small>No temporal data available</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: GEOFENCES -->
+        <div v-if="activeTab === 'geofences'" class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">➕ Create Geofence</h5>
+                        <form @submit.prevent="createGeofence">
+                            <div class="mb-3">
+                                <label class="form-label small"><strong>Name</strong></label>
+                                <input v-model="newGeofence.name" type="text" class="form-control form-control-sm" placeholder="e.g., Downtown Office" required>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col">
+                                    <label class="form-label small"><strong>Latitude</strong></label>
+                                    <input v-model.number="newGeofence.latitude" type="number" step="0.00001" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label small"><strong>Longitude</strong></label>
+                                    <input v-model.number="newGeofence.longitude" type="number" step="0.00001" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small"><strong>Radius (m)</strong></label>
+                                <input v-model.number="newGeofence.radius_meters" type="number" class="form-control form-control-sm" value="100" required>
+                            </div>
+                            <div
+                            <div class="mb-3">
+                                <label class="form-label small"><strong>Category</strong></label>
+                                <select v-model="newGeofence.category" class="form-select form-select-sm">
+                                    <option value="retail">🛍️ Retail</option>
+                                    <option value="restaurant">🍽️ Restaurant</option>
+                                    <option value="office">🏢 Office</option>
+                                    <option value="entertainment">🎬 Entertainment</option>
+                                    <option value="other">📍 Other</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Create Geofence</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">📌 Active Geofences</h5>
+                        <div v-if="geofences.length > 0" class="sidebar">
+                            <div v-for="geofence in geofences" :key="geofence.id" class="geofence-item">
+                                <div style="flex: 1;">
+                                    <div><strong style="font-size: 0.95rem;">{{ geofence.name }}</strong></div>
+                                    <small class="text-muted">{{ geofence.category }} • {{ geofence.radius_meters }}m radius</small>
+                                    <div class="mt-1">
+                                        <small class="text-muted">{{ geofence.visits_count }} visits</small>
+                                    </div>
+                                </div>
+                                <button @click="deleteGeofence(geofence.id)" class="btn btn-sm btn-outline-danger">
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                        <div v-else class="text-muted text-center py-4">
+                            <small>No geofences created yet</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+    data() {
+        return {
+            customerId: 'ACME Corp',
+            activeTab: 'upload',
+            selectedFile: null,
+            uploading: false,
+            uploadProgress: 0,
+            uploadStatus: null,
+            devices: [],
+            selectedDevice: '',
+            locationData: [],
+            currentLocation: null,
+            playbackIndex: 0,
+            playbackSpeed: 1,
+            isPlaying: false,
+            playbackInterval: null,
+            filterStartDate: '',
+            filterEndDate: '',
+            analytics: {
+                dwell_by_location: [],
+                temporal_patterns: []
+            },
+            maxEvents: 0,
+            newGeofence: {
+                name: '',
+                latitude: 0,
+                longitude: 0,
+                radius_meters: 100,
+                category: 'other'
+            },
+            geofences: [],
+            map: null
+        }
+    },
+    mounted() {
+        this.initMap();
+        this.loadDevices();
+    },
+    methods: {
+        initMap() {
+            mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN_HERE';
+            this.map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [-74.5, 40],
+                zoom: 9
+            });
+        },
+        handleFileSelect(event) {
+            this.selectedFile = event.target.files[0];
+            this.uploadStatus = null;
+        },
+        handleDrop(event) {
+            event.preventDefault();
+            this.selectedFile = event.dataTransfer.files[0];
+            this.uploadStatus = null;
+        },
+        uploadFile() {
+            if (!this.selectedFile) return;
+
+            this.uploading = true;
+            this.uploadProgress = 0;
+
+            const formData = new FormData();
+            formData.append('file', this.selectedFile);
+
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('progress', (e) => {
+                this.uploadProgress = Math.round((e.loaded / e.total) * 100);
+            });
+
+            xhr.addEventListener('load', () => {
+                this.uploading = false;
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    this.uploadStatus = { success: true, message: '✓ File uploaded successfully!' };
+                    this.devices = response.devices;
+                    this.selectedFile = null;
+                    this.uploadProgress = 0;
+                } else {
+                    this.uploadStatus = { success: false, message: '✗ Upload failed. Please try again.' };
+                }
+            });
+
+            xhr.open('POST', '/api/upload');
+            xhr.send(formData);
+        },
+        loadDevices() {
+            fetch('/api/devices')
+                .then(res => res.json())
+                .then(data => {
+                    this.devices = data.devices;
+                })
+                .catch(err => console.error('Error loading devices:', err));
+        },
+        loadDeviceData() {
+            if (!this.selectedDevice) return;
+
+            fetch(`/api/device/${this.selectedDevice}`)
+                .then(res => res.json())
+                .then(data => {
+                    this.locationData = data.locations;
+                    this.analytics = data.analytics;
+                    this.geofences = data.geofences;
+                    this.maxEvents = Math.max(...this.analytics.temporal_patterns.map(p => p.event_count));
+                    this.playbackIndex = 0;
+                    this.updateCurrentLocation();
+                    this.plotMapData();
+                })
+                .catch(err => console.error('Error loading device data:', err));
+        },
+        playPlayback() {
+            this.isPlaying = true;
+            this.playbackInterval = setInterval(() => {
+                if (this.playbackIndex < this.locationData.length - 1) {
+                    this.playbackIndex += this.playbackSpeed;
+                } else {
+                    this.pausePlayback();
+                }
+                this.updateCurrentLocation();
+            }, 100);
+        },
+        pausePlayback() {
+            this.isPlaying = false;
+            clearInterval(this.playbackInterval);
+        },
+        resetPlayback() {
+            this.pausePlayback();
+            this.playbackIndex = 0;
+            this.updateCurrentLocation();
+        },
+        seekPlayback() {
+            this.updateCurrentLocation();
+        },
+        updateCurrentLocation() {
+            const index = Math.floor(this.playbackIndex);
+            if (this.locationData[index]) {
+                this.currentLocation = this.locationData[index];
+            }
+        },
+        applyDateFilter() {
+            if (!this.filterStartDate || !this.filterEndDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+
+            const start = new Date(this.filterStartDate).getTime();
+            const end = new Date(this.filterEndDate).getTime();
+
+            this.locationData = this.locationData.filter(loc => {
+                const timestamp = new Date(loc.timestamp).getTime();
+                return timestamp >= start && timestamp <= end;
+            });
+        },
+        createGeofence() {
+            const geofence = { ...this.newGeofence, id: Date.now(), visits_count: 0 };
+            this.geofences.push(geofence);
+            this.newGeofence = { name: '', latitude: 0, longitude: 0, radius_meters: 100, category: 'other' };
+            this.plotMapData();
+        },
+        deleteGeofence(id) {
+            this.geofences = this.geofences.filter(g => g.id !== id);
+            this.plotMapData();
+        },
+        plotMapData() {
+            if (!this.map || !this.currentLocation) return;
+
+            this.map.flyTo({
+                center: [this.currentLocation.longitude, this.currentLocation.latitude],
+                zoom: 12
+            });
+
+            this.geofences.forEach(geofence => {
+                const el = document.createElement('div');
+                el.style.width = '20px';
+                el.style.height = '20px';
+                el.style.backgroundColor = '#28a745';
+                el.style.borderRadius = '50%';
+                el.style.border = '2px solid #fff';
+                new mapboxgl.Marker(el).setLngLat([geofence.longitude, geofence.latitude]).addTo(this.map);
+            });
+        },
+        formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
