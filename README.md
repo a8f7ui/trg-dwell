@@ -98,8 +98,9 @@ Built in stages, each one runnable and demonstrable before the next begins.
 
 - [x] **Stage 1 — Foundation.** Licence, README, sample-data generator.
 - [x] **Stage 2 — Backend and instructor dashboard**, running locally on sample data.
-- [ ] Stage 3 — Mobile app: consent flow, collection, daily reveal.
-- [ ] Stage 4 — SDK research feeding the "illustrated" categories.
+- [x] **Stage 3 — Mobile app**: consent flow, collection, teaching flow, daily reveal.
+- [x] **Stage 4 — SDK research** feeding the "illustrated" categories
+      (`docs/sdk-research.md`).
 - [ ] Stage 5 — Backend hosting (guided walkthrough).
 - [ ] Stage 6 — Getting it onto attendee phones (guided walkthrough).
 - [ ] Stage 7 — Store disclosures, facilitator's guide, demo guide.
@@ -163,6 +164,54 @@ hosting this, make a real account with `python manage.py add-instructor <name>`.
 The satellite imagery comes from Esri, which is free and needs no API key,
 no billing account and no per-view charge. Google's tiles would require all
 three.
+
+## The app
+
+One codebase for iPhone and Android, built with Expo. It lives in `app/`.
+
+If you want to check what it does rather than take our word for it, two files
+answer almost every question:
+
+- **`app/src/collection.ts`** — every line of code that touches your location.
+- **`app/src/api.ts`** — every request that ever leaves the phone. There are four.
+
+There is no analytics package, no crash reporter and no advertising library
+anywhere in the app, which would be an awkward thing for a privacy-education tool
+to ship with.
+
+### What the app does
+
+- **A consent screen you cannot skip.** The agree button stays disabled until the
+  text has actually been scrolled through, and the two uncomfortable facts —
+  that collection continues when the app is closed, and that instructors can see
+  a participant's live position — are at the top rather than buried.
+- **Narrated permission requests.** Each system prompt is preceded by what a
+  normal app would say at that exact moment, the reason it would give, and what
+  saying yes actually allows. Declining is offered as a real option at every step.
+- **A permanent "Collection is ON" indicator**, backed by the notification Android
+  requires and the indicator iOS shows.
+- **The illustrated categories** — contacts, photos, clipboard, installed apps,
+  cross-app identifiers and the rest — shown with invented values, labelled as
+  simulated on every card, each with the documented real-world case behind it.
+- **The daily reveal**: the day's movement on a map, stops with dwell, the
+  commercial segment a marketer would file the participant under, how that
+  compares with earlier days, where the guess is shaky, and one concrete thing to
+  do about it.
+- **Withdrawal in two taps**, which deletes everything server-side and reports how
+  many location points were destroyed.
+
+### Checking the app still matches the backend
+
+The app is TypeScript and the server is Python, so nothing checks them against
+each other automatically. This does:
+
+```bash
+.venv/bin/python -m backend.app          # in one terminal
+python3 tools/contract_test.py           # in another
+```
+
+It replays the exact requests the app makes and verifies the responses, including
+that a device token stops working the moment somebody withdraws.
 
 ## Running a course with this
 
