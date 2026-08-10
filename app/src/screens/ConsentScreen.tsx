@@ -78,7 +78,13 @@ export default function ConsentScreen({ onAgree, onDecline, busy, error }: Props
         </View>
 
         <Text style={s.h2}>What is actually collected</Text>
-        <Bullet>Where you are, with the time, continuously — including in the background.</Bullet>
+        <Bullet>
+          <Text style={{ color: colors.ink, fontWeight: '700' }}>
+            Where you are, with the time, continuously.
+          </Text>{' '}
+          Not a sample, not a simulation — your real position, recorded all day, in the
+          background, from now until the course ends or you stop it.
+        </Bullet>
         <Bullet>Your device model, operating system version and screen size.</Bullet>
         <Bullet>Your timezone and language.</Bullet>
         <Bullet>Your battery level and whether you are on Wi-Fi or mobile data.</Bullet>
@@ -102,6 +108,22 @@ export default function ConsentScreen({ onAgree, onDecline, busy, error }: Props
         <Bullet>To a server run by the course organisers, and nowhere else.</Bullet>
         <Bullet>It is not sold, shared, or given to any third party. There are no advertising or analytics tools inside this app.</Bullet>
         <Bullet>You see your own data. Instructors see participant movement and combined patterns for teaching.</Bullet>
+
+        <Text style={s.h2}>You are agreeing once, now</Text>
+        <Text style={s.p}>
+          There is no daily check-in and nothing else to tap. You agree here, and the app
+          then collects continuously for the rest of the course without asking again.
+        </Text>
+        <Text style={s.p}>
+          That is worth noticing in itself: it is exactly how the apps already on your
+          phone behave. One tap, months ago, and they have been collecting ever since.
+          The difference is that this one told you.
+        </Text>
+        <Text style={s.p}>
+          Your phone may still remind you from time to time that this app has been using
+          your location in the background. That comes from iPhone or Android, not from
+          us, and we would not switch it off if we could.
+        </Text>
 
         <Text style={s.h2}>How long it is kept</Text>
         <Text style={s.p}>
