@@ -76,7 +76,7 @@ export default function HomeScreen({
       </View>
 
       <ScrollView contentContainerStyle={s.scroll}>
-        <Text style={s.h1}>What Your Phone Knows</Text>
+        <Text style={s.h1}>Dwell: Privacy Lab</Text>
         <Text style={s.p}>
           {live
             ? 'This app is recording your location right now, including when you are not looking at it.'

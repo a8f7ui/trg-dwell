@@ -189,7 +189,7 @@ export async function startCollection(): Promise<void> {
     foregroundService: {
       notificationTitle: 'Collection is ON',
       notificationBody:
-        'What Your Phone Knows is recording your location for the course. Tap to stop.',
+        'Dwell: Privacy Lab is recording your location for the course. Tap to stop.',
       notificationColor: '#4da3ff',
     },
     // iOS shows its own indicator; this adds the blue bar behaviour.

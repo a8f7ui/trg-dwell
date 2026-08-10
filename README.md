@@ -1,4 +1,4 @@
-# What Your Phone Knows
+# Dwell: Privacy Lab
 
 **An open-source privacy-education tool for classroom use.**
 

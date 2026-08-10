@@ -1,5 +1,5 @@
 """
-The What Your Phone Knows backend.
+The Dwell: Privacy Lab backend.
 
 Route groups, and who can reach them:
 

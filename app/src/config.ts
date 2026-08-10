@@ -27,7 +27,7 @@ export const UPLOAD_BATCH_SIZE = 25;
 export const MAX_QUEUE_LENGTH = 5_000;
 
 /** The identifier the background task is registered under. */
-export const LOCATION_TASK = 'wypk-background-location';
+export const LOCATION_TASK = 'dwell-background-location';
 
 /** When the evening reveal notification fires, in local time. */
 export const REVEAL_HOUR = 20;
