@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-08-10T16:28:55.506721+00:00",
+  "seed": 20260810,
+  "days": 5,
+  "participant_count": 12,
+  "ping_count": 2311,
+  "session_count": 180,
+  "center": {
+    "lat": 30.2672,
+    "lon": -97.7431
+  },
+  "timezone": "America/Chicago",
+  "utc_offset_hours": -5.0,
+  "course_start": "2026-09-14T00:00:00-05:00",
+  "notice": "ENTIRELY SYNTHETIC. No real person, device, business or address is represented in this file."
+}

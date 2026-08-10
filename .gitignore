@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Local data — never commit real participant data
+data/local/
+*.db
+*.sqlite
+*.sqlite3
+
+# Node / Expo (mobile app, added in a later stage)
+node_modules/
+.expo/
+dist/
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
