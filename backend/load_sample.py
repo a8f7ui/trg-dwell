@@ -69,15 +69,17 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True) -> dict:
         ping_rows = [
             (r["participant_id"], r["session_id"], r["ts"], float(r["lat"]),
              float(r["lon"]), float(r["accuracy_m"]), int(r["battery_pct"]),
+             r["connection"], r.get("collection_mode", "background"),
              # received_at is set to when the point was taken, not to now.
              # Otherwise bulk-loading a week of history would look to the
              # monitoring panel like a sudden flood of live traffic.
-             r["connection"], r["ts"])
+             r["ts"])
             for r in csv.DictReader(fh)
         ]
     conn.executemany(
         "INSERT INTO pings (participant_id, session_id, ts, lat, lon, accuracy_m, "
-        "battery_pct, connection, received_at) VALUES (?,?,?,?,?,?,?,?,?)", ping_rows)
+        "battery_pct, connection, collection_mode, received_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)", ping_rows)
 
     conn.execute(
         "UPDATE participants SET last_seen_at = "

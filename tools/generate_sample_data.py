@@ -14,15 +14,22 @@ around a chosen city centre. No real business, address or person is referenced.
 
 An important detail about realism
 ---------------------------------
-The real app only collects while it is open on screen (no background tracking).
-So this generator does NOT emit a smooth, continuous trail. It builds a private
-"ground truth" of where each person actually went, and then emits location
-points ONLY during the handful of moments each day when that person had the app
-open. The result is patchy and gappy — which is exactly what the real data will
-look like.
+The app collects in the background, so this generator does not simply emit a
+tidy point every N seconds. It builds a private "ground truth" of where each
+person actually went, then samples it the way a real phone would:
 
-That patchiness is pedagogically useful: it lets an instructor show that even
-occasional glimpses are enough to reconstruct a routine.
+* **Background collection**, around the clock, but throttled the way the
+  platforms actually throttle it — far less often when somebody is sitting
+  still, and with occasional holes where the operating system suspended the app.
+  Background fixes are also given worse accuracy, because to save battery the OS
+  often serves a coarse position rather than waking the GPS chip.
+* **Foreground bursts**, much denser, during the handful of moments each day
+  when the participant genuinely had the app open.
+
+Pass `--mode foreground` to generate the far patchier data an app would produce
+if it only collected while on screen. Comparing the two is a good teaching
+exercise in itself: it shows how much of the picture comes from the hours
+nobody was looking at their phone.
 
 Requires only the Python standard library.
 
@@ -596,6 +603,66 @@ def generate(args: argparse.Namespace) -> dict:
                         "speed_mps": round(spd, 2),
                     })
 
+            def emit(t: datetime, session_id: str, mode: str) -> bool:
+                """Record one location point. Returns False if past the track."""
+                nonlocal ping_counter
+                idx = int((t - track_start).total_seconds() // 30)
+                if not (0 <= idx < len(track)):
+                    return False
+                _, lat, lon, spd = track[idx]
+                kind, moving = kind_at(plan, t)
+                # GPS is worse in dense areas and when moving. Background fixes
+                # are worse again: to save battery the OS often serves a coarser
+                # position rather than waking the GPS chip.
+                base = 12 if not moving else 22
+                if mode == "background":
+                    base *= 1.6
+                accuracy = abs(rng.gauss(base, 7)) + 4
+                lat, lon = offset_meters(
+                    lat, lon,
+                    rng.gauss(0, accuracy / 2.5),
+                    rng.gauss(0, accuracy / 2.5),
+                )
+                ping_counter += 1
+                pings.append({
+                    "ping_id": ping_counter,
+                    "participant_id": p.participant_id,
+                    "session_id": session_id,
+                    "ts": t.isoformat(),
+                    "lat": round(lat, 6),
+                    "lon": round(lon, 6),
+                    "accuracy_m": round(accuracy, 1),
+                    "battery_pct": battery_at(t, day_start, start_battery),
+                    "connection": connection_for(kind, moving, rng),
+                    "collection_mode": mode,
+                })
+                return True
+
+            # ---- Background collection -------------------------------------
+            # The app keeps collecting when it is not on screen. This is not a
+            # smooth firehose: to preserve battery, both platforms report far
+            # less often when somebody is sitting still, and the operating
+            # system suspends background apps from time to time. The result is
+            # a near-complete trail with occasional holes in it.
+            if args.mode == "background":
+                t = day_start
+                day_end = day_start + timedelta(hours=24)
+                while t < day_end:
+                    if not emit(t, "", "background"):
+                        break
+                    _, moving = kind_at(plan, t)
+                    if moving:
+                        step = rng.uniform(60, 120)
+                    else:
+                        step = rng.uniform(300, 900)
+                    # Now and then the OS suspends the app entirely.
+                    if rng.random() < 0.03:
+                        t += timedelta(minutes=rng.uniform(20, 60))
+                    t += timedelta(seconds=step)
+
+            # ---- Foreground sessions ---------------------------------------
+            # While somebody actually has the app open, it collects much more
+            # often. These windows are also what put a crowd on the live map.
             spec = PERSONAS[p._persona]
             for (s_start, s_end) in build_sessions(
                     day_start, rng, engagement,
@@ -605,30 +672,15 @@ def generate(args: argparse.Namespace) -> dict:
                 t = s_start
                 interval = rng.uniform(15, 25)
                 while t <= s_end:
-                    idx = int((t - track_start).total_seconds() // 30)
-                    if 0 <= idx < len(track):
-                        _, lat, lon, spd = track[idx]
-                        kind, moving = kind_at(plan, t)
-                        # GPS is worse in dense areas and when moving.
-                        accuracy = abs(rng.gauss(12 if not moving else 22, 7)) + 4
-                        lat, lon = offset_meters(
-                            lat, lon,
-                            rng.gauss(0, accuracy / 2.5),
-                            rng.gauss(0, accuracy / 2.5),
-                        )
-                        ping_counter += 1
-                        pings.append({
-                            "ping_id": ping_counter,
-                            "participant_id": p.participant_id,
-                            "session_id": session_id,
-                            "ts": t.isoformat(),
-                            "lat": round(lat, 6),
-                            "lon": round(lon, 6),
-                            "accuracy_m": round(accuracy, 1),
-                            "battery_pct": battery_at(t, day_start, start_battery),
-                            "connection": connection_for(kind, moving, rng),
-                        })
+                    if not emit(t, session_id, "foreground"):
+                        break
                     t += timedelta(seconds=interval)
+
+    # Background and foreground points are produced by separate passes, so put
+    # them back into chronological order before writing.
+    pings.sort(key=lambda r: (r["participant_id"], r["ts"]))
+    for i, row in enumerate(pings, start=1):
+        row["ping_id"] = i
 
     return {
         "pois": pois,
@@ -638,6 +690,7 @@ def generate(args: argparse.Namespace) -> dict:
         "meta": {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "seed": args.seed,
+            "collection_mode": args.mode,
             "days": args.days,
             "participant_count": len(participants),
             "ping_count": len(pings),
@@ -723,7 +776,16 @@ def main() -> None:
     ap.add_argument("--timezone-name", default="America/Chicago")
     ap.add_argument("--utc-offset", type=float, default=-5.0,
                     help="Hours from UTC for the course location.")
-    ap.add_argument("--emit-ground-truth", action="store_true", default=True)
+    # Note: this was previously declared as store_true with default=True, which
+    # meant the flag did nothing and the file was always written.
+    ap.add_argument("--emit-ground-truth", action="store_true",
+                    help="Also write where people actually went, including what the "
+                         "app missed. Mostly of interest in --mode foreground, where "
+                         "the gaps are large.")
+    ap.add_argument("--mode", choices=["background", "foreground"], default="background",
+                    help="'background' (default) collects around the clock, as the app "
+                         "does. 'foreground' collects only while the app is on screen, "
+                         "producing far patchier data.")
     ap.add_argument("--out", default="data/sample")
     args = ap.parse_args()
 

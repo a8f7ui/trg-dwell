@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS pings (
     accuracy_m     REAL,
     battery_pct    INTEGER,
     connection     TEXT,
+    -- 'background' or 'foreground'. Recorded so a participant can be told what
+    -- proportion of what the app knows about them was gathered while they were
+    -- not looking at it. That figure is the single most persuasive number in
+    -- the whole daily reveal.
+    collection_mode TEXT,
     received_at    TEXT NOT NULL
 );
 
@@ -113,7 +118,27 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
 
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
+    _migrate(conn)
     conn.commit()
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """
+    Add columns introduced after a database was first created.
+
+    `CREATE TABLE IF NOT EXISTS` silently leaves an existing table alone, so
+    without this an older course.db would fail with a confusing "no such column"
+    error rather than simply working.
+    """
+    expected = {
+        "pings": {"collection_mode": "TEXT"},
+        "participants": {"token_hash": "TEXT"},
+    }
+    for table, columns in expected.items():
+        present = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+        for name, coltype in columns.items():
+            if name not in present:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {coltype}")
 
 
 def audit(conn: sqlite3.Connection, actor: str, action: str, detail: str = "") -> None:

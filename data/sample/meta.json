@@ -1,10 +1,11 @@
 {
-  "generated_at": "2026-08-10T16:43:58.394372+00:00",
+  "generated_at": "2026-08-10T17:03:45.693966+00:00",
   "seed": 20260810,
+  "collection_mode": "background",
   "days": 5,
   "participant_count": 12,
-  "ping_count": 22515,
-  "session_count": 315,
+  "ping_count": 41799,
+  "session_count": 291,
   "center": {
     "lat": 30.2672,
     "lon": -97.7431

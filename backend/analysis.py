@@ -4,10 +4,12 @@ routines, and the confident-sounding guesses a commercial system would make.
 
 Two principles run through this file.
 
-1. **Report what was observed, not what was assumed.** Because the app only
-   collects while it is open on screen, we see fragments of a day. Every dwell
-   figure produced here is *observed* dwell — a floor, not an estimate. We say
-   so, everywhere, rather than quietly interpolating across the gaps.
+1. **Report what was observed, not what was assumed.** Even collecting in the
+   background, a phone does not report continuously — the platforms throttle
+   heavily when somebody is still, and suspend background apps from time to
+   time. Every dwell figure produced here is *observed* dwell: a floor, not an
+   estimate. We say so, everywhere, rather than quietly interpolating across
+   gaps we did not see.
 
 2. **Characterise behaviour, never identity.** The output describes patterns:
    visitor or local, the character of an area, the kind of activity a stop
@@ -108,6 +110,7 @@ class Point:
     session_id: str = ""
     battery_pct: int | None = None
     connection: str = ""
+    collection_mode: str = ""
 
 
 @dataclass
@@ -334,6 +337,12 @@ def observed_coverage(points: list[Point], max_gap_s: float | None = None) -> di
             gaps.append(delta)
 
     span = (pts[-1].ts - pts[0].ts).total_seconds()
+
+    # How much of this was gathered while the participant was not looking at
+    # the app. This is the number that lands hardest in the daily reveal.
+    background = sum(1 for p in pts if p.collection_mode == "background")
+    known_mode = sum(1 for p in pts if p.collection_mode)
+
     return {
         "observed_seconds": round(observed),
         "observed_minutes": round(observed / 60, 1),
@@ -344,6 +353,9 @@ def observed_coverage(points: list[Point], max_gap_s: float | None = None) -> di
         "gap_count": len(gaps),
         "longest_gap_seconds": round(max(gaps)) if gaps else 0,
         "longest_gap_minutes": round(max(gaps) / 60, 1) if gaps else 0.0,
+        "point_count": len(pts),
+        "background_points": background,
+        "background_pct": round(100 * background / known_mode, 1) if known_mode else None,
     }
 
 
@@ -522,6 +534,22 @@ def infer_day(points: list[Point], stops: list[Stop], places: list[Place],
         "basis": seg_basis,
     }
 
+    # A specific way this label could be wrong about this person. Included even
+    # when the data is good, because good data is exactly when a profiling
+    # system sounds most authoritative.
+    if segment in SEGMENT_COUNTEREXAMPLE:
+        caveats.append(SEGMENT_COUNTEREXAMPLE[segment])
+
+    # Activity guesses come from the type of place, not from anything observed
+    # about what the person was doing there.
+    ambiguous_kinds = kind_counts.keys() & (DINING_KINDS | SHOPPING_KINDS)
+    if ambiguous_kinds:
+        caveats.append(
+            "Activities above are guessed purely from the type of place, never "
+            "from anything actually observed. An hour in a cafe might be a work "
+            "meeting, a first date, a job interview or shelter from the rain. "
+            "This system records 'eating or drinking' and moves on.")
+
     # --- Ambiguity in place matching ---------------------------------------
     ambiguous = [s for s in stops if s.poi_alternatives]
     if ambiguous:
@@ -634,6 +662,30 @@ def compare_with_prior(today: dict, prior: list[dict]) -> dict:
 # --------------------------------------------------------------------------
 # The "what you can do about it" step
 # --------------------------------------------------------------------------
+
+# For each segment, one concrete way this specific judgement could be wrong
+# about this specific person — and, crucially, why nothing in the data would
+# reveal the mistake. A profiling system that cannot be contradicted by its own
+# inputs is the thing worth being alarmed about.
+SEGMENT_COUNTEREXAMPLE = {
+    "business traveller": (
+        "If you actually live in this city and merely stayed in a hotel this week "
+        "— renovations, a conference rate, a fallen-out housemate — you would be "
+        "filed as a business traveller regardless. Nothing in this data could tell "
+        "the difference."),
+    "leisure traveller": (
+        "If your trip mixed work and leisure, simply not visiting an office is "
+        "enough for this system to call it a holiday and sell you accordingly."),
+    "commuting professional": (
+        "If you were staying at a friend's or relative's home rather than your own, "
+        "this system would still record you as a local resident with a settled "
+        "routine. It cannot tell whose home it is."),
+    "student": (
+        "Time in a library or on a campus is enough to be labelled a student. "
+        "Staff, visitors, and people who just like the reading room all look "
+        "identical here."),
+}
+
 
 AGENCY_STEPS = [
     {

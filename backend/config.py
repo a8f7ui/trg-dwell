@@ -54,11 +54,12 @@ STORES_DIRECT_IDENTIFIERS = False
 # Stop detection
 # --------------------------------------------------------------------------
 #
-# Adapted for sparse data. Because the app only collects while it is open on
-# screen, we never see a full continuous day — we see short windows. So these
-# thresholds are deliberately more forgiving than a background tracker's would
-# be, and every dwell time we report is explicitly labelled as *observed*
-# dwell, which is a floor on the real figure, not an estimate of it.
+# The app collects in the background, but a phone still does not report
+# continuously: both platforms throttle location heavily when somebody is
+# sitting still, and suspend background apps from time to time. So these
+# thresholds stay forgiving, and every dwell time we report is explicitly
+# labelled as *observed* dwell — a floor on the real figure, not an estimate
+# of it.
 
 # Points staying within this many metres of each other count as "not moving".
 # Roughly matches phone GPS accuracy in a built-up area.
@@ -68,9 +69,14 @@ STOP_ROAM_RADIUS_M = float(os.getenv("WYPK_STOP_RADIUS", "60"))
 STOP_MIN_DWELL_S = float(os.getenv("WYPK_STOP_MIN_DWELL", "90"))
 
 # If two consecutive points are further apart in time than this, they are not
-# treated as part of the same stop — the app was probably closed in between,
-# and we must not invent a dwell across a gap we did not observe.
-STOP_MAX_GAP_S = float(os.getenv("WYPK_STOP_MAX_GAP", "600"))
+# treated as part of the same stop, and we do not invent a dwell across the gap.
+#
+# Set to 30 minutes because that is how background location actually behaves:
+# when somebody sits still, both platforms throttle reporting hard to save
+# battery, so quarter-hour gaps between points are normal and do NOT mean the
+# person went anywhere. Two points 20 m apart either side of a 15-minute silence
+# are good evidence of staying put. Beyond half an hour we stop assuming.
+STOP_MAX_GAP_S = float(os.getenv("WYPK_STOP_MAX_GAP", "1800"))
 
 # Stops closer together than this across the week are treated as the same place.
 # Kept tight: in a dense city centre a generous radius quietly merges the cafe,

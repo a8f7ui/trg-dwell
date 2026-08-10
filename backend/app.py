@@ -46,8 +46,8 @@ def parse_ts(value: str) -> datetime:
 
 
 def load_points(conn, participant_id: str, day: str | None = None) -> list[Point]:
-    sql = ("SELECT ts, lat, lon, accuracy_m, session_id, battery_pct, connection "
-           "FROM pings WHERE participant_id = ?")
+    sql = ("SELECT ts, lat, lon, accuracy_m, session_id, battery_pct, connection, "
+           "collection_mode FROM pings WHERE participant_id = ?")
     params: list = [participant_id]
     if day:
         sql += " AND substr(ts, 1, 10) = ?"
@@ -56,7 +56,8 @@ def load_points(conn, participant_id: str, day: str | None = None) -> list[Point
     return [
         Point(ts=parse_ts(r["ts"]), lat=r["lat"], lon=r["lon"],
               accuracy_m=r["accuracy_m"] or 0.0, session_id=r["session_id"] or "",
-              battery_pct=r["battery_pct"], connection=r["connection"] or "")
+              battery_pct=r["battery_pct"], connection=r["connection"] or "",
+              collection_mode=r["collection_mode"] or "")
         for r in conn.execute(sql, params)
     ]
 
@@ -159,16 +160,20 @@ def upload_pings():
     rows = []
     for p in points:
         try:
+            mode = p.get("collection_mode")
             rows.append((participant_id, p.get("session_id"), parse_ts(p["ts"]).isoformat(),
                          float(p["lat"]), float(p["lon"]),
                          float(p.get("accuracy_m") or 0), p.get("battery_pct"),
-                         p.get("connection"), received))
+                         p.get("connection"),
+                         mode if mode in ("background", "foreground") else None,
+                         received))
         except (KeyError, TypeError, ValueError):
             continue    # skip malformed points rather than failing the batch
 
     conn.executemany(
         "INSERT INTO pings (participant_id, session_id, ts, lat, lon, accuracy_m, "
-        "battery_pct, connection, received_at) VALUES (?,?,?,?,?,?,?,?,?)", rows)
+        "battery_pct, connection, collection_mode, received_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)", rows)
     conn.execute("UPDATE participants SET last_seen_at = ? WHERE participant_id = ?",
                  (received, participant_id))
     conn.commit()

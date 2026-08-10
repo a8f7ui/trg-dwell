@@ -392,9 +392,10 @@ function drawTrail(segments, stops) {
   if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.2));
 
   showLegend('One participant, one day', [
-    ['#4da3ff', 'Movement while the app was open'],
+    ['#4da3ff', 'Movement'],
     ['#ffb454', 'Stop (circle size = observed dwell)'],
-  ], 'Gaps between lines are times the app was closed and saw nothing.');
+  ], 'Breaks in the line are gaps the phone did not report — usually the OS ' +
+     'suspending the app or throttling while somebody sat still.');
 }
 
 function renderVerdictCard(a) {
@@ -454,12 +455,17 @@ function renderAssessment(d) {
     </div>
 
     <div class="card">
-      <h4>How little it took</h4>
-      <p class="basis">The app was watching for about
-        ${cov.observed_minutes || 0} minutes across a ${cov.span_hours || 0}-hour
-        span — roughly ${cov.coverage_pct || 0}% of the day, in
-        ${cov.session_count || 0} separate windows. Everything below was worked
-        out from that.</p>
+      <h4>How much came from the background</h4>
+      <p class="basis">${
+        cov.background_pct != null
+          ? `<strong>${cov.background_pct}% of these ${cov.point_count} location
+             points were collected while the app was not open.</strong> The
+             participant opened it ${cov.session_count || 0} time(s) that day.
+             Everything below was worked out from that — and most of it was
+             gathered while nobody was looking at the screen.`
+          : `The app recorded ${cov.point_count || 0} location points across a
+             ${cov.span_hours || 0}-hour span.`
+      }</p>
     </div>
 
     ${renderVerdictCard(a)}

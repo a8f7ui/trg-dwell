@@ -21,7 +21,7 @@ about their day. Instructors use a separate dashboard to teach from the patterns
 Being trustworthy here is the entire point. If this tool were sneaky, it would be
 teaching the opposite of its lesson. So:
 
-### It really collects (only with consent, only while the app is open on screen)
+### It really collects (only with consent, and only after you opt in)
 
 | Data | Why it's here |
 |---|---|
@@ -43,18 +43,25 @@ You do not have to take our word for any of this. That is why the code is public
 
 ### Deliberate limits built into the design
 
-- **Collection stops when the app is not on screen.** No background tracking. If the app
-  isn't open and visible, it is not collecting. This is enforced in code, not a setting.
-- **A visible indicator is shown the entire time collection is active.**
+- **This app collects in the background, and says so.** It keeps recording location
+  when it is not open on screen. That is deliberate: an app that only collected while
+  you were watching it could not demonstrate the thing this course is about, which is
+  what happens when you are *not* watching. You are told this before you agree, not
+  buried in a policy.
+- **A visible indicator is shown the entire time collection is active.** On Android this
+  is a permanent notification you cannot swipe away; on iOS the system shows its own
+  location indicator and periodically reminds you the app has been collecting. These are
+  enforced by the phone, not merely promised by us.
+- **Pause it whenever you like** from inside the app, without withdrawing entirely.
 - **One tap withdraws you.** Collection halts and your data is deleted from the server.
 - **Data is retained for the course and then wiped.** Instructors have a "wipe everything"
   control for teardown.
 - **The app characterises behaviour, not identity.** It will say "this looks like a
   visitor spending time in a commercial district". It will not look up your address, and
   it does not connect you to any outside record about you.
-- **Instructors can see participant movement, including live.** This is disclosed on the
-  consent screen before you agree, because a consent screen that hides something is a bad
-  example to set in a privacy course.
+- **Instructors can see participant movement, including your live position.** This is
+  disclosed on the consent screen before you agree, because a consent screen that hides
+  something is a bad example to set in a privacy course.
 
 ---
 
@@ -111,11 +118,15 @@ python3 tools/generate_sample_data.py --participants 12 --days 5 --out data/samp
 
 No installation required — it uses only the Python standard library.
 
-One realism note worth understanding: because the real app only collects while it is open
-on screen, the generated data is **deliberately patchy**. Each participant "opens the app"
-a handful of times a day, and only those windows produce location points. This is honest
-about what the app actually sees — and it makes the lesson stronger, since even occasional
-glimpses turn out to reveal a great deal.
+The generated data mimics how a phone really reports position: continuously in the
+background, but throttled heavily when somebody is sitting still, with occasional holes
+where the operating system suspended the app, and much denser bursts while the app is
+actually open. Background fixes are given worse accuracy, because to save battery the
+phone often serves a coarse position rather than waking the GPS chip.
+
+Add `--mode foreground` to generate the far patchier data an app would produce if it only
+collected while on screen. Running both and comparing them is a good teaching exercise:
+it shows how much of the picture comes from the hours nobody was looking at their phone.
 
 ---
 
