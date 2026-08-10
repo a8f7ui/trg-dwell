@@ -90,7 +90,7 @@ app/            The mobile app (iOS + Android, one codebase).              (late
 Built in stages, each one runnable and demonstrable before the next begins.
 
 - [x] **Stage 1 — Foundation.** Licence, README, sample-data generator.
-- [ ] Stage 2 — Backend and instructor dashboard, running locally on sample data.
+- [x] **Stage 2 — Backend and instructor dashboard**, running locally on sample data.
 - [ ] Stage 3 — Mobile app: consent flow, collection, daily reveal.
 - [ ] Stage 4 — SDK research feeding the "illustrated" categories.
 - [ ] Stage 5 — Backend hosting (guided walkthrough).
@@ -118,6 +118,40 @@ about what the app actually sees — and it makes the lesson stronger, since eve
 glimpses turn out to reveal a great deal.
 
 ---
+
+## Trying it on your own machine
+
+Nothing here touches a real phone or a real server. Four commands:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 tools/generate_sample_data.py --out data/sample   # invent participants
+.venv/bin/python -m backend.load_sample                   # load them locally
+.venv/bin/python -m backend.app                           # start the server
+```
+
+Then open <http://localhost:5000> and log in as `instructor` / `demo-password`.
+
+That demo password is fine on a laptop and unacceptable anywhere else. Before
+hosting this, make a real account with `python manage.py add-instructor <name>`.
+
+### What you can show from the dashboard
+
+- **Live map** — participants as dots on satellite imagery, with a clock you can
+  play, pause and scrub through the whole course.
+- **Participant** — one person, one day: their movement, their stops sized by how
+  long they were observed there, and what a marketing system would conclude about
+  them, including where it is unsure. Switch the day selector to *Whole course*
+  to see the places they keep returning to.
+- **Whole course** — everybody at once as a hexagon grid, with the k-anonymity
+  threshold on a slider. Dragging it to 1 in front of a class is the single most
+  effective demonstration in the whole tool.
+- **Data & teardown** — what is stored, the audit log, and the wipe-everything
+  control.
+
+The satellite imagery comes from Esri, which is free and needs no API key,
+no billing account and no per-view charge. Google's tiles would require all
+three.
 
 ## Running a course with this
 

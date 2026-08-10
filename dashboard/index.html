@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Your Phone Knows — Instructor Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📍</text></svg>">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ==================== Login ==================== -->
+<div id="login-screen" class="login-screen">
+  <form id="login-form" class="login-card">
+    <h1>What Your Phone Knows</h1>
+    <p class="sub">Instructor dashboard</p>
+    <p class="notice">
+      This dashboard shows participant movement. Everyone whose data appears here
+      agreed to it on a consent screen that said so explicitly, and can withdraw
+      at any time.
+    </p>
+    <label>Username <input type="text" id="username" autocomplete="username" required></label>
+    <label>Password <input type="password" id="password" autocomplete="current-password" required></label>
+    <button type="submit">Log in</button>
+    <p id="login-error" class="error" hidden></p>
+  </form>
+</div>
+
+<!-- ==================== Main ==================== -->
+<div id="app" hidden>
+  <header>
+    <div class="brand">
+      <strong>What Your Phone Knows</strong>
+      <span class="tag">teaching tool</span>
+    </div>
+    <nav id="tabs">
+      <button data-view="live" class="active">Live map</button>
+      <button data-view="participant">Participant</button>
+      <button data-view="aggregate">Whole course</button>
+      <button data-view="admin">Data &amp; teardown</button>
+    </nav>
+    <div class="user">
+      <span id="who"></span>
+      <button id="logout" class="link">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <aside id="sidebar">
+
+      <!-- ---------- Live controls ---------- -->
+      <section class="panel" data-panel="live">
+        <h2>Live map</h2>
+        <p class="hint">
+          Each dot is a participant who had the app open recently. Use the clock
+          to replay the course.
+        </p>
+
+        <label class="field">Time
+          <input type="range" id="clock" min="0" max="100" value="0">
+        </label>
+        <div class="clock-readout" id="clock-readout">—</div>
+
+        <div class="row">
+          <button id="play">▶ Play</button>
+          <select id="speed">
+            <option value="60">1 min / tick</option>
+            <option value="300" selected>5 min / tick</option>
+            <option value="900">15 min / tick</option>
+            <option value="1800">30 min / tick</option>
+          </select>
+        </div>
+
+        <label class="field">Show anyone seen in the last
+          <select id="live-window">
+            <option value="300">5 minutes</option>
+            <option value="900" selected>15 minutes</option>
+            <option value="3600">1 hour</option>
+          </select>
+        </label>
+
+        <div class="teaching-note">
+          <strong>Worth saying out loud:</strong> notice how few dots there are.
+          This app only collects while it is open on screen, so most participants
+          are invisible most of the time. A real advertising SDK would have every
+          one of them on this map, all day, without anybody noticing.
+        </div>
+
+        <div id="monitoring" class="stats"></div>
+      </section>
+
+      <!-- ---------- Participant controls ---------- -->
+      <section class="panel" data-panel="participant" hidden>
+        <h2>One participant</h2>
+        <label class="field">Participant
+          <select id="participant-select"></select>
+        </label>
+        <label class="field">Day
+          <select id="day-select"></select>
+        </label>
+        <div id="participant-detail"></div>
+      </section>
+
+      <!-- ---------- Aggregate controls ---------- -->
+      <section class="panel" data-panel="aggregate" hidden>
+        <h2>Whole course</h2>
+        <p class="hint">
+          Everybody's data at once, bucketed into hexagons.
+        </p>
+
+        <label class="field">
+          Hide hexagons with fewer than <output id="k-out">5</output> participants
+          <input type="range" id="k-slider" min="1" max="12" value="5">
+        </label>
+
+        <label class="field">Hexagon size
+          <select id="resolution">
+            <option value="8">Large (~460 m)</option>
+            <option value="9" selected>Medium (~200 m)</option>
+            <option value="10">Small (~75 m)</option>
+          </select>
+        </label>
+
+        <label class="field">Day
+          <select id="agg-day"><option value="">Whole course</option></select>
+        </label>
+
+        <div id="aggregate-detail"></div>
+
+        <div class="teaching-note">
+          <strong>Try this live:</strong> drag the slider down to 1. Hexagons
+          appear in places only one person ever went — someone's hotel, someone's
+          street. That is why the threshold exists: an "anonymous" aggregate map
+          stops being anonymous as soon as the groups get small.
+        </div>
+      </section>
+
+      <!-- ---------- Admin ---------- -->
+      <section class="panel" data-panel="admin" hidden>
+        <h2>Data &amp; teardown</h2>
+        <div id="admin-stats" class="stats"></div>
+
+        <h3>Wipe all session data</h3>
+        <p class="hint">
+          Deletes every participant and every location point. Use this at the end
+          of the course. It cannot be undone.
+        </p>
+        <label class="field">Type <code>DELETE ALL DATA</code> to confirm
+          <input type="text" id="wipe-confirm" placeholder="DELETE ALL DATA">
+        </label>
+        <button id="wipe-btn" class="danger">Wipe everything</button>
+        <p id="wipe-result" class="result" hidden></p>
+
+        <h3>Recent actions</h3>
+        <div id="audit" class="audit"></div>
+      </section>
+    </aside>
+
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div id="map-legend" class="legend" hidden></div>
+    </div>
+  </main>
+</div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

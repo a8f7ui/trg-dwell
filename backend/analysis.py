@@ -73,14 +73,17 @@ ACTIVITY_BY_KIND = {
 
 # The character of the surrounding area, as a location-intelligence product
 # would bucket it.
+# Phrased as complete noun phrases that all read correctly after "a", because
+# these strings get dropped straight into sentences shown to participants.
 AREA_BY_KIND = {
-    "retail": "commercial", "restaurant": "commercial", "bar": "commercial",
-    "coffee": "commercial", "grocery": "commercial",
+    "retail": "commercial district", "restaurant": "commercial district",
+    "bar": "commercial district", "coffee": "commercial district",
+    "grocery": "commercial district",
     "office": "business district", "conference_venue": "business district",
     "coworking": "business district",
     "attraction": "tourist area", "park": "tourist area", "hotel": "tourist area",
-    "residential": "residential",
-    "campus": "institutional", "library": "institutional",
+    "residential": "residential area",
+    "campus": "study area", "library": "study area",
     "transit": "transit hub",
 }
 
@@ -348,6 +351,12 @@ def observed_coverage(points: list[Point], max_gap_s: float | None = None) -> di
 # Inference
 # --------------------------------------------------------------------------
 
+def _plural(n: int, singular: str, plural: str | None = None) -> str:
+    """"1 stop" / "3 stops". These strings are shown to participants, so they
+    need to read like English rather than like a log file."""
+    return f"{n} {singular}" if n == 1 else f"{n} {plural or singular + 's'}"
+
+
 def _confidence_word(score: float) -> str:
     if score >= 0.75:
         return "fairly confident"
@@ -424,14 +433,20 @@ def infer_day(points: list[Point], stops: list[Stop], places: list[Place],
             "visitor-versus-local judgement here is weak.")
 
     # --- Character of the areas visited -----------------------------------
-    area_counts = Counter(AREA_BY_KIND.get(k, "unclassified") for k in kinds)
+    area_counts = Counter(AREA_BY_KIND.get(k, "mixed-use area") for k in kinds)
     if area_counts:
         top_area, top_n = area_counts.most_common(1)[0]
+        if len(kinds) == 1:
+            area_basis = (f"The one identifiable place you stopped at sits in what "
+                          f"looks like a {top_area}.")
+        else:
+            verb = "sits" if top_n == 1 else "sit"
+            area_basis = (f"Of the {_plural(len(kinds), 'identifiable place')} you "
+                          f"stopped at, {top_n} {verb} in what looks like a {top_area}.")
         findings["area_character"] = {
             "value": top_area,
             "confidence": round(min(0.85, 0.35 + 0.15 * top_n), 2),
-            "basis": (f"Of the {len(kinds)} identifiable places you stopped at, "
-                      f"{top_n} sit in what looks like a {top_area}."),
+            "basis": area_basis,
             "breakdown": dict(area_counts),
         }
 
@@ -491,8 +506,8 @@ def infer_day(points: list[Point], stops: list[Stop], places: list[Place],
     if len(places) < 3:
         seg_conf *= 0.75
         caveats.append(
-            f"Only {len(places)} distinct place(s) were observed today — this is a "
-            f"judgement made on very little.")
+            f"Only {_plural(len(places), 'distinct place')} were observed today — "
+            f"this is a judgement made on very little.")
     if coverage["coverage_pct"] < 15:
         seg_conf *= 0.8
         caveats.append(
@@ -514,15 +529,16 @@ def infer_day(points: list[Point], stops: list[Stop], places: list[Place],
         alts = ", ".join(a["name"] for a in example.poi_alternatives[:2])
         caveats.append(
             f"{len(ambiguous)} of your stops sat close to more than one place. "
-            f"One was matched to {example.poi_name}, but {alts} were just as near. "
+            f"One was matched to {example.poi_name}, but {alts} sat just as near. "
             f"A real system would pick whichever was most commercially useful and "
             f"show it to you without mentioning the doubt.")
 
     unmatched = [s for s in stops if not s.poi_kind]
     if unmatched:
         caveats.append(
-            f"{len(unmatched)} stop(s) could not be matched to any known place, so "
-            f"they are missing from the reasoning above entirely.")
+            f"{_plural(len(unmatched), 'stop')} could not be matched to any known "
+            f"place, so {'it is' if len(unmatched) == 1 else 'they are'} missing "
+            f"from the reasoning above entirely.")
 
     return {
         "coverage": coverage,
@@ -593,10 +609,12 @@ def compare_with_prior(today: dict, prior: list[dict]) -> dict:
 
     if repeat_places:
         names = ", ".join(p["name"] for p in repeat_places[:3])
-        bits.append(f"You returned to {len(repeat_places)} place(s) I have seen before "
-                    f"({names}). Repeat visits are what turn a list of dots into a routine.")
+        bits.append(f"You returned to {_plural(len(repeat_places), 'place')} I have "
+                    f"seen before ({names}). Repeat visits are what turn a list of "
+                    f"dots into a routine.")
     if new_places:
-        bits.append(f"{len(new_places)} place(s) were new to me today.")
+        bits.append(f"{_plural(len(new_places), 'place')} "
+                    f"{'was' if len(new_places) == 1 else 'were'} new to me today.")
 
     if today_conf > prior_best:
         bits.append("I am more confident about you than I was yesterday.")
