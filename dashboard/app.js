@@ -322,7 +322,7 @@ async function renderParticipantWeek(pid) {
       fillColor: recurring ? '#ffb454' : '#4da3ff',
       fillOpacity: 0.35,
     }).bindPopup(
-      `<b>${escapeHtml(p.name)}</b><br>${escapeHtml(p.kind || 'unmatched')}<br>` +
+      `<b>${escapeHtml(p.name)}</b><br>${escapeHtml(p.kind_label || 'unmatched')}<br>` +
       `Seen on ${p.day_count} day(s), ${p.visit_count} visit(s)<br>` +
       `${p.observed_minutes} minutes observed`
     ).addTo(layers.participant);
@@ -348,7 +348,7 @@ async function renderParticipantWeek(pid) {
         ? w.recurring_places.map((p) => `
           <div class="place">
             <div><div>${escapeHtml(p.name)}</div>
-              <div class="kind">${escapeHtml(p.kind || 'unmatched')} · ${p.day_count} days</div></div>
+              <div class="kind">${escapeHtml(p.kind_label || 'unmatched')} · ${p.day_count} days</div></div>
             <div class="dwell">${p.observed_minutes} min</div>
           </div>`).join('')
         : '<p class="empty">No place was seen on more than one day.</p>'
@@ -378,7 +378,7 @@ function drawTrail(segments, stops) {
       fillColor: '#ffb454', fillOpacity: 0.3,
     }).bindPopup(
       `<b>${escapeHtml(s.poi_name || 'Unmatched stop')}</b><br>` +
-      `${escapeHtml(s.poi_kind || 'no nearby place found')}<br>` +
+      `${escapeHtml(s.poi_kind_label || 'no nearby place found')}<br>` +
       `${fmtTime(s.start)} – ${fmtTime(s.end)}<br>` +
       `<b>${s.observed_minutes} min observed</b><br>` +
       `Likely activity: ${escapeHtml(s.activity_guess)}` +
@@ -425,10 +425,15 @@ function renderVerdictCard(a) {
     </div>` : ''}
     ${rhythm.first_seen_local ? `<div class="card">
       <h4>Daily rhythm</h4>
-      <p class="basis">Active from ${escapeHtml(rhythm.first_seen_local)} to
-        ${escapeHtml(rhythm.last_seen_local)} — a span of
-        ${rhythm.active_span_hours} hours, across ${rhythm.distinct_places}
-        distinct place(s) and ${rhythm.stop_count} stop(s).</p>
+      <p class="basis">${
+        rhythm.left_anchor_local
+          ? `Left at ${escapeHtml(rhythm.left_anchor_local)}, back by
+             ${escapeHtml(rhythm.returned_local)} — ${rhythm.hours_out} hours out,
+             across ${rhythm.distinct_places} distinct places and
+             ${rhythm.stop_count} stops.`
+          : `Recorded across ${rhythm.distinct_places} distinct places and
+             ${rhythm.stop_count} stops.`
+      }</p>
     </div>` : ''}`;
 }
 
@@ -476,7 +481,7 @@ function renderAssessment(d) {
         ? d.places.map((p) => `
           <div class="place">
             <div><div>${escapeHtml(p.name)}</div>
-              <div class="kind">${escapeHtml(p.kind || 'unmatched')} · ${escapeHtml(p.activity_guess)}</div></div>
+              <div class="kind">${escapeHtml(p.kind_label || 'unmatched')} · ${escapeHtml(p.activity_guess)}</div></div>
             <div class="dwell">${p.observed_minutes} min</div>
           </div>`).join('')
         : '<p class="empty">No stops detected on this day.</p>'

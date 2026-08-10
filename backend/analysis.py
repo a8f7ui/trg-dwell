@@ -89,6 +89,22 @@ AREA_BY_KIND = {
     "transit": "transit hub",
 }
 
+# Readable names for the place types. The raw keys are fine in code but look
+# like database columns when shown to a participant.
+KIND_LABEL = {
+    "hotel": "hotel", "residential": "residential address",
+    "office": "office", "conference_venue": "conference venue",
+    "coworking": "coworking space", "campus": "campus", "library": "library",
+    "coffee": "coffee shop", "restaurant": "restaurant", "bar": "bar",
+    "retail": "shop", "grocery": "supermarket", "park": "park",
+    "attraction": "visitor attraction", "transit": "transit stop",
+}
+
+
+def kind_label(kind: str) -> str:
+    return KIND_LABEL.get(kind, kind.replace("_", " ") if kind else "unmatched")
+
+
 LODGING_KINDS = {"hotel", "residential"}
 WORK_KINDS = {"office", "conference_venue", "coworking"}
 STUDY_KINDS = {"campus", "library"}
@@ -137,6 +153,7 @@ class Stop:
             "observed_minutes": round(self.observed_seconds / 60, 1),
             "poi_name": self.poi_name,
             "poi_kind": self.poi_kind,
+            "poi_kind_label": kind_label(self.poi_kind),
             "poi_distance_m": (round(self.poi_distance_m, 1)
                                if self.poi_distance_m is not None else None),
             "poi_alternatives": self.poi_alternatives,
@@ -277,6 +294,7 @@ class Place:
             "lon": round(self.lon, 6),
             "name": self.name,
             "kind": self.kind,
+            "kind_label": kind_label(self.kind),
             "visit_count": self.visit_count,
             "days_seen": sorted(self.days),
             "day_count": len(self.days),
@@ -473,7 +491,7 @@ def infer_day(points: list[Point], stops: list[Stop], places: list[Place],
     # --- Daily rhythm -------------------------------------------------------
     if points:
         pts = sorted(points, key=lambda p: p.ts)
-        findings["rhythm"] = {
+        rhythm = {
             "first_seen": pts[0].ts.isoformat(),
             "last_seen": pts[-1].ts.isoformat(),
             "first_seen_local": pts[0].ts.strftime("%H:%M"),
@@ -483,6 +501,22 @@ def infer_day(points: list[Point], stops: list[Stop], places: list[Place],
             "distinct_places": len(places),
             "stop_count": len(stops),
         }
+        # Collecting in the background means the first and last points of a day
+        # are usually just a phone sitting on a bedside table. The figure that
+        # actually describes somebody's routine is when they left wherever they
+        # slept, and when they got back.
+        if anchor:
+            away = [s for s in stops
+                    if haversine_m(s.lat, s.lon, anchor.lat, anchor.lon)
+                    > config.PLACE_CLUSTER_RADIUS_M]
+            if away:
+                left = min(s.start for s in away)
+                returned = max(s.end for s in away)
+                rhythm["left_anchor_local"] = left.strftime("%H:%M")
+                rhythm["returned_local"] = returned.strftime("%H:%M")
+                rhythm["hours_out"] = round(
+                    (returned - left).total_seconds() / 3600, 1)
+        findings["rhythm"] = rhythm
 
     # --- The commercial segment --------------------------------------------
     has_work = bool(kind_counts.keys() & WORK_KINDS)
