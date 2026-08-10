@@ -7,9 +7,8 @@ No real person, device, business or address is represented.
   Fields beginning with `_` are generator-only ground truth (such as which
   persona template produced the data). The backend never receives these; the
   system has to infer behaviour from movement alone.
-- `pings.csv` / `pings.json` — the location points the app would have sent.
-  **Deliberately patchy**, because the real app only collects while it is open
-  on screen.
+- `pings.csv` — the location points the app would have sent. **Deliberately
+  patchy**, because the real app only collects while it is open on screen.
 - `pois.json` — the invented places used to build routines. In production this
   role is played by OpenStreetMap data.
 - `ground_truth.csv` — where people actually went, including everything the app

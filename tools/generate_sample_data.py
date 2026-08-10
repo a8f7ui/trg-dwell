@@ -132,6 +132,14 @@ class Poi:
     lon: float
 
 
+# Keep invented places at least this far apart. Real city blocks do put venues
+# closer together than this, but packing them tighter here would make the
+# "which place was that stop at?" step artificially hopeless — every stop would
+# sit within range of three different venues purely because of how the sample
+# city was drawn, rather than because of anything real.
+MIN_POI_SPACING_M = 85.0
+
+
 def build_city(center_lat: float, center_lon: float, rng: random.Random) -> list[Poi]:
     """Scatter fictional places of each type around a city centre."""
     pois: list[Poi] = []
@@ -139,14 +147,18 @@ def build_city(center_lat: float, center_lon: float, rng: random.Random) -> list
     counter = 0
     for kind, (count, max_radius) in _POI_PLAN.items():
         for _ in range(count):
-            # Bias toward the centre by taking sqrt of a uniform draw.
-            radius = max_radius * math.sqrt(rng.random())
-            bearing = rng.uniform(0, 2 * math.pi)
-            lat, lon = offset_meters(
-                center_lat, center_lon,
-                radius * math.cos(bearing),
-                radius * math.sin(bearing),
-            )
+            for _placement in range(60):
+                # Bias toward the centre by taking sqrt of a uniform draw.
+                radius = max_radius * math.sqrt(rng.random())
+                bearing = rng.uniform(0, 2 * math.pi)
+                lat, lon = offset_meters(
+                    center_lat, center_lon,
+                    radius * math.cos(bearing),
+                    radius * math.sin(bearing),
+                )
+                if all(haversine_m(lat, lon, p.lat, p.lon) >= MIN_POI_SPACING_M
+                       for p in pois):
+                    break
             for _attempt in range(20):
                 name = f"{rng.choice(_NAME_FIRST)} {rng.choice(_NAME_SECOND[kind])}"
                 if name not in used_names:
@@ -176,68 +188,94 @@ def nearest_of_kind(pois: list[Poi], kind: str, lat: float, lon: float,
 # Each entry is a stop in the day:
 #   (place kind, target arrival hour, jitter in minutes, duration minutes,
 #    duration jitter, probability of happening at all)
+# Everyone in this dataset is attending the SAME week-long course, so they all
+# spend the working day at one shared venue and only diverge in the mornings and
+# evenings. This matters a great deal for realism:
+#
+#   * the live map has everyone in one place during sessions, which is what an
+#     instructor will actually see when they ask the room to open the app;
+#   * the aggregate map gets one busy hexagon at the venue that comfortably
+#     clears the k-anonymity threshold, while individual evening haunts fall
+#     below it and get suppressed — which is exactly the contrast that makes
+#     the k-anonymity lesson land;
+#   * the personal reveals stay distinct, because what people do before and
+#     after the course day is genuinely their own.
+VENUE = "__venue__"
+
 PERSONAS: dict[str, dict] = {
-    "conference_visitor": {
+    "visiting_attendee": {
         "anchor_kind": "hotel",
-        "wake_hour": 7.6,
-        "stops": [
-            ("coffee",            8.05, 20,  20,  10, 0.9),
-            ("conference_venue",  8.75, 25, 195,  30, 1.0),
-            ("restaurant",       12.3,  30,  60,  20, 0.95),
-            ("conference_venue", 13.6,  30, 205,  40, 1.0),
-            ("retail",           17.6,  40,  40,  20, 0.45),
-            ("bar",              19.2,  50,  95,  40, 0.7),
-        ],
-        "return_hour": 21.3,
-    },
-    "local_commuter": {
-        "anchor_kind": "residential",
         "wake_hour": 7.7,
         "stops": [
-            ("transit",   8.05, 15,  12,   6, 0.8),
-            ("office",    8.6,  25, 215,  30, 1.0),
-            ("restaurant", 12.4, 30,  45,  15, 0.85),
-            ("office",    13.3, 25, 255,  40, 1.0),
-            ("gym",       18.1,  45,  60,  20, 0.4),
-            ("grocery",   19.3,  50,  25,  12, 0.45),
+            ("coffee",     8.2, 20,  25, 10, 0.8),
+            (VENUE,        9.0, 15, 205, 15, 1.0),
+            ("restaurant", 12.6, 20,  60, 15, 0.9),
+            (VENUE,        13.8, 15, 190, 20, 1.0),
+            ("restaurant", 18.8, 45,  85, 30, 0.85),
         ],
-        "return_hour": 20.1,
+        "return_hour": 20.8,
     },
-    "tourist": {
-        "anchor_kind": "hotel",
-        "wake_hour": 8.9,
-        "stops": [
-            ("coffee",      9.4,  40,  30,  15, 0.85),
-            ("park",       10.4,  50,  70,  30, 0.7),
-            ("attraction", 12.0,  60,  95,  35, 0.8),
-            ("restaurant", 13.9,  50,  70,  25, 0.9),
-            ("retail",     15.8,  60,  60,  30, 0.75),
-            ("restaurant", 19.1,  50,  90,  30, 0.9),
-        ],
-        "return_hour": 21.6,
-    },
-    "remote_worker": {
+    "local_attendee": {
         "anchor_kind": "residential",
-        "wake_hour": 8.4,
+        "wake_hour": 7.4,
         "stops": [
-            ("coffee",     9.1,  35, 145,  45, 0.9),
-            ("restaurant", 12.1, 30,  50,  20, 0.8),
-            ("coworking",  13.3, 35, 205,  50, 0.85),
-            ("grocery",    17.6, 45,  30,  15, 0.5),
+            ("transit",    8.2, 20,  12,  6, 0.7),
+            (VENUE,        9.0, 15, 205, 15, 1.0),
+            ("restaurant", 12.6, 20,  55, 15, 0.85),
+            (VENUE,        13.8, 15, 190, 20, 1.0),
+            ("grocery",    17.6, 40,  28, 12, 0.5),
         ],
         "return_hour": 18.6,
     },
-    "student": {
-        "anchor_kind": "residential",
-        "wake_hour": 8.5,
+    "visiting_explorer": {
+        "anchor_kind": "hotel",
+        "wake_hour": 8.0,
         "stops": [
-            ("campus",     9.2,  40, 175,  45, 0.95),
-            ("restaurant", 12.6, 35,  45,  20, 0.8),
-            ("library",    13.6, 40, 195,  60, 0.85),
-            ("coffee",     17.3, 50,  45,  25, 0.6),
-            ("bar",        20.1, 60, 100,  40, 0.35),
+            (VENUE,        9.0, 15, 205, 15, 1.0),
+            ("restaurant", 12.6, 20,  60, 15, 0.9),
+            (VENUE,        13.8, 15, 190, 20, 1.0),
+            ("attraction", 17.6, 40,  80, 30, 0.7),
+            ("retail",     19.2, 45,  50, 25, 0.5),
+            ("restaurant", 20.4, 45,  80, 25, 0.8),
         ],
-        "return_hour": 22.1,
+        "return_hour": 22.2,
+    },
+    "local_commuter_attendee": {
+        "anchor_kind": "residential",
+        "wake_hour": 7.2,
+        "stops": [
+            ("coffee",     8.3, 25,  20, 10, 0.6),
+            (VENUE,        9.0, 15, 205, 15, 1.0),
+            ("restaurant", 12.6, 20,  55, 15, 0.85),
+            (VENUE,        13.8, 15, 190, 20, 1.0),
+            ("gym",        17.8, 40,  60, 20, 0.45),
+        ],
+        "return_hour": 19.4,
+    },
+    "visiting_social": {
+        "anchor_kind": "hotel",
+        "wake_hour": 7.9,
+        "stops": [
+            ("coffee",     8.3, 20,  20, 10, 0.7),
+            (VENUE,        9.0, 15, 205, 15, 1.0),
+            ("restaurant", 12.6, 20,  60, 15, 0.9),
+            (VENUE,        13.8, 15, 190, 20, 1.0),
+            ("bar",        18.4, 40, 110, 40, 0.8),
+            ("restaurant", 20.6, 45,  70, 25, 0.6),
+        ],
+        "return_hour": 22.6,
+    },
+    "local_evening_studier": {
+        "anchor_kind": "residential",
+        "wake_hour": 7.9,
+        "stops": [
+            (VENUE,        9.0, 15, 205, 15, 1.0),
+            ("restaurant", 12.6, 20,  50, 15, 0.8),
+            (VENUE,        13.8, 15, 190, 20, 1.0),
+            ("library",    17.5, 40,  90, 35, 0.6),
+            ("coffee",     19.4, 45,  40, 20, 0.5),
+        ],
+        "return_hour": 20.9,
     },
 }
 
@@ -295,7 +333,7 @@ def travel_speed_mps(distance_m: float, rng: random.Random) -> float:
 
 
 def build_day_plan(participant: Participant, pois: list[Poi], anchor: Poi,
-                   day_start: datetime, rng: random.Random) -> list[Stop]:
+                   venue: Poi, day_start: datetime, rng: random.Random) -> list[Stop]:
     """Turn a persona template into concrete stops with real clock times."""
     spec = PERSONAS[participant._persona]
     plan: list[Stop] = []
@@ -310,7 +348,10 @@ def build_day_plan(participant: Participant, pois: list[Poi], anchor: Poi,
         if arrive < last_end + timedelta(minutes=4):
             arrive = last_end + timedelta(minutes=rng.uniform(5, 14))
         duration = max(8.0, rng.gauss(dur_min, dur_jit / 2))
-        poi = nearest_of_kind(pois, kind, cursor_lat, cursor_lon, rng)
+        # Everyone shares the one course venue; everything else is chosen near
+        # wherever they happen to be.
+        poi = venue if kind == VENUE else nearest_of_kind(
+            pois, kind, cursor_lat, cursor_lon, rng)
         depart = arrive + timedelta(minutes=duration)
         plan.append(Stop(poi, arrive, depart))
         cursor_lat, cursor_lon = poi.lat, poi.lon
@@ -389,13 +430,23 @@ SESSION_HOUR_WEIGHTS = [
     (17.0, 1.1), (18.0, 1.2), (19.0, 0.9), (20.0, 1.3), (21.0, 1.6), (22.0, 0.6),
 ]
 
+# Moments during the course day when the instructor asks the room to open the
+# app. These produce everyone appearing on the live map at once, which is both
+# what really happens and what makes the live view worth showing.
+PROMPTED_SESSIONS = [
+    (9.4, 0.85),
+    (11.2, 0.80),
+    (14.3, 0.85),
+    (16.1, 0.80),
+]
+
 # Assume phones are charged overnight and drain through the day.
 WAKE_HOUR = 7.0
 BATTERY_DRAIN_PCT_PER_HOUR = 3.6
 
 
-def build_sessions(day_start: datetime, rng: random.Random,
-                   engagement: float) -> list[tuple[datetime, datetime]]:
+def build_sessions(day_start: datetime, rng: random.Random, engagement: float,
+                   wake_hour: float, return_hour: float) -> list[tuple[datetime, datetime]]:
     """
     Decide when this person had the app open today.
 
@@ -405,9 +456,26 @@ def build_sessions(day_start: datetime, rng: random.Random,
     """
     hours = [h for h, _ in SESSION_HOUR_WEIGHTS]
     weights = [w for _, w in SESSION_HOUR_WEIGHTS]
-    target = max(1, round(engagement * rng.uniform(3.0, 6.0)))
+    target = max(1, round(engagement * rng.uniform(4.0, 8.0)))
 
     chosen: list[float] = []
+
+    # A quick look at the app not long after waking, before heading out. This
+    # usually happens wherever the person slept.
+    if rng.random() < 0.7 * max(0.75, engagement):
+        chosen.append(wake_hour + rng.uniform(0.05, 0.35))
+
+    # Instructor-prompted openings during the course day. Everyone does these at
+    # roughly the same time, which is what puts a crowd on the live map.
+    for hour, probability in PROMPTED_SESSIONS:
+        if rng.random() < probability * max(0.75, engagement):
+            chosen.append(hour + rng.gauss(0, 0.1))
+
+    # The evening reveal. This is the app's whole purpose, so nearly everybody
+    # opens it — and by then most people are back wherever they are staying.
+    if rng.random() < 0.9 * max(0.8, engagement):
+        chosen.append(return_hour + rng.uniform(0.3, 1.2))
+
     for _attempt in range(40):
         if len(chosen) >= target:
             break
@@ -420,7 +488,14 @@ def build_sessions(day_start: datetime, rng: random.Random,
     sessions: list[tuple[datetime, datetime]] = []
     for h in sorted(chosen):
         start = day_start + timedelta(hours=h)
-        duration_s = rng.uniform(60, 420)          # 1 to 7 minutes on screen
+        # Most times the app is opened briefly. But participants on a course are
+        # asked to keep it running, so now and then it is left open on a desk or
+        # a table for a long stretch. Those longer windows are what produce
+        # clearly detectable stops.
+        if rng.random() < 0.35:
+            duration_s = rng.uniform(1500, 4500)   # 25 to 75 minutes
+        else:
+            duration_s = rng.uniform(120, 720)     # 2 to 12 minutes
         sessions.append((start, start + timedelta(seconds=duration_s)))
     return sessions
 
@@ -462,6 +537,9 @@ def generate(args: argparse.Namespace) -> dict:
     pois = build_city(args.center_lat, args.center_lon, rng)
     course_start = datetime.fromisoformat(args.start_date).replace(tzinfo=tz)
 
+    # The one venue everybody attends.
+    venue = rng.choice(pois_of(pois, "conference_venue"))
+
     participants: list[Participant] = []
     persona_names = list(PERSONAS.keys())
     for i in range(args.participants):
@@ -498,7 +576,7 @@ def generate(args: argparse.Namespace) -> dict:
             day_start = (course_start + timedelta(days=day_index)).replace(
                 hour=0, minute=0, second=0, microsecond=0)
 
-            plan = build_day_plan(p, pois, anchor, day_start, rng)
+            plan = build_day_plan(p, pois, anchor, venue, day_start, rng)
             track = build_ground_truth(plan, anchor, day_start, rng)
             if not track:
                 continue
@@ -518,7 +596,10 @@ def generate(args: argparse.Namespace) -> dict:
                         "speed_mps": round(spd, 2),
                     })
 
-            for (s_start, s_end) in build_sessions(day_start, rng, engagement):
+            spec = PERSONAS[p._persona]
+            for (s_start, s_end) in build_sessions(
+                    day_start, rng, engagement,
+                    spec["wake_hour"], spec["return_hour"]):
                 session_counter += 1
                 session_id = f"s_{session_counter:05d}"
                 t = s_start
@@ -562,6 +643,8 @@ def generate(args: argparse.Namespace) -> dict:
             "ping_count": len(pings),
             "session_count": session_counter,
             "center": {"lat": args.center_lat, "lon": args.center_lon},
+            "course_venue": {"poi_id": venue.poi_id, "name": venue.name,
+                             "lat": venue.lat, "lon": venue.lon},
             "timezone": args.timezone_name,
             "utc_offset_hours": args.utc_offset,
             "course_start": course_start.isoformat(),
@@ -584,16 +667,14 @@ def write_outputs(result: dict, out_dir: Path) -> None:
 
     (out_dir / "meta.json").write_text(json.dumps(result["meta"], indent=2) + "\n")
 
+    # CSV only. A JSON copy of the same points would double the size of the
+    # repository for no benefit — anything that needs JSON can convert it.
     pings = result["pings"]
     if pings:
         with (out_dir / "pings.csv").open("w", newline="") as fh:
             writer = csv.DictWriter(fh, fieldnames=list(pings[0].keys()))
             writer.writeheader()
             writer.writerows(pings)
-    # Compact rather than indented — this file is read by code, not people, and
-    # pings.csv already exists for anyone who wants to eyeball it.
-    (out_dir / "pings.json").write_text(
-        json.dumps(pings, separators=(",", ":")) + "\n")
 
     if result["ground_truth"]:
         with (out_dir / "ground_truth.csv").open("w", newline="") as fh:
@@ -610,9 +691,8 @@ No real person, device, business or address is represented.
   Fields beginning with `_` are generator-only ground truth (such as which
   persona template produced the data). The backend never receives these; the
   system has to infer behaviour from movement alone.
-- `pings.csv` / `pings.json` — the location points the app would have sent.
-  **Deliberately patchy**, because the real app only collects while it is open
-  on screen.
+- `pings.csv` — the location points the app would have sent. **Deliberately
+  patchy**, because the real app only collects while it is open on screen.
 - `pois.json` — the invented places used to build routines. In production this
   role is played by OpenStreetMap data.
 - `ground_truth.csv` — where people actually went, including everything the app

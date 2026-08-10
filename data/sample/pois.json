@@ -64,646 +64,646 @@
   },
   {
     "poi_id": "poi_010",
-    "name": "Sable Coffee",
+    "name": "Kestrel Coffee",
     "kind": "coffee",
-    "lat": 30.262316,
-    "lon": -97.754791
+    "lat": 30.278413,
+    "lon": -97.728969
   },
   {
     "poi_id": "poi_011",
-    "name": "Pike Coffee House",
+    "name": "Mercer Coffee House",
     "kind": "coffee",
-    "lat": 30.274586,
-    "lon": -97.729694
+    "lat": 30.26678,
+    "lon": -97.738091
   },
   {
     "poi_id": "poi_012",
-    "name": "Copper Coffee House",
-    "kind": "coffee",
-    "lat": 30.283804,
-    "lon": -97.749133
-  },
-  {
-    "poi_id": "poi_013",
     "name": "Old Mill Coffee House",
     "kind": "coffee",
     "lat": 30.253829,
     "lon": -97.747155
   },
   {
-    "poi_id": "poi_014",
-    "name": "Alder Roasters",
+    "poi_id": "poi_013",
+    "name": "Lantern Roasters",
     "kind": "coffee",
-    "lat": 30.262759,
-    "lon": -97.725342
+    "lat": 30.281662,
+    "lon": -97.743927
+  },
+  {
+    "poi_id": "poi_014",
+    "name": "Alder Coffee House",
+    "kind": "coffee",
+    "lat": 30.27331,
+    "lon": -97.732939
   },
   {
     "poi_id": "poi_015",
-    "name": "Bellweather Coffee",
+    "name": "Marble Coffee",
     "kind": "coffee",
-    "lat": 30.274949,
-    "lon": -97.737526
+    "lat": 30.272094,
+    "lon": -97.751791
   },
   {
     "poi_id": "poi_016",
-    "name": "Marble Coffee House",
+    "name": "Union Espresso Bar",
     "kind": "coffee",
-    "lat": 30.271583,
-    "lon": -97.755227
+    "lat": 30.277442,
+    "lon": -97.742038
   },
   {
     "poi_id": "poi_017",
-    "name": "Pike Roasters",
+    "name": "Copper Coffee House",
     "kind": "coffee",
-    "lat": 30.275163,
-    "lon": -97.731004
+    "lat": 30.262745,
+    "lon": -97.753837
   },
   {
     "poi_id": "poi_018",
-    "name": "Halfpenny Espresso Bar",
+    "name": "Foxglove Roasters",
     "kind": "coffee",
-    "lat": 30.280555,
-    "lon": -97.749479
+    "lat": 30.274454,
+    "lon": -97.741465
   },
   {
     "poi_id": "poi_019",
-    "name": "Foxglove Diner",
+    "name": "Sable Grill",
     "kind": "restaurant",
-    "lat": 30.255708,
-    "lon": -97.743879
+    "lat": 30.266896,
+    "lon": -97.737141
   },
   {
     "poi_id": "poi_020",
-    "name": "Old Mill Grill",
+    "name": "Ironwood Diner",
     "kind": "restaurant",
-    "lat": 30.268614,
-    "lon": -97.754217
+    "lat": 30.283814,
+    "lon": -97.746142
   },
   {
     "poi_id": "poi_021",
-    "name": "Northgate Grill",
+    "name": "Marble Table",
     "kind": "restaurant",
-    "lat": 30.259359,
-    "lon": -97.733841
+    "lat": 30.284827,
+    "lon": -97.74627
   },
   {
     "poi_id": "poi_022",
-    "name": "Northgate Diner",
+    "name": "Kestrel Grill",
     "kind": "restaurant",
-    "lat": 30.266085,
-    "lon": -97.728603
+    "lat": 30.259189,
+    "lon": -97.732692
   },
   {
     "poi_id": "poi_023",
-    "name": "Cedar Grill",
+    "name": "Union Kitchen",
     "kind": "restaurant",
-    "lat": 30.278408,
-    "lon": -97.755649
+    "lat": 30.275986,
+    "lon": -97.746441
   },
   {
     "poi_id": "poi_024",
-    "name": "Union Kitchen",
+    "name": "Larkspur Grill",
     "kind": "restaurant",
-    "lat": 30.277195,
-    "lon": -97.734975
+    "lat": 30.258521,
+    "lon": -97.733461
   },
   {
     "poi_id": "poi_025",
-    "name": "Larkspur Table",
+    "name": "Union Diner",
     "kind": "restaurant",
-    "lat": 30.284902,
-    "lon": -97.745774
+    "lat": 30.280747,
+    "lon": -97.733654
   },
   {
     "poi_id": "poi_026",
-    "name": "Ironwood Grill",
-    "kind": "restaurant",
-    "lat": 30.271508,
-    "lon": -97.76187
-  },
-  {
-    "poi_id": "poi_027",
-    "name": "Union Diner",
-    "kind": "restaurant",
-    "lat": 30.261777,
-    "lon": -97.737494
-  },
-  {
-    "poi_id": "poi_028",
     "name": "Lantern Diner",
     "kind": "restaurant",
     "lat": 30.265626,
     "lon": -97.728271
   },
   {
-    "poi_id": "poi_029",
-    "name": "Kestrel Grill",
+    "poi_id": "poi_027",
+    "name": "Cedar Canteen",
     "kind": "restaurant",
     "lat": 30.26595,
     "lon": -97.73713
   },
   {
-    "poi_id": "poi_030",
-    "name": "Copper Diner",
+    "poi_id": "poi_028",
+    "name": "Union Grill",
     "kind": "restaurant",
-    "lat": 30.265996,
-    "lon": -97.749898
+    "lat": 30.279371,
+    "lon": -97.748729
+  },
+  {
+    "poi_id": "poi_029",
+    "name": "Mercer Diner",
+    "kind": "restaurant",
+    "lat": 30.284532,
+    "lon": -97.74503
+  },
+  {
+    "poi_id": "poi_030",
+    "name": "Mercer Table",
+    "kind": "restaurant",
+    "lat": 30.256026,
+    "lon": -97.737038
   },
   {
     "poi_id": "poi_031",
     "name": "Ironwood Canteen",
     "kind": "restaurant",
-    "lat": 30.278164,
-    "lon": -97.740818
+    "lat": 30.273158,
+    "lon": -97.746682
   },
   {
     "poi_id": "poi_032",
-    "name": "Quarry Diner",
+    "name": "Copper Grill",
     "kind": "restaurant",
-    "lat": 30.251233,
-    "lon": -97.746695
+    "lat": 30.264554,
+    "lon": -97.760235
   },
   {
     "poi_id": "poi_033",
-    "name": "Riverside Canteen",
+    "name": "Riverside Grill",
     "kind": "restaurant",
-    "lat": 30.260928,
-    "lon": -97.755707
+    "lat": 30.269977,
+    "lon": -97.741088
   },
   {
     "poi_id": "poi_034",
-    "name": "Larkspur Supply Co.",
-    "kind": "retail",
-    "lat": 30.266043,
-    "lon": -97.727297
-  },
-  {
-    "poi_id": "poi_035",
-    "name": "Riverside Goods",
-    "kind": "retail",
-    "lat": 30.259151,
-    "lon": -97.750166
-  },
-  {
-    "poi_id": "poi_036",
     "name": "Sundial Outfitters",
     "kind": "retail",
     "lat": 30.274849,
     "lon": -97.750732
   },
   {
-    "poi_id": "poi_037",
+    "poi_id": "poi_035",
     "name": "Copper Goods",
     "kind": "retail",
     "lat": 30.275526,
     "lon": -97.729752
   },
   {
-    "poi_id": "poi_038",
+    "poi_id": "poi_036",
     "name": "Verdigris Outfitters",
     "kind": "retail",
     "lat": 30.265221,
     "lon": -97.754166
   },
   {
-    "poi_id": "poi_039",
+    "poi_id": "poi_037",
     "name": "Windrow Mercantile",
     "kind": "retail",
     "lat": 30.258126,
     "lon": -97.729359
   },
   {
-    "poi_id": "poi_040",
+    "poi_id": "poi_038",
     "name": "Old Mill Supply Co.",
     "kind": "retail",
     "lat": 30.270453,
     "lon": -97.755704
   },
   {
-    "poi_id": "poi_041",
+    "poi_id": "poi_039",
     "name": "Windrow Supply Co.",
     "kind": "retail",
     "lat": 30.259341,
     "lon": -97.728651
   },
   {
-    "poi_id": "poi_042",
+    "poi_id": "poi_040",
     "name": "Northgate Mercantile",
     "kind": "retail",
     "lat": 30.255005,
     "lon": -97.750891
   },
   {
-    "poi_id": "poi_043",
+    "poi_id": "poi_041",
     "name": "Sable Goods",
     "kind": "retail",
     "lat": 30.27343,
     "lon": -97.727424
   },
   {
+    "poi_id": "poi_042",
+    "name": "Verdigris Mercantile",
+    "kind": "retail",
+    "lat": 30.260483,
+    "lon": -97.727867
+  },
+  {
+    "poi_id": "poi_043",
+    "name": "Sundial Goods",
+    "kind": "retail",
+    "lat": 30.265803,
+    "lon": -97.757986
+  },
+  {
     "poi_id": "poi_044",
-    "name": "Verdigris Works",
-    "kind": "office",
-    "lat": 30.261602,
-    "lon": -97.730406
-  },
-  {
-    "poi_id": "poi_045",
-    "name": "Sundial Offices",
-    "kind": "office",
-    "lat": 30.266035,
-    "lon": -97.755505
-  },
-  {
-    "poi_id": "poi_046",
     "name": "Larkspur Works",
     "kind": "office",
     "lat": 30.271542,
     "lon": -97.748156
   },
   {
-    "poi_id": "poi_047",
+    "poi_id": "poi_045",
     "name": "Marble Works",
     "kind": "office",
     "lat": 30.279737,
     "lon": -97.739257
   },
   {
-    "poi_id": "poi_048",
+    "poi_id": "poi_046",
     "name": "Marble Tower",
     "kind": "office",
     "lat": 30.277988,
     "lon": -97.750068
   },
   {
-    "poi_id": "poi_049",
-    "name": "Tallow Tower",
-    "kind": "office",
-    "lat": 30.270966,
-    "lon": -97.748716
-  },
-  {
-    "poi_id": "poi_050",
+    "poi_id": "poi_047",
     "name": "Kestrel Works",
     "kind": "office",
-    "lat": 30.260644,
-    "lon": -97.748537
+    "lat": 30.264298,
+    "lon": -97.739732
   },
   {
-    "poi_id": "poi_051",
+    "poi_id": "poi_048",
     "name": "Copper Offices",
     "kind": "office",
     "lat": 30.265669,
     "lon": -97.735381
   },
   {
+    "poi_id": "poi_049",
+    "name": "Northgate Offices",
+    "kind": "office",
+    "lat": 30.259631,
+    "lon": -97.740631
+  },
+  {
+    "poi_id": "poi_050",
+    "name": "Northgate Works",
+    "kind": "office",
+    "lat": 30.271537,
+    "lon": -97.739569
+  },
+  {
+    "poi_id": "poi_051",
+    "name": "Ironwood Tower",
+    "kind": "office",
+    "lat": 30.269468,
+    "lon": -97.755875
+  },
+  {
     "poi_id": "poi_052",
-    "name": "Northgate Exhibition Hall",
+    "name": "Tallow Conference Centre",
     "kind": "conference_venue",
-    "lat": 30.261145,
-    "lon": -97.741125
+    "lat": 30.27376,
+    "lon": -97.750102
   },
   {
     "poi_id": "poi_053",
-    "name": "Northgate Conference Centre",
+    "name": "Old Mill Exhibition Hall",
     "kind": "conference_venue",
-    "lat": 30.270669,
-    "lon": -97.740275
+    "lat": 30.273782,
+    "lon": -97.748234
   },
   {
     "poi_id": "poi_054",
-    "name": "Ironwood Forum",
+    "name": "Tallow Forum",
     "kind": "conference_venue",
-    "lat": 30.269014,
-    "lon": -97.75332
+    "lat": 30.25953,
+    "lon": -97.73525
   },
   {
     "poi_id": "poi_055",
-    "name": "Pike Platform",
+    "name": "Union Platform",
     "kind": "transit",
-    "lat": 30.270473,
-    "lon": -97.742151
+    "lat": 30.266429,
+    "lon": -97.732484
   },
   {
     "poi_id": "poi_056",
-    "name": "Foxglove Transit Centre",
+    "name": "Northgate Station",
     "kind": "transit",
-    "lat": 30.26515,
-    "lon": -97.729413
+    "lat": 30.257206,
+    "lon": -97.750648
   },
   {
     "poi_id": "poi_057",
-    "name": "Bellweather Station",
+    "name": "Foxglove Platform",
     "kind": "transit",
-    "lat": 30.278775,
-    "lon": -97.753143
+    "lat": 30.278003,
+    "lon": -97.758149
   },
   {
     "poi_id": "poi_058",
-    "name": "Kestrel Platform",
+    "name": "Northgate Platform",
     "kind": "transit",
-    "lat": 30.256437,
-    "lon": -97.725533
+    "lat": 30.261758,
+    "lon": -97.760693
   },
   {
     "poi_id": "poi_059",
-    "name": "Kestrel Station",
+    "name": "Verdigris Station",
     "kind": "transit",
-    "lat": 30.269685,
-    "lon": -97.726695
+    "lat": 30.274649,
+    "lon": -97.747442
   },
   {
     "poi_id": "poi_060",
-    "name": "Bellweather Platform",
+    "name": "Halfpenny Transit Centre",
     "kind": "transit",
-    "lat": 30.266413,
-    "lon": -97.759289
+    "lat": 30.257548,
+    "lon": -97.733315
   },
   {
     "poi_id": "poi_061",
-    "name": "Mercer Green",
+    "name": "Alder Commons",
     "kind": "park",
-    "lat": 30.281629,
-    "lon": -97.745475
+    "lat": 30.269606,
+    "lon": -97.738242
   },
   {
     "poi_id": "poi_062",
-    "name": "Tallow Commons",
+    "name": "Verdigris Green",
     "kind": "park",
-    "lat": 30.256557,
-    "lon": -97.739007
+    "lat": 30.270555,
+    "lon": -97.725553
   },
   {
     "poi_id": "poi_063",
-    "name": "Lantern Commons",
+    "name": "Windrow Gardens",
     "kind": "park",
-    "lat": 30.260445,
-    "lon": -97.735452
+    "lat": 30.265547,
+    "lon": -97.75504
   },
   {
     "poi_id": "poi_064",
-    "name": "Halfpenny Gardens",
+    "name": "Alder Green",
     "kind": "park",
-    "lat": 30.274961,
-    "lon": -97.73625
+    "lat": 30.283955,
+    "lon": -97.750148
   },
   {
     "poi_id": "poi_065",
-    "name": "Old Mill Alehouse",
+    "name": "Verdigris Bar",
     "kind": "bar",
-    "lat": 30.273147,
-    "lon": -97.729189
+    "lat": 30.277505,
+    "lon": -97.730661
   },
   {
     "poi_id": "poi_066",
-    "name": "Copper Tavern",
+    "name": "Alder Bar",
     "kind": "bar",
-    "lat": 30.263516,
-    "lon": -97.746395
+    "lat": 30.25989,
+    "lon": -97.744605
   },
   {
     "poi_id": "poi_067",
-    "name": "Quarry Social Club",
+    "name": "Windrow Social Club",
     "kind": "bar",
-    "lat": 30.26719,
-    "lon": -97.732144
+    "lat": 30.278145,
+    "lon": -97.734375
   },
   {
     "poi_id": "poi_068",
-    "name": "Alder Bar",
+    "name": "Mercer Tavern",
     "kind": "bar",
-    "lat": 30.282279,
-    "lon": -97.749443
+    "lat": 30.266938,
+    "lon": -97.734128
   },
   {
     "poi_id": "poi_069",
-    "name": "Halfpenny Tavern",
+    "name": "Ironwood Tavern",
     "kind": "bar",
-    "lat": 30.266184,
-    "lon": -97.755258
+    "lat": 30.260793,
+    "lon": -97.731269
   },
   {
     "poi_id": "poi_070",
-    "name": "Cedar Alehouse",
+    "name": "Bellweather Alehouse",
     "kind": "bar",
-    "lat": 30.281541,
-    "lon": -97.734748
+    "lat": 30.256168,
+    "lon": -97.753662
   },
   {
     "poi_id": "poi_071",
-    "name": "Union Alehouse",
+    "name": "Foxglove Social Club",
     "kind": "bar",
-    "lat": 30.280151,
-    "lon": -97.7367
+    "lat": 30.260418,
+    "lon": -97.755933
   },
   {
     "poi_id": "poi_072",
-    "name": "Windrow Social Club",
+    "name": "Alder Tavern",
     "kind": "bar",
-    "lat": 30.255261,
-    "lon": -97.754464
+    "lat": 30.267671,
+    "lon": -97.750839
   },
   {
     "poi_id": "poi_073",
-    "name": "Mercer Fitness",
+    "name": "Halfpenny Athletic Club",
     "kind": "gym",
-    "lat": 30.266908,
-    "lon": -97.733131
+    "lat": 30.280599,
+    "lon": -97.742861
   },
   {
     "poi_id": "poi_074",
-    "name": "Ironwood Fitness",
+    "name": "Lantern Fitness",
     "kind": "gym",
-    "lat": 30.260081,
-    "lon": -97.729955
+    "lat": 30.274476,
+    "lon": -97.759256
   },
   {
     "poi_id": "poi_075",
-    "name": "Bellweather Athletic Club",
+    "name": "Kestrel Gym",
     "kind": "gym",
-    "lat": 30.254943,
-    "lon": -97.754835
+    "lat": 30.270289,
+    "lon": -97.742633
   },
   {
     "poi_id": "poi_076",
-    "name": "Foxglove Athletic Club",
+    "name": "Union Fitness",
     "kind": "gym",
-    "lat": 30.259664,
-    "lon": -97.757359
+    "lat": 30.27153,
+    "lon": -97.759971
   },
   {
     "poi_id": "poi_077",
-    "name": "Alder Market",
+    "name": "Copper Provisions",
     "kind": "grocery",
-    "lat": 30.267828,
-    "lon": -97.753418
+    "lat": 30.257992,
+    "lon": -97.734847
   },
   {
     "poi_id": "poi_078",
-    "name": "Halfpenny Grocers",
+    "name": "Cedar Market",
     "kind": "grocery",
-    "lat": 30.283279,
-    "lon": -97.742814
+    "lat": 30.256133,
+    "lon": -97.760692
   },
   {
     "poi_id": "poi_079",
-    "name": "Lantern Market",
+    "name": "Larkspur Grocers",
     "kind": "grocery",
-    "lat": 30.275932,
-    "lon": -97.762487
+    "lat": 30.259441,
+    "lon": -97.729903
   },
   {
     "poi_id": "poi_080",
-    "name": "Kestrel Provisions",
+    "name": "Bellweather Provisions",
     "kind": "grocery",
-    "lat": 30.270907,
-    "lon": -97.74254
+    "lat": 30.261586,
+    "lon": -97.741214
   },
   {
     "poi_id": "poi_081",
-    "name": "Union Market",
+    "name": "Bellweather Market",
     "kind": "grocery",
-    "lat": 30.272396,
-    "lon": -97.763345
+    "lat": 30.277122,
+    "lon": -97.725707
   },
   {
     "poi_id": "poi_082",
-    "name": "Copper Apartments",
+    "name": "Cedar Residences",
     "kind": "residential",
-    "lat": 30.25569,
-    "lon": -97.732784
+    "lat": 30.252677,
+    "lon": -97.745876
   },
   {
     "poi_id": "poi_083",
-    "name": "Verdigris Apartments",
+    "name": "Mercer Flats",
     "kind": "residential",
-    "lat": 30.256165,
-    "lon": -97.742282
+    "lat": 30.269251,
+    "lon": -97.714785
   },
   {
     "poi_id": "poi_084",
-    "name": "Ironwood Flats",
-    "kind": "residential",
-    "lat": 30.279767,
-    "lon": -97.738607
-  },
-  {
-    "poi_id": "poi_085",
-    "name": "Bellweather Court",
-    "kind": "residential",
-    "lat": 30.278264,
-    "lon": -97.717365
-  },
-  {
-    "poi_id": "poi_086",
-    "name": "Union Court",
-    "kind": "residential",
-    "lat": 30.253751,
-    "lon": -97.760283
-  },
-  {
-    "poi_id": "poi_087",
-    "name": "Foxglove Court",
-    "kind": "residential",
-    "lat": 30.25066,
-    "lon": -97.761397
-  },
-  {
-    "poi_id": "poi_088",
-    "name": "Tallow Flats",
-    "kind": "residential",
-    "lat": 30.264116,
-    "lon": -97.743565
-  },
-  {
-    "poi_id": "poi_089",
     "name": "Old Mill Apartments",
     "kind": "residential",
     "lat": 30.254282,
     "lon": -97.730829
   },
   {
+    "poi_id": "poi_085",
+    "name": "Tallow Flats",
+    "kind": "residential",
+    "lat": 30.249998,
+    "lon": -97.720675
+  },
+  {
+    "poi_id": "poi_086",
+    "name": "Sundial Court",
+    "kind": "residential",
+    "lat": 30.26092,
+    "lon": -97.719775
+  },
+  {
+    "poi_id": "poi_087",
+    "name": "Verdigris Apartments",
+    "kind": "residential",
+    "lat": 30.242001,
+    "lon": -97.743182
+  },
+  {
+    "poi_id": "poi_088",
+    "name": "Lantern Residences",
+    "kind": "residential",
+    "lat": 30.268375,
+    "lon": -97.732591
+  },
+  {
+    "poi_id": "poi_089",
+    "name": "Third Street Court",
+    "kind": "residential",
+    "lat": 30.286339,
+    "lon": -97.734037
+  },
+  {
     "poi_id": "poi_090",
-    "name": "Tallow Hall",
+    "name": "Pike Hall",
     "kind": "campus",
-    "lat": 30.252292,
-    "lon": -97.723665
+    "lat": 30.251272,
+    "lon": -97.726174
   },
   {
     "poi_id": "poi_091",
-    "name": "Sundial Institute",
+    "name": "Larkspur Campus",
     "kind": "campus",
-    "lat": 30.261757,
-    "lon": -97.722885
+    "lat": 30.262957,
+    "lon": -97.743059
   },
   {
     "poi_id": "poi_092",
-    "name": "Foxglove Archive",
+    "name": "Pike Archive",
     "kind": "library",
-    "lat": 30.276769,
-    "lon": -97.742085
+    "lat": 30.270296,
+    "lon": -97.760785
   },
   {
     "poi_id": "poi_093",
-    "name": "Riverside Library",
+    "name": "Lantern Reading Room",
     "kind": "library",
-    "lat": 30.275937,
-    "lon": -97.731676
+    "lat": 30.262192,
+    "lon": -97.728125
   },
   {
     "poi_id": "poi_094",
-    "name": "Old Mill Library",
+    "name": "Tallow Library",
     "kind": "library",
-    "lat": 30.27494,
-    "lon": -97.742245
+    "lat": 30.252373,
+    "lon": -97.748059
   },
   {
     "poi_id": "poi_095",
-    "name": "Copper Workspace",
+    "name": "Bellweather Coworking",
     "kind": "coworking",
-    "lat": 30.277982,
-    "lon": -97.753748
+    "lat": 30.254617,
+    "lon": -97.737199
   },
   {
     "poi_id": "poi_096",
-    "name": "Kestrel Studios",
+    "name": "Marble Studios",
     "kind": "coworking",
-    "lat": 30.269244,
-    "lon": -97.756497
+    "lat": 30.256728,
+    "lon": -97.74234
   },
   {
     "poi_id": "poi_097",
-    "name": "Larkspur Studios",
+    "name": "Alder Coworking",
     "kind": "coworking",
-    "lat": 30.273026,
-    "lon": -97.734291
+    "lat": 30.264853,
+    "lon": -97.744885
   },
   {
     "poi_id": "poi_098",
-    "name": "Verdigris Gallery",
+    "name": "Union Museum",
     "kind": "attraction",
-    "lat": 30.254454,
-    "lon": -97.738647
+    "lat": 30.282641,
+    "lon": -97.749029
   },
   {
     "poi_id": "poi_099",
-    "name": "Mercer Observatory",
+    "name": "Bellweather Aquarium",
     "kind": "attraction",
-    "lat": 30.28411,
-    "lon": -97.733116
+    "lat": 30.282929,
+    "lon": -97.756723
   },
   {
     "poi_id": "poi_100",
-    "name": "Kestrel Observatory",
+    "name": "Union Aquarium",
     "kind": "attraction",
-    "lat": 30.28084,
-    "lon": -97.738306
+    "lat": 30.264088,
+    "lon": -97.734215
   },
   {
     "poi_id": "poi_101",
-    "name": "Cedar Gallery",
+    "name": "Verdigris Gallery",
     "kind": "attraction",
-    "lat": 30.255282,
-    "lon": -97.744008
+    "lat": 30.258705,
+    "lon": -97.75802
   }
 ]
