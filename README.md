@@ -21,7 +21,7 @@ about their day. Instructors use a separate dashboard to teach from the patterns
 Being trustworthy here is the entire point. If this tool were sneaky, it would be
 teaching the opposite of its lesson. So:
 
-### It really collects (only with consent, and only after you opt in)
+### What it really collects — genuinely, and continuously
 
 | Data | Why it's here |
 |---|---|
@@ -29,15 +29,37 @@ teaching the opposite of its lesson. So:
 | Device model, OS version, screen size | The "device fingerprint" every analytics SDK reads |
 | Timezone, language | Common profiling signals |
 | Battery level, connection type | Genuinely collected by real SDKs; surprises most people |
-| Location, with timestamps | The heart of the lesson |
+| **Location, with timestamps** | The heart of the lesson |
 
-### It illustrates but never collects
+**This is real.** The app is not simulating collection, replaying a script, or showing
+you a mock-up. It records your actual position, continuously, in the background, from
+the moment you agree until the course ends or you stop it. The map you are shown each
+evening is your own day.
 
-Real advertising and analytics SDKs reach for far more than the list above. This app
-*shows you what that would look like* using clearly-labelled invented data. Your
-contacts, photos, clipboard, microphone, installed apps and cross-app identifiers are
-**never read and never transmitted**. The screens depicting them are demonstrations,
-marked as such on screen.
+That matters because a simulation would prove nothing. Everybody already accepts in
+principle that phones can track people. What changes minds is seeing *your* Tuesday
+drawn on a map, with the places you stopped named, by an app you agreed to install and
+then forgot about. Faking that would be both dishonest and pointless.
+
+You consent once, at the start. After that it simply runs. There is no repeated
+prompting, no daily check-in — which is exactly how a commercial SDK behaves, and part
+of what the week is meant to expose.
+
+### The one exception: the invasive categories are invented
+
+Real advertising and analytics SDKs reach much further than the list above — into
+contacts, photos, the clipboard, the microphone, the list of installed apps, and
+cross-app identifiers.
+
+**Those, and only those, this app illustrates rather than takes.** It shows what such a
+harvest would look like using clearly-labelled invented values. Nothing in those
+categories is read from your phone or transmitted anywhere. There is no code in this
+app that reads them, and the server has no field to store them in.
+
+That line is drawn deliberately. Collecting real location from consenting adults who
+were told plainly is a defensible teaching exercise. Hoovering up their contacts —
+which would sweep in hundreds of people who never agreed to anything and are not on
+the course — is not, and no amount of educational framing would make it so.
 
 You do not have to take our word for any of this. That is why the code is public.
 
