@@ -2,13 +2,15 @@
 """
 Administrative commands for a course.
 
-    python manage.py add-instructor <username>   create a teaching-team login
-    python manage.py list-instructors            who can log in
-    python manage.py load-sample                 load the synthetic sample data
-    python manage.py status                      what is currently stored
-    python manage.py wipe                        delete ALL participant data
-    python manage.py sweep                       delete data past its retention date
-    python manage.py audit                       show the log of consequential actions
+    python manage.py check-production               before going live: safety check
+    python manage.py add-instructor <username>      create a teaching-team login
+    python manage.py remove-instructor <username>   delete a login
+    python manage.py list-instructors               who can log in
+    python manage.py status                         what is currently stored
+    python manage.py load-sample                    load the synthetic sample data
+    python manage.py wipe                           delete ALL participant data
+    python manage.py sweep                          delete data past its retention date
+    python manage.py audit                          log of consequential actions
 
 `wipe` is the teardown control: run it at the end of a course. It asks for
 confirmation, and records what it deleted in the audit log.
@@ -17,8 +19,10 @@ confirmation, and records what it deleted in the audit log.
 from __future__ import annotations
 
 import getpass
+import os
 import sys
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from backend import auth, config, db
 
@@ -125,8 +129,125 @@ def cmd_audit(_args: list[str]) -> None:
         print(f"  {r['ts']}  {r['actor']:24s} {r['action']:22s} {r['detail']}")
 
 
+def cmd_check_production(_args: list[str]) -> None:
+    """
+    Check the things that are dangerous to get wrong on a public server.
+
+    Written to be run by somebody who is not a developer, so every failure says
+    what to do about it rather than only what is wrong.
+    """
+    from backend import load_sample
+
+    problems: list[str] = []
+    warnings: list[str] = []
+    good: list[str] = []
+
+    conn = db.connect()
+    db.init_db(conn)
+
+    # 1. Is there a real instructor account, and is the demo one gone?
+    rows = conn.execute("SELECT username FROM instructors").fetchall()
+    names = [r["username"] for r in rows]
+    demo_user = load_sample.DEMO_INSTRUCTOR[0]
+    if not names:
+        problems.append(
+            "There are no instructor accounts, so nobody can log in.\n"
+            "     Fix: python manage.py add-instructor <your-name>")
+    if demo_user in names:
+        if auth.check_instructor(conn, demo_user, load_sample.DEMO_INSTRUCTOR[1]):
+            problems.append(
+                f"The demo account '{demo_user}' still exists WITH ITS PUBLISHED\n"
+                f"     PASSWORD. Anyone who has read this project on GitHub can log in\n"
+                f"     and watch your participants.\n"
+                f"     Fix: python manage.py remove-instructor {demo_user}")
+        else:
+            warnings.append(
+                f"An account named '{demo_user}' exists. Its password has been "
+                f"changed, so this is not urgent, but a distinctive name is better.")
+    if names and demo_user not in names:
+        good.append(f"Instructor accounts exist ({', '.join(names)}) and none is the demo.")
+
+    # 2. Is the session secret a real one?
+    if os.getenv("WYPK_SECRET_KEY"):
+        good.append("Session secret is set from the environment.")
+    else:
+        key_file = Path(config.DB_PATH).parent / "secret_key"
+        if key_file.exists():
+            good.append(f"Session secret was generated and stored at {key_file}.")
+        else:
+            warnings.append(
+                "No session secret yet. One will be generated automatically the "
+                "first time the server starts.")
+
+    # 3. HTTPS
+    if config.PUBLIC_URL.startswith("https://"):
+        good.append(f"Public address is HTTPS ({config.PUBLIC_URL}); "
+                    f"login cookies will be marked HTTPS-only.")
+    elif config.PUBLIC_URL:
+        problems.append(
+            f"WYPK_PUBLIC_URL is '{config.PUBLIC_URL}', which is not HTTPS.\n"
+            "     Participant tokens and instructor passwords would cross the "
+            "network in the clear.\n"
+            "     Fix: use the https:// address your host gave you.")
+    else:
+        warnings.append(
+            "WYPK_PUBLIC_URL is not set. Set it to your server's https:// address "
+            "so login cookies are marked HTTPS-only.")
+
+    # 4. Is there sample data sitting in what is meant to be a real course?
+    sample = conn.execute(
+        "SELECT COUNT(*) AS n FROM participants WHERE consent_version = 'sample-data-v1'"
+    ).fetchone()["n"]
+    if sample:
+        warnings.append(
+            f"{sample} synthetic sample participants are still loaded. Real "
+            f"participants would be mixed in with invented ones.\n"
+            f"     Fix: python manage.py wipe")
+    else:
+        good.append("No synthetic sample data is loaded.")
+
+    # 5. Can the database actually be written to?
+    try:
+        conn.execute("CREATE TABLE IF NOT EXISTS _writecheck (x INTEGER)")
+        conn.execute("DROP TABLE _writecheck")
+        conn.commit()
+        good.append(f"Database is writable at {config.DB_PATH}.")
+    except Exception as exc:
+        problems.append(f"The database cannot be written to: {exc}")
+
+    conn.close()
+
+    for line in good:
+        print(f"  OK       {line}")
+    for line in warnings:
+        print(f"  WARNING  {line}")
+    for line in problems:
+        print(f"  PROBLEM  {line}")
+
+    print()
+    if problems:
+        print(f"{len(problems)} problem(s) must be fixed before real participants "
+              f"use this server.")
+        raise SystemExit(1)
+    print("No blocking problems found.")
+
+
+def cmd_remove_instructor(args: list[str]) -> None:
+    if not args:
+        raise SystemExit("Usage: python manage.py remove-instructor <username>")
+    conn = db.connect()
+    db.init_db(conn)
+    cur = conn.execute("DELETE FROM instructors WHERE username = ?", (args[0],))
+    conn.commit()
+    db.audit(conn, "manage.py", "instructor_removed", args[0])
+    conn.close()
+    print(f"Removed {cur.rowcount} account(s) named '{args[0]}'.")
+
+
 COMMANDS = {
     "add-instructor": cmd_add_instructor,
+    "remove-instructor": cmd_remove_instructor,
+    "check-production": cmd_check_production,
     "list-instructors": cmd_list_instructors,
     "load-sample": cmd_load_sample,
     "status": cmd_status,

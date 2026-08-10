@@ -101,7 +101,7 @@ Built in stages, each one runnable and demonstrable before the next begins.
 - [x] **Stage 3 — Mobile app**: consent flow, collection, teaching flow, daily reveal.
 - [x] **Stage 4 — SDK research** feeding the "illustrated" categories
       (`docs/sdk-research.md`).
-- [ ] Stage 5 — Backend hosting (guided walkthrough).
+- [x] **Stage 5 — Backend hosting** (guided walkthrough: `docs/hosting.md`).
 - [ ] Stage 6 — Getting it onto attendee phones (guided walkthrough).
 - [ ] Stage 7 — Store disclosures, facilitator's guide, demo guide.
 
@@ -212,6 +212,23 @@ python3 tools/contract_test.py           # in another
 
 It replays the exact requests the app makes and verifies the responses, including
 that a device token stops working the moment somebody withdraws.
+
+## Putting it online
+
+Everything above runs on a laptop. To get it onto real phones, the server needs a
+public address. **[docs/hosting.md](docs/hosting.md)** is a step-by-step
+walkthrough written for somebody who has never hosted anything, using a free
+service that needs no credit card. Allow about 45 minutes.
+
+Before real participants use it, run:
+
+```bash
+python manage.py check-production
+```
+
+It checks the handful of things that are genuinely dangerous to get wrong — most
+importantly that the demo login, whose password is published in this README, has
+been removed — and tells you the exact command to fix each one.
 
 ## Running a course with this
 

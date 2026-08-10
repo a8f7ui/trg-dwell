@@ -93,9 +93,54 @@ POI_MATCH_RADIUS_M = float(os.getenv("WYPK_POI_RADIUS", "45"))
 # Instructor dashboard
 # --------------------------------------------------------------------------
 
-# Secret used to sign login sessions. MUST be set to a random value in any real
-# deployment; the fallback exists only so the local demo runs out of the box.
-SECRET_KEY = os.getenv("WYPK_SECRET_KEY", "dev-only-not-for-real-use")
+# The public address this server is reachable at, e.g.
+# "https://yourname.pythonanywhere.com". Used to decide whether login cookies
+# should be marked HTTPS-only. Leave unset for local development.
+PUBLIC_URL = os.getenv("WYPK_PUBLIC_URL", "")
+
+# Login cookies are marked "secure" — meaning the browser will only ever send
+# them over HTTPS — as soon as this server knows it is being served over HTTPS.
+# Setting this on a plain-HTTP local machine would break logging in, hence the
+# check rather than a hard-coded True.
+SESSION_COOKIE_SECURE = PUBLIC_URL.startswith("https://")
+
+
+def get_secret_key() -> str:
+    """
+    The key used to sign instructor login sessions.
+
+    Anybody who knows this value can forge a login and read participant
+    movement, so it must be random and it must be secret.
+
+    Rather than ask a non-technical person to generate and configure one — a
+    step that is easy to skip, and silently dangerous when skipped — this
+    generates a random key on first run and stores it beside the database with
+    owner-only permissions. Setting WYPK_SECRET_KEY overrides it, which is what
+    you want on a host with a proper secrets mechanism.
+    """
+    from_env = os.getenv("WYPK_SECRET_KEY")
+    if from_env:
+        return from_env
+
+    key_path = Path(DB_PATH).parent / "secret_key"
+    if key_path.exists():
+        return key_path.read_text().strip()
+
+    import secrets
+
+    key = secrets.token_urlsafe(48)
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    key_path.write_text(key)
+    try:
+        key_path.chmod(0o600)
+    except OSError:
+        # Some hosts do not allow chmod; the key is still random and private to
+        # the account, which is the important part.
+        pass
+    return key
+
+
+SECRET_KEY = get_secret_key()
 
 # A participant counts as "currently visible" on the live map if we have heard
 # from them within this many seconds.

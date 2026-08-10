@@ -31,6 +31,10 @@ app.secret_key = config.SECRET_KEY
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,   # JavaScript cannot read the login cookie
     SESSION_COOKIE_SAMESITE="Lax",  # limits cross-site request forgery
+    # Once served over HTTPS, the browser must never send the login cookie over
+    # plain HTTP. Off locally, because it would break logging in over http://.
+    SESSION_COOKIE_SECURE=config.SESSION_COOKIE_SECURE,
+    MAX_CONTENT_LENGTH=8 * 1024 * 1024,   # reject absurdly large uploads
 )
 
 
