@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "What Your Phone Knows",
+    "slug": "what-your-phone-knows",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "wypk",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#10151c",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#10151c",
+      "resizeMode": "contain",
+      "image": "./assets/icon.png"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.whatyourphoneknows.course",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This course app records where you go so it can show you, each evening, what an app can work out about you. You can stop it at any time and delete everything it has collected.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This course app keeps recording your location even when it is closed. That is the point of the exercise: it demonstrates what ordinary apps can learn while you are not looking at them. Your course instructors can see this data, including your live position. You can stop collection and delete everything at any time, from the app's main screen.",
+        "UIBackgroundModes": ["location", "fetch"],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "org.whatyourphoneknows.course",
+      "adaptiveIcon": {
+        "backgroundColor": "#10151c",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "locationWhenInUsePermission": "This course app records where you go so it can show you what an app can work out about you.",
+          "locationAlwaysAndWhenInUsePermission": "This course app keeps recording your location even when it is closed. That is the point of the exercise. Your instructors can see this data, including your live position. You can stop and delete everything at any time."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4da3ff"
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-08-10T17:03:45.693966+00:00",
+  "seed": 20260810,
+  "collection_mode": "background",
+  "days": 5,
+  "participant_count": 12,
+  "ping_count": 41799,
+  "session_count": 291,
+  "center": {
+    "lat": 30.2672,
+    "lon": -97.7431
+  },
+  "course_venue": {
+    "poi_id": "poi_052",
+    "name": "Tallow Conference Centre",
+    "lat": 30.27376,
+    "lon": -97.750102
+  },
+  "timezone": "America/Chicago",
+  "utc_offset_hours": -5.0,
+  "course_start": "2026-09-14T00:00:00-05:00",
+  "notice": "ENTIRELY SYNTHETIC. No real person, device, business or address is represented in this file."
+}
