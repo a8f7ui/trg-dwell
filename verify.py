@@ -304,7 +304,7 @@ def _launch(pw):
     return None
 
 
-def check_in_browser(base: str) -> None:
+def check_in_browser(base: str, expect_groups: bool) -> None:
     """
     Drive a real browser through every screen, if Playwright is available.
 
@@ -331,39 +331,70 @@ def check_in_browser(base: str) -> None:
                 return
             page = browser.new_page(viewport={"width": 1400, "height": 900})
             page.on("pageerror", lambda e: errors.append(str(e)))
+            # Waited for rather than slept through. A fixed pause is a guess
+            # about how fast the machine is, and on a slow or busy one it
+            # produces a failure that says the dashboard is broken when it was
+            # only late. A false alarm costs exactly as much trust as a missed
+            # fault, so every wait below is for a condition, with a ceiling
+            # generous enough that reaching it means something is genuinely
+            # wrong.
+            def wait_for(condition: str, seconds: int = 30) -> bool:
+                try:
+                    page.wait_for_function(condition, timeout=seconds * 1000)
+                    return True
+                except Exception:                  # noqa: BLE001
+                    return False
+
             page.goto(base, wait_until="domcontentloaded")
             page.fill("#username", "instructor")
             page.fill("#password", "demo-password")
             page.click("button[type=submit]")
-            page.wait_for_timeout(3500)
-            check("logging in reaches the dashboard", page.is_visible("#app"))
+            check("logging in reaches the dashboard",
+                  wait_for("!document.querySelector('#app').hidden"))
 
             for view, marker in [("live", "#roster"),
                                  ("participant", "#participant-select"),
                                  ("aggregate", "#k-slider"),
                                  ("admin", "#audit")]:
                 page.click(f"nav#tabs button[data-view={view}]")
-                page.wait_for_timeout(2500)
-                check(f"the {view} screen draws", page.is_visible(marker))
+                check(f"the {view} screen draws",
+                      wait_for(f"document.querySelector('{marker}') && "
+                               f"document.querySelector('{marker}').offsetParent"))
 
             # The heaviest screen, and the one with the newest analysis on it.
             page.click("nav#tabs button[data-view=participant]")
-            page.wait_for_timeout(2000)
+            wait_for("document.querySelector('#day-select') && "
+                     "document.querySelector('#day-select').options.length > 1")
             page.select_option("#day-select", "__week__")
-            page.wait_for_timeout(4000)
+
+            # This view runs the whole week's analysis server-side, so on a slow
+            # machine it can genuinely take a while. Wait for the last section
+            # to arrive, then read them all from the same settled state.
+            #
+            # Which sections should be there depends on the data, so it is
+            # asked rather than assumed: the groups section is only drawn for
+            # somebody who has a recurring group, and requiring it regardless
+            # would fail on a participant who simply travelled alone.
+            wanted = ["behavioural signature", "pattern of life"]
+            if expect_groups:
+                wanted.append("recurring groups")
+
+            arrived = wait_for(
+                "document.querySelector('#participant-detail')"
+                f".innerText.toLowerCase().includes('{wanted[-1]}')", 60)
             text = page.inner_text("#participant-detail").lower()
-            for section in ("behavioural signature", "pattern of life",
-                            "recurring groups"):
-                check(f"the week view shows '{section}'", section in text)
+            for section in wanted:
+                check(f"the week view shows '{section}'",
+                      section in text,
+                      "" if arrived else "the week view did not finish loading")
 
             # Both skins, since a broken one is invisible until it is on screen.
             for skin in ("console", "field"):
                 page.click(f"[data-theme-set={skin}]")
-                page.wait_for_timeout(800)
+                want = "'console'" if skin == "console" else "null"
                 check(f"the {skin} skin applies",
-                      page.evaluate(
-                          "document.documentElement.getAttribute('data-theme')")
-                      == (skin if skin == "console" else None))
+                      wait_for("document.documentElement.getAttribute"
+                               f"('data-theme') === {want}", 10))
             browser.close()
     except Exception as exc:                       # noqa: BLE001
         check("browser checks ran", False, str(exc)[:200])
@@ -445,7 +476,19 @@ def main() -> int:
         check_instructor_api(client, hexmap)
         check_privacy_rules(client)
         check_javascript()
-        check_in_browser(base)
+
+        # Whether the browser should expect a groups section depends on whether
+        # the first participant actually has one. Asked here rather than assumed
+        # in the browser, where a wrong assumption would look like a fault.
+        expect_groups = False
+        status, people = client.get("/api/instructor/participants")
+        if status == 200 and people:
+            status, week = client.get(
+                f"/api/instructor/participant/{people[0]['participant_id']}/week")
+            if status == 200:
+                expect_groups = bool(week.get("groups", {}).get("available"))
+
+        check_in_browser(base, expect_groups)
     finally:
         server.terminate()
         try:
