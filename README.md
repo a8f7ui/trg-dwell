@@ -174,6 +174,25 @@ carries on without that one feature rather than stopping.
 That demo password is fine on a laptop and unacceptable anywhere else. Before
 hosting this, make a real account with `.venv/bin/python manage.py add-instructor <name>`.
 
+### Checking it works, without taking anyone's word for it
+
+```bash
+python3 verify.py
+```
+
+Starts a server against a throwaway copy of the data, exercises every endpoint
+and every screen, and prints a plain verdict. Safe to run at any time — it
+touches nothing you already have, including during a course.
+
+It checks the server, the analysis, the **privacy rules**, and that every
+dashboard screen draws without JavaScript errors. It does **not** check the
+phone app on a real phone; nothing run on a laptop can.
+
+If Playwright is installed it also drives a real browser through every screen.
+If it is not, those checks are reported as skipped rather than passed — a check
+that quietly skips itself is worse than no check, because it reads as a clean
+run.
+
 <details>
 <summary>The same thing by hand, if you would rather see the steps</summary>
 

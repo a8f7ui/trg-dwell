@@ -330,7 +330,17 @@ Run from the project folder, with the virtual environment active.
 .venv/bin/python manage.py wipe                # delete everything (asks for confirmation)
 ```
 
-Checking the app and server still agree, after any change:
+Checking that everything still works, after any change:
+
+```bash
+python3 verify.py
+```
+
+Starts its own server against a throwaway copy of the data, exercises every
+endpoint and every screen, and prints a plain verdict. Safe during a course —
+it touches nothing you already have. Run it before you teach.
+
+Checking a *live* server specifically, which the above does not:
 
 ```bash
 python3 tools/contract_test.py https://your-server-address
