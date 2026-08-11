@@ -74,7 +74,7 @@ function escapeHtml(s) {
 
 // ---------------------------------------------------------------- map setup
 
-let map, baseSatellite, baseStreet, labelLayer;
+let map, baseSatellite, baseStreet, labelLayer, layerControl;
 const layers = {};      // one layer group per view
 
 function initMap() {
@@ -98,11 +98,13 @@ function initMap() {
   baseSatellite.addTo(map);
   labelLayer.addTo(map);
 
-  L.control.layers(
+  layerControl = L.control.layers(
     { 'Satellite': baseSatellite, 'Street map': baseStreet },
     { 'Place names': labelLayer },
     { position: 'topright' }
   ).addTo(map);
+
+  addOfflineBasemaps();
 
   ['live', 'participant', 'aggregate'].forEach((v) => {
     layers[v] = L.layerGroup().addTo(map);
@@ -114,6 +116,39 @@ function initMap() {
   map.on('zoomend', () => {
     if (currentView === 'live') drawLive();
   });
+}
+
+/**
+ * Offer any offline map the server has, as an extra basemap choice.
+ *
+ * Satellite imagery comes from Esri's servers, so on a bad venue connection the
+ * map is simply blank — which is awkward when the map is the lesson. A PMTiles
+ * archive is one file holding an entire city's streets, served from the same
+ * machine as everything else, so it keeps working with no internet at all.
+ *
+ * If no archive is installed the option does not appear, and nothing changes.
+ */
+async function addOfflineBasemaps() {
+  try {
+    const { basemaps } = await api('/api/basemaps');
+    if (!basemaps || !basemaps.length) return;
+    if (typeof protomapsL === 'undefined') return;
+
+    basemaps.forEach((b) => {
+      const layer = protomapsL.leafletLayer({
+        url: b.url,
+        theme: 'black',          // matches the console styling
+        maxDataZoom: 15,
+      });
+      const label = basemaps.length === 1
+        ? `Offline map (${b.size_mb} MB)`
+        : `Offline: ${b.name.replace(/\.pmtiles$/, '')}`;
+      layerControl.addBaseLayer(layer, label);
+    });
+  } catch {
+    // No offline map available, or the server did not answer. The online
+    // basemaps still work; this is an addition, never a dependency.
+  }
 }
 
 function clearLayer(name) { layers[name].clearLayers(); }

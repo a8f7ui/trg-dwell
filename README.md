@@ -106,7 +106,8 @@ tools/          Sample-data generator — builds realistic synthetic participant
                 data so the backend and dashboard can be built and demonstrated
                 without any real phone or real person involved.
 data/sample/    Generated sample data (committed, safe, entirely invented).
-docs/           Hosting, distribution, store disclosures, SDK research.
+docs/           Hosting, distribution, store disclosures, SDK research,
+                facilitator's guide, offline maps.
 backend/        The server that receives pings and serves the dashboard.
 dashboard/      The instructor dashboard.
 app/            The mobile app (iOS + Android, one codebase).
@@ -185,9 +186,12 @@ hosting this, make a real account with `python manage.py add-instructor <name>`.
 - **Data & teardown** — what is stored, the audit log, and the wipe-everything
   control.
 
-The satellite imagery comes from Esri, which is free and needs no API key,
-no billing account and no per-view charge. Google's tiles would require all
-three.
+The satellite imagery comes from Esri, which is free and needs no API key, no
+billing account and no per-view charge. Google's tiles would require all three.
+
+If venue wifi is unreliable, you can install an **offline street map** so the
+dashboard stops depending on anyone else's servers for tiles — see
+[docs/offline-maps.md](docs/offline-maps.md). Optional, and about 15 minutes.
 
 ## The app
 

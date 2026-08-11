@@ -70,6 +70,10 @@ In order. Each links to a full walkthrough.
 **Step 2 is the one not to skip.** It catches the demo login — whose password is
 published in this repository — still being active on a live server.
 
+Optional: if venue wifi is unreliable, install an offline street map so the
+dashboard does not depend on anyone else's tile servers —
+[`offline-maps.md`](offline-maps.md), about 15 minutes.
+
 Store privacy forms are in [`store-disclosures.md`](store-disclosures.md), with
 exact answers. The evidence base for the illustrated screens is in
 [`sdk-research.md`](sdk-research.md); read it before you teach.

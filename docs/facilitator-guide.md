@@ -58,6 +58,8 @@ unremarkable is what makes it a real option.
 - [ ] Dashboard logged in on the projector machine, with the demo participant
       view already open.
 - [ ] Know how many participants installed. Chase the stragglers.
+- [ ] If the venue's wifi is doubtful, install an offline map
+      (`docs/offline-maps.md`) and check it covers the venue and the hotels.
 
 **Have the sample data ready as a fallback.** If the server misbehaves, or too
 few people installed, every teaching point below works against the synthetic

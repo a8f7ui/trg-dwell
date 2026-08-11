@@ -7,6 +7,10 @@ venv/
 
 # Local data — never commit real participant data
 data/local/
+
+# Offline map archives. Large (tens to hundreds of MB), specific to wherever a
+# course is running, and downloaded separately. See docs/offline-maps.md.
+data/basemap/*.pmtiles
 *.db
 *.sqlite
 *.sqlite3
