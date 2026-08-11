@@ -87,17 +87,20 @@ class Client:
         self.opener = urllib.request.build_opener(
             urllib.request.HTTPCookieProcessor(CookieJar()))
 
-    def get(self, path: str) -> tuple[int, object]:
-        return self._call("GET", path, None)
+    def get(self, path: str, token: str = "") -> tuple[int, object]:
+        return self._call("GET", path, None, token)
 
-    def post(self, path: str, body: dict) -> tuple[int, object]:
-        return self._call("POST", path, body)
+    def post(self, path: str, body: dict, token: str = "") -> tuple[int, object]:
+        return self._call("POST", path, body, token)
 
-    def _call(self, method, path, body):
+    def _call(self, method, path, body, token=""):
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
         req = urllib.request.Request(
             self.base + path, method=method,
             data=json.dumps(body).encode() if body is not None else None,
-            headers={"Content-Type": "application/json"})
+            headers=headers)
         try:
             with self.opener.open(req, timeout=30) as resp:
                 raw = resp.read()
@@ -259,6 +262,94 @@ def check_privacy_rules(client: Client) -> None:
                   "(checked by the contract test)")
 
 
+def check_local_days(client: Client) -> None:
+    """
+    A phone's day and the server's day are the same day.
+
+    This is a regression test for a fault that made the evening reveal — the
+    centrepiece of the whole week — show about ninety minutes.
+
+    A phone reports UTC. Milwaukee is five or six hours behind it, so a course
+    day that runs 09:00 to 21:00 local spans two UTC dates, with everything
+    after 19:00 falling on the next one. The backend used to take the day from
+    the first ten characters of the timestamp, which is the UTC date, so one
+    day of a participant's life arrived as two — and the reveal, which shows
+    the latest day, got only the tail end of the evening.
+
+    It never showed up in testing because the sample generator writes
+    timestamps with a local offset, whose first ten characters happen to
+    already be the local date. So this check deliberately uploads what a real
+    phone sends: UTC, with a Z on the end.
+    """
+    group("Days are the course's days, not UTC's")
+
+    # Migration, relocation and daylight saving need no server, so they live in
+    # their own script and are run here rather than duplicated.
+    result = subprocess.run(
+        [sys.executable, str(HERE / "tools" / "day_boundary_test.py")],
+        capture_output=True, text=True, cwd=HERE)
+    for line in (result.stdout or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PASS  "):
+            passed.append(stripped[6:])
+        elif stripped.startswith("FAIL  "):
+            failed.append((stripped[6:], "tools/day_boundary_test.py"))
+    check("the day-boundary checks ran", result.returncode in (0, 1)
+          and "PASS" in (result.stdout or ""),
+          (result.stderr or "").strip()[:300])
+
+    status, reg = client.post("/api/v1/participants", {
+        "consent_version": "verify-local-day", "consented_at": "2026-09-15T08:00:00Z",
+        "timezone": "America/Chicago", "os_name": "verify",
+    })
+    if not check("a phone can register", status == 201 and isinstance(reg, dict),
+                 f"got HTTP {status}"):
+        return
+    token = reg.get("token", "")
+
+    # One day in Milwaukee: 09:00 to 21:45 local on 15 September 2026, which is
+    # CDT (UTC-5). In UTC that is 14:00 on the 15th to 02:45 on the 16th.
+    lat, lon = 43.0389, -87.9065
+    uploaded = []
+    for hour in range(14, 24):                      # 09:00–18:00 local, 15 Sep
+        uploaded.append(f"2026-09-15T{hour:02d}:20:00Z")
+    for hour in range(0, 3):                        # 19:00–21:00 local, still 15 Sep
+        uploaded.append(f"2026-09-16T{hour:02d}:20:00Z")
+
+    status, ack = client.post("/api/v1/pings", {"pings": [
+        {"ts": ts, "lat": lat + i * 0.0004, "lon": lon + i * 0.0004,
+         "accuracy_m": 12, "battery_pct": 70, "connection": "wifi",
+         "collection_mode": "background", "session_id": "verify-day"}
+        for i, ts in enumerate(uploaded)
+    ]}, token=token)
+    if not check(f"{len(uploaded)} points upload, spanning two UTC dates",
+                 status == 201 and isinstance(ack, dict)
+                 and ack.get("accepted") == len(uploaded),
+                 f"got HTTP {status}: {ack}"):
+        return
+
+    status, reveal = client.get("/api/v1/me/reveal", token=token)
+    if not check("the reveal loads", status == 200 and isinstance(reveal, dict),
+                 f"got HTTP {status}"):
+        return
+
+    days = reveal.get("days_available") or []
+    check("one local day is reported as one day, not two",
+          days == ["2026-09-15"],
+          f"the reveal offers {days!r} — evening points have been filed under "
+          f"the next day, which is what UTC slicing did")
+
+    check("the reveal opens on the day the participant just lived",
+          reveal.get("day") == "2026-09-15",
+          f"it opened on {reveal.get('day')!r}")
+
+    count = reveal.get("point_count")
+    check("the day shown contains the whole day, including the evening",
+          count == len(uploaded),
+          f"the reveal shows {count} of {len(uploaded)} points; the evening is "
+          f"the part that goes missing, and the evening is the point of it")
+
+
 def check_javascript() -> None:
     group("Dashboard JavaScript")
     node = shutil.which("node")
@@ -268,6 +359,34 @@ def check_javascript() -> None:
     result = subprocess.run([node, "--check", str(HERE / "dashboard" / "app.js")],
                             capture_output=True, text=True)
     check("app.js parses", result.returncode == 0, (result.stderr or "").strip())
+
+
+def _installed_browsers() -> list[Path]:
+    """
+    Any Chromium actually present, whichever build number it happens to be.
+
+    Playwright asks for one exact build and refuses anything else, so a machine
+    with a perfectly working Chromium two revisions old reports itself as having
+    no browser at all — and this whole section then skips itself, which reads
+    like a clean run. Looking for what is there rather than for what was
+    expected turns that back into a real check.
+    """
+    roots = [Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"])] if os.environ.get(
+        "PLAYWRIGHT_BROWSERS_PATH") else []
+    roots += [Path.home() / ".cache" / "ms-playwright",
+              Path.home() / "Library" / "Caches" / "ms-playwright"]
+
+    found: list[Path] = []
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for pattern in ("chromium-*/chrome-linux/chrome",
+                        "chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+                        "chromium-*/chrome-win/chrome.exe",
+                        "chromium_headless_shell-*/chrome-headless-shell-*/"
+                        "chrome-headless-shell"):
+            found += sorted(root.glob(pattern), reverse=True)
+    return found
 
 
 def _launch(pw):
@@ -287,6 +406,7 @@ def _launch(pw):
     if os.environ.get("DWELL_BROWSER"):
         attempts.append({"executable_path": os.environ["DWELL_BROWSER"]})
     attempts += [{}, {"channel": "chromium"}, {"channel": "chrome"}]
+    attempts += [{"executable_path": str(p)} for p in _installed_browsers()]
 
     for attempt in attempts:
         try:
@@ -495,6 +615,7 @@ def main() -> int:
         check_participant_api(python, base)
         check_instructor_api(client)
         check_privacy_rules(client)
+        check_local_days(client)
         check_javascript()
         if production:
             check_production_safety(python)

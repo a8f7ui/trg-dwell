@@ -16,7 +16,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import auth, config, db
+from . import auth, config, course, db
 
 SAMPLE_DIR = config.BASE_DIR / "data" / "sample"
 
@@ -124,11 +124,18 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
         "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
 
     # --- location points ---------------------------------------------------
+    # The day each point belongs to is worked out the same way as for a real
+    # phone, rather than being taken from the first ten characters of the
+    # timestamp. The sample file happens to carry local-offset timestamps, so
+    # slicing them gives the right answer here and the wrong one for real
+    # data — which is exactly how this bug survived so long.
+    tz_name = course.get_location(conn)["timezone"]
     with (sample_dir / "pings.csv").open() as fh:
         ping_rows = [
             (r["participant_id"], r["session_id"], r["ts"], float(r["lat"]),
              float(r["lon"]), float(r["accuracy_m"]), int(r["battery_pct"]),
              r["connection"], r.get("collection_mode", "background"),
+             db.local_day(r["ts"], tz_name),
              # received_at is set to when the point was taken, not to now.
              # Otherwise bulk-loading a week of history would look to the
              # monitoring panel like a sudden flood of live traffic.
@@ -137,8 +144,8 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
         ]
     conn.executemany(
         "INSERT INTO pings (participant_id, session_id, ts, lat, lon, accuracy_m, "
-        "battery_pct, connection, collection_mode, received_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?)", ping_rows)
+        "battery_pct, connection, collection_mode, local_day, received_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)", ping_rows)
 
     conn.execute(
         "UPDATE participants SET last_seen_at = "

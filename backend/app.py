@@ -54,12 +54,28 @@ def parse_ts(value: str) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+# Which day a point belongs to.
+#
+# Written out as one expression, used everywhere, so that "day" cannot come to
+# mean two different things in two different queries. `local_day` is the
+# calendar date in the course's own timezone, filled in when the point arrives.
+# The COALESCE is a floor, not a plan: if a row somehow has no local_day, it
+# falls back to the old UTC slice and is still counted, rather than silently
+# disappearing from the reveal.
+DAY_EXPR = "COALESCE(local_day, substr(ts, 1, 10))"
+
+
+def course_timezone(conn) -> str:
+    """The timezone the course is being taught in."""
+    return course.get_location(conn)["timezone"]
+
+
 def load_points(conn, participant_id: str, day: str | None = None) -> list[Point]:
     sql = ("SELECT ts, lat, lon, accuracy_m, session_id, battery_pct, connection, "
            "collection_mode FROM pings WHERE participant_id = ?")
     params: list = [participant_id]
     if day:
-        sql += " AND substr(ts, 1, 10) = ?"
+        sql += f" AND {DAY_EXPR} = ?"
         params.append(day)
     sql += " ORDER BY ts"
     return [
@@ -171,7 +187,7 @@ def analyse_day(points: list[Point], places_ref: list[dict],
 
 def days_for(conn, participant_id: str) -> list[str]:
     return [r["d"] for r in conn.execute(
-        "SELECT DISTINCT substr(ts, 1, 10) AS d FROM pings "
+        f"SELECT DISTINCT {DAY_EXPR} AS d FROM pings "
         "WHERE participant_id = ? ORDER BY d", (participant_id,))]
 
 
@@ -239,23 +255,28 @@ def upload_pings():
         return jsonify({"error": "Expected a list of pings."}), 400
 
     received = db.now_iso()
+    # A phone sends UTC. Which day that is depends on where the course is, so
+    # the day is worked out here, once, on the way in — and stored — rather
+    # than being re-derived by every query that groups by day.
+    tz_name = course_timezone(conn)
     rows = []
     for p in points:
         try:
             mode = p.get("collection_mode")
-            rows.append((participant_id, p.get("session_id"), parse_ts(p["ts"]).isoformat(),
+            ts = parse_ts(p["ts"]).isoformat()
+            rows.append((participant_id, p.get("session_id"), ts,
                          float(p["lat"]), float(p["lon"]),
                          float(p.get("accuracy_m") or 0), p.get("battery_pct"),
                          p.get("connection"),
                          mode if mode in ("background", "foreground") else None,
-                         received))
+                         db.local_day(ts, tz_name), received))
         except (KeyError, TypeError, ValueError):
             continue    # skip malformed points rather than failing the batch
 
     conn.executemany(
         "INSERT INTO pings (participant_id, session_id, ts, lat, lon, accuracy_m, "
-        "battery_pct, connection, collection_mode, received_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?)", rows)
+        "battery_pct, connection, collection_mode, local_day, received_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)", rows)
     conn.execute("UPDATE participants SET last_seen_at = ? WHERE participant_id = ?",
                  (received, participant_id))
     conn.commit()
@@ -532,7 +553,7 @@ def aggregate():
     sql = "SELECT participant_id, lat, lon FROM pings"
     params: list = []
     if day:
-        sql += " WHERE substr(ts, 1, 10) = ?"
+        sql += f" WHERE {DAY_EXPR} = ?"
         params.append(day)
     rows = [dict(r) for r in conn.execute(sql, params)]
     total_participants = conn.execute(
@@ -619,7 +640,7 @@ def monitoring():
         "WHERE ts <= ? AND ts >= ?", (at.isoformat(), since.isoformat())).fetchone()
 
     span_days = conn.execute(
-        "SELECT COUNT(DISTINCT substr(ts,1,10)) AS n FROM pings").fetchone()["n"]
+        f"SELECT COUNT(DISTINCT {DAY_EXPR}) AS n FROM pings").fetchone()["n"]
 
     # The timezone the course is actually running in, taken as the one most
     # participants' phones report. The dashboard formats every time in this zone

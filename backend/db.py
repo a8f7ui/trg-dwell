@@ -69,6 +69,10 @@ CREATE TABLE IF NOT EXISTS pings (
 
 CREATE INDEX IF NOT EXISTS idx_pings_participant_ts ON pings(participant_id, ts);
 CREATE INDEX IF NOT EXISTS idx_pings_ts ON pings(ts);
+-- The index on local_day is created after the migration, not here: on a
+-- database made before that column existed this script runs first, and an
+-- index over a column that is not there yet is an error that would stop the
+-- server starting at all.
 
 -- Reference data about places. In the sample dataset these are invented; in a
 -- real deployment they come from OpenStreetMap. Used only to say "there is a
@@ -156,20 +160,40 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
 
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
-    _migrate(conn)
+    added = _migrate(conn)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_pings_local_day "
+                 "ON pings(participant_id, local_day)")
     conn.commit()
+    if "pings.local_day" in added:
+        # The column has just appeared on a database that already holds points,
+        # so every one of them has a NULL day. Fill them in once, here, rather
+        # than leaving the reveal to quietly show nothing for older data.
+        from . import course
+        backfill_local_days(conn, course.get_location(conn)["timezone"])
 
 
-def _migrate(conn: sqlite3.Connection) -> None:
+def _migrate(conn: sqlite3.Connection) -> set[str]:
     """
     Add columns introduced after a database was first created.
 
     `CREATE TABLE IF NOT EXISTS` silently leaves an existing table alone, so
     without this an older course.db would fail with a confusing "no such column"
     error rather than simply working.
+
+    Returns the "table.column" names actually added, so a caller can do the
+    one-off work that a new column implies.
     """
+    added: set[str] = set()
     expected = {
-        "pings": {"collection_mode": "TEXT"},
+        # The calendar date this point falls on *in the course's timezone*.
+        #
+        # Everything that groups by day reads this rather than slicing the
+        # timestamp text. A phone sends UTC, so slicing gave UTC days: in
+        # Milwaukee that filed everything after 19:00 under tomorrow, and the
+        # 20:30 evening reveal showed about ninety minutes. It never surfaced in
+        # testing because the sample generator writes local-offset timestamps
+        # whose first ten characters happen to be the local date.
+        "pings": {"collection_mode": "TEXT", "local_day": "TEXT"},
         "participants": {"token_hash": "TEXT"},
     }
     for table, columns in expected.items():
@@ -177,6 +201,8 @@ def _migrate(conn: sqlite3.Connection) -> None:
         for name, coltype in columns.items():
             if name not in present:
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {coltype}")
+                added.add(f"{table}.{name}")
+    return added
 
 
 def audit(conn: sqlite3.Connection, actor: str, action: str, detail: str = "") -> None:
@@ -216,3 +242,59 @@ def wipe_all_data(conn: sqlite3.Connection, actor: str) -> dict:
     audit(conn, actor, "wipe_all_data",
           f"{people} participants and {pings} location points deleted")
     return {"participants_deleted": people, "pings_deleted": pings}
+
+
+# --------------------------------------------------------------------------
+# Course-local days
+# --------------------------------------------------------------------------
+
+def local_day(ts: str | datetime, tz_name: str) -> str:
+    """
+    The calendar date a moment falls on where the course is happening.
+
+    This exists because a day is a local idea and a timestamp is not. Phones
+    send UTC; a course in Milwaukee runs on Central time; and the difference is
+    the whole evening. Getting it wrong splits every participant's day at 19:00
+    and makes the evening reveal — the centrepiece of the week — show the last
+    ninety minutes of it.
+
+    DST is handled by zoneinfo rather than a fixed offset, so a course spanning
+    the change still gets correct days on both sides of it.
+    """
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    if isinstance(ts, str):
+        try:
+            moment = datetime.fromisoformat(ts)
+        except ValueError:
+            return ts[:10]
+    else:
+        moment = ts
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    try:
+        zone = ZoneInfo(tz_name)
+    except (ZoneInfoNotFoundError, ValueError, TypeError):
+        zone = timezone.utc
+    return moment.astimezone(zone).date().isoformat()
+
+
+def backfill_local_days(conn: sqlite3.Connection, tz_name: str) -> int:
+    """
+    Fill in local_day for rows recorded before this column existed, and for any
+    row whose timezone has since changed.
+
+    Run whenever the course location is set, because moving a course to another
+    timezone changes which day every existing point belongs to.
+    """
+    rows = conn.execute("SELECT ping_id, ts, local_day FROM pings").fetchall()
+    updates = []
+    for row in rows:
+        correct = local_day(row["ts"], tz_name)
+        if row["local_day"] != correct:
+            updates.append((correct, row["ping_id"]))
+    if updates:
+        conn.executemany(
+            "UPDATE pings SET local_day = ? WHERE ping_id = ?", updates)
+        conn.commit()
+    return len(updates)

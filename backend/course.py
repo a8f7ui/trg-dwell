@@ -115,6 +115,7 @@ def set_location(conn: sqlite3.Connection, name: str, lat: float, lon: float,
         (SETTING_KEY, json.dumps(location),
          datetime.now(timezone.utc).isoformat()))
     conn.commit()
+    _reday(conn, location["timezone"])
     return dict(location, is_default=False)
 
 
@@ -122,7 +123,21 @@ def reset_location(conn: sqlite3.Connection) -> dict:
     """Back to Milwaukee."""
     conn.execute("DELETE FROM settings WHERE key = ?", (SETTING_KEY,))
     conn.commit()
+    _reday(conn, DEFAULT_LOCATION["timezone"])
     return dict(DEFAULT_LOCATION, is_default=True)
+
+
+def _reday(conn: sqlite3.Connection, tz_name: str) -> int:
+    """
+    Re-file existing points under the new timezone's days.
+
+    Moving a course from Milwaukee to Berlin does not just move the map: it
+    changes which calendar day every point already collected belongs to. Without
+    this, days set before the move and days set after it would disagree, and the
+    disagreement would show up as a reveal missing its evening.
+    """
+    from . import db
+    return db.backfill_local_days(conn, tz_name)
 
 
 def validate(name: str, lat: float, lon: float, tz_name: str,
