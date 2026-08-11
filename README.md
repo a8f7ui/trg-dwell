@@ -102,33 +102,68 @@ You do not have to take our word for any of this. That is why the code is public
 ## Repository layout
 
 ```
-tools/          Sample-data generator — builds realistic synthetic participant
-                data so the backend and dashboard can be built and demonstrated
-                without any real phone or real person involved.
-data/sample/    Generated sample data (committed, safe, entirely invented).
-docs/           Hosting, distribution, store disclosures, SDK research,
-                facilitator's guide.
+start.py        Run the demo. One command, sets up whatever is missing.
+verify.py       Check it all works. One command, prints a plain verdict.
+manage.py       Course admin: logins, location, teardown, safety checks.
+
 backend/        The server that receives pings and serves the dashboard.
 dashboard/      The instructor dashboard.
 app/            The mobile app (iOS + Android, one codebase).
+
+tools/          Sample-data generator, the phone-API contract test, and
+                optional fetchers for real local data.
+data/sample/    Generated sample data (committed, safe, entirely invented).
+docs/           Hosting, distribution, store disclosures, SDK research,
+                facilitator's guide.
+wsgi.py         Entry point for a real web host. See docs/hosting.md.
 ```
+
+The two files to know are **`start.py`** and **`verify.py`**. Everything else is
+either the thing being run or documentation about running it.
 
 ---
 
 ## Project status
 
-Built in stages, each one runnable and demonstrable before the next begins.
+Everything is built. What matters more is which parts have actually been proved
+to work, because that is not the same question.
 
-- [x] **Stage 1 — Foundation.** License, README, sample-data generator.
-- [x] **Stage 2 — Backend and instructor dashboard**, running locally on sample data.
-- [x] **Stage 3 — Mobile app**: consent flow, collection, teaching flow, daily reveal.
-- [x] **Stage 4 — SDK research** feeding the "illustrated" categories
-      (`docs/sdk-research.md`).
-- [x] **Stage 5 — Backend hosting** (guided walkthrough: `docs/hosting.md`).
-- [x] **Stage 6 — Getting it onto attendee phones**
-      (`docs/distribution.md`, `docs/store-disclosures.md`).
-- [x] **Stage 7 — Facilitator's guide and run-and-demo guide**
-      (`docs/facilitator-guide.md`, `docs/running-and-demoing.md`).
+### Checked automatically, every time you run `verify.py`
+
+The server, the phone API, every instructor endpoint, the analysis, the privacy
+rules, and every dashboard screen driven in a real browser. 55 checks. If any of
+this breaks, that command says so.
+
+### Built, and exercised by hand, but not covered by an automated check
+
+- **The mobile app on real phones.** It builds and the API contract test proves
+  the phone and server agree, but nothing here substitutes for installing it on
+  an iPhone and an Android handset and living with it for two days. Do that
+  before the course, not during it.
+- **Hosting.** `docs/hosting.md` is a walkthrough; the server itself is proved
+  by `verify.py`, and `manage.py check-production` covers the dangerous
+  settings.
+
+### Built, but never run against its real data source
+
+These work on the sample data and on anything you curate by hand. Their
+*fetchers* have never successfully talked to the live service, so treat a first
+run as something to try a week early rather than the morning of:
+
+- `tools/fetch_osm_environment.py` — real cameras and plate readers, via
+  OpenStreetMap
+- `tools/fetch_nearby_posts.py` — public geotagged photos
+- `tools/fetch_area_context.py` — local news and events
+- Geocoding a place name in **Data & teardown → Course location**. Entering
+  coordinates directly always works and needs no network.
+
+### Before a real course
+
+1. `.venv/bin/python manage.py set-location "Your City, State" --timezone …`
+2. `.venv/bin/python manage.py check-production` — it catches the demo login,
+   which has a published password
+3. `docs/distribution.md` for TestFlight and Play, allowing 2–7 days for review
+4. Read `docs/facilitator-guide.md` properly. It is the actual teaching plan.
 
 ---
 
