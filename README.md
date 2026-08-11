@@ -158,7 +158,24 @@ it shows how much of the picture comes from the hours nobody was looking at thei
 
 ## Trying it on your own machine
 
-Nothing here touches a real phone or a real server. Four commands:
+Nothing here touches a real phone or a real server. **One command:**
+
+```bash
+python3 start.py
+```
+
+It sets up whatever is missing, skips whatever is already done, and prints one
+address to open. Log in as `instructor` / `demo-password`. Press Ctrl-C to stop.
+
+Run it again any time — it checks each step rather than repeating it. If a
+dependency will not install on your machine, it says so in a sentence and
+carries on without that one feature rather than stopping.
+
+That demo password is fine on a laptop and unacceptable anywhere else. Before
+hosting this, make a real account with `.venv/bin/python manage.py add-instructor <name>`.
+
+<details>
+<summary>The same thing by hand, if you would rather see the steps</summary>
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -167,10 +184,10 @@ python3 tools/generate_sample_data.py --out data/sample   # invent participants
 .venv/bin/python -m backend.app                           # start the server
 ```
 
-Then open <http://localhost:5000> and log in as `instructor` / `demo-password`.
+`.venv/bin/python manage.py doctor` checks the interpreter, the dependencies,
+the port and the database, and names the command that fixes anything it finds.
 
-That demo password is fine on a laptop and unacceptable anywhere else. Before
-hosting this, make a real account with `.venv/bin/python manage.py add-instructor <name>`.
+</details>
 
 ### Teaching it somewhere other than Milwaukee
 

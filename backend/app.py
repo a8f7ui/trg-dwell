@@ -1013,7 +1013,26 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--port", type=int, default=int(os.getenv("DWELL_PORT", "5000")),
         help="Port to listen on (default 5000). Also settable as DWELL_PORT.")
+    parser.add_argument(
+        "--quiet", action="store_true",
+        help="Suppress the startup banner and per-request logging. Used by "
+             "start.py, which has already said everything this would repeat.")
     args = parser.parse_args(argv)
+
+    if args.quiet:
+        # start.py has printed the address and the login already. Repeating it,
+        # under a red warning about development servers, is noise to somebody
+        # who only wants the demo running — and that warning is aimed at people
+        # deploying this, who are reading docs/hosting.md rather than this line.
+        #
+        # Done by silencing the two things that print, rather than by setting
+        # WERKZEUG_RUN_MAIN: that makes werkzeug believe it is the reloader's
+        # child process, whereupon it looks for an inherited socket that does
+        # not exist and dies with a KeyError.
+        import logging
+        import flask.cli
+        flask.cli.show_server_banner = lambda *a, **k: None
+        logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
     containerised = in_container()
     host = args.host
@@ -1028,6 +1047,10 @@ def main(argv: list[str] | None = None) -> None:
         # at all. Defaulting to unreachable is not the safe option, it is the
         # broken one.
         host = "0.0.0.0" if containerised else "127.0.0.1"
+
+    if args.quiet:
+        app.run(host=host, port=args.port, debug=False)
+        return
 
     print(f"\n  Dwell: Privacy Lab — listening on {host}:{args.port}")
 

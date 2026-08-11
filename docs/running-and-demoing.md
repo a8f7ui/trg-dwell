@@ -25,13 +25,29 @@ Useful for pitching the course, briefing colleagues, or getting institutional
 sign-off. Runs entirely on synthetic data on one laptop.
 
 ```bash
+python3 start.py
+```
+
+That is the whole thing. It sets up whatever is missing, skips whatever is
+already done, and prints one address to open. Log in as `instructor` /
+`demo-password`. Ctrl-C stops it.
+
+Run it again whenever you like — it checks each step rather than repeating it,
+so the second run is instant. It also picks a different port if 5000 is busy,
+and if a dependency will not install on your machine it says so in a sentence
+and carries on without that one feature.
+
+<details>
+<summary>The same thing by hand</summary>
+
+```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 python3 tools/generate_sample_data.py --out data/sample
 .venv/bin/python -m backend.load_sample
 .venv/bin/python -m backend.app
 ```
 
-Open <http://localhost:5000>, log in as `instructor` / `demo-password`.
+</details>
 
 **The five-minute version:**
 
@@ -102,11 +118,7 @@ docker run --rm -it -p 5000:5000 ubuntu:24.04 bash
 # inside:
 apt-get update && apt-get install -y git python3 python3-venv
 git clone https://github.com/a8f7ui/trg-dwell.git && cd trg-dwell
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-python3 tools/generate_sample_data.py --out data/sample
-.venv/bin/python -m backend.load_sample
-.venv/bin/python manage.py doctor        # confirms everything before you start
-.venv/bin/python -m backend.app
+python3 start.py
 ```
 
 Then <http://127.0.0.1:5000> on the host.
@@ -129,9 +141,13 @@ and names the command that fixes whatever it finds.
 
 It can, with three things known in advance.
 
-**Installing is the part that goes wrong.** Everything here is pure Python
-except `h3`, the hexagon library, which contains compiled C. On Termux there is
-no prebuilt wheel for it.
+**`python3 start.py` handles this too** — if the hexagon library will not
+install, it says so in one line and carries on without it. The rest of this
+section is only worth reading if you want to know why, or want that feature
+back.
+
+Everything here is pure Python except `h3`, the hexagon library, which contains
+compiled C. On Termux there is no prebuilt wheel for it.
 
 Left alone, pip responds to that by building h3 from source; h3's build wants
 CMake; there is no CMake wheel either; so pip downloads the CMake *source* and
