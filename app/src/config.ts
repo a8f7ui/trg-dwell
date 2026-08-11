@@ -5,9 +5,28 @@
  * app does should be able to read this, then `collection.ts`, and know.
  */
 
-/** Where location points are sent. Overridable in the app's own settings so a
- *  course can point at its own server without rebuilding the app. */
-export const DEFAULT_SERVER_URL = 'http://localhost:5000';
+/**
+ * Where location points are sent.
+ *
+ * Written into the build by `python3 dwell.py app`, which puts the course's
+ * address in `app/.env`. Nothing in this file is edited by hand — that used to
+ * be step one of distribution, and asking a non-technical person to edit
+ * TypeScript before every build was the single most technical thing this
+ * project required of anybody.
+ *
+ * Empty by default, deliberately. The old default was `http://localhost:5000`,
+ * which on a phone means the phone itself: the app looked like it was working
+ * and collected nothing. An empty address makes the app say plainly that it has
+ * not been set up, which is the truth.
+ *
+ * Still overridable in the app's own Settings screen, for the rare case of
+ * pointing one handset at a different server.
+ */
+export const DEFAULT_SERVER_URL =
+  process.env.EXPO_PUBLIC_DWELL_SERVER ?? '';
+
+/** Whether a build knows where to send anything at all. */
+export const HAS_SERVER_CONFIGURED = DEFAULT_SERVER_URL.length > 0;
 
 /** Bumped whenever the wording of the consent screen changes in a way that
  *  alters what somebody agreed to. Recorded alongside their agreement, so it is

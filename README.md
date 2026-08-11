@@ -11,8 +11,9 @@ Participants in a week-long course install this app on their own phones, give ex
 consent, and each evening receive a short summary of what the app was able to work out
 about their day. Instructors use a separate dashboard to teach from the patterns.
 
-> **Start here:** [docs/running-and-demoing.md](docs/running-and-demoing.md) — how to
-> demo this in ten minutes with no phones and no server, and how to run a real course.
+> **Start here:** run `python3 setup.py`. It asks four questions and sets up
+> everything else itself, including testing that it worked. No technical
+> knowledge needed — see [Setting it up](#setting-it-up).
 
 ---
 
@@ -102,9 +103,12 @@ You do not have to take our word for any of this. That is why the code is public
 ## Repository layout
 
 ```
-start.py        Run the demo. One command, sets up whatever is missing.
-verify.py       Check it all works. One command, prints a plain verdict.
-manage.py       Course admin: logins, location, teardown, safety checks.
+setup.py        Set up a course. One command, four questions, does the rest.
+dwell.py        Everything afterwards: start, check, deploy, app.
+
+start.py        The server itself (dwell.py start calls this).
+verify.py       Every automated check (dwell.py check calls this).
+manage.py       Advanced admin, for someone who wants the individual controls.
 
 backend/        The server that receives pings and serves the dashboard.
 dashboard/      The instructor dashboard.
@@ -118,8 +122,8 @@ docs/           Hosting, distribution, store disclosures, SDK research,
 wsgi.py         Entry point for a real web host. See docs/hosting.md.
 ```
 
-The two files to know are **`start.py`** and **`verify.py`**. Everything else is
-either the thing being run or documentation about running it.
+The two files to know are **`setup.py`** (once) and **`dwell.py`** (everything
+after). The rest is either the thing being run or documentation about it.
 
 ---
 
@@ -191,55 +195,63 @@ it shows how much of the picture comes from the hours nobody was looking at thei
 
 ---
 
-## Trying it on your own machine
+## Setting it up
 
-Nothing here touches a real phone or a real server. **One command:**
-
-```bash
-python3 start.py
-```
-
-It sets up whatever is missing, skips whatever is already done, and prints one
-address to open. Log in as `instructor` / `demo-password`. Press Ctrl-C to stop.
-
-Run it again any time — it checks each step rather than repeating it. If a
-dependency will not install on your machine, it says so in a sentence and
-carries on without that one feature rather than stopping.
-
-That demo password is fine on a laptop and unacceptable anywhere else. Before
-hosting this, make a real account with `.venv/bin/python manage.py add-instructor <name>`.
-
-### Checking it works, without taking anyone's word for it
+**One command.** It asks four questions and does everything else itself.
 
 ```bash
-python3 verify.py
+python3 setup.py
 ```
 
-Starts a server against a throwaway copy of the data, exercises every endpoint
-and every screen, and prints a plain verdict. Safe to run at any time — it
-touches nothing you already have, including during a course.
+It checks your computer, installs what it needs, asks what the course is
+called, which city it is in, which timezone, and your name — then generates
+your password, builds the course database, runs every automated test, and tells
+you plainly whether it worked.
 
-It checks the server, the analysis, the **privacy rules**, and that every
-dashboard screen draws without JavaScript errors. It does **not** check the
-phone app on a real phone; nothing run on a laptop can.
+You are never asked for a password, a port, a file path, a secret or a
+technical identifier. You never edit a file.
 
-If Playwright is installed it also drives a real browser through every screen.
-If it is not, those checks are reported as skipped rather than passed — a check
-that quietly skips itself is worse than no check, because it reads as a clean
-run.
+Afterwards there are three commands, and only three:
+
+```bash
+python3 dwell.py start      # run the course server
+python3 dwell.py check      # confirm everything still works
+python3 dwell.py deploy     # put it on the internet, for real phones
+```
+
+`python3 dwell.py` on its own lists them and tells you where you are.
+
+### Getting it onto real phones
+
+Two things need accounts that only a human can create — a web host, and the
+Apple/Google/Expo accounts for building an app. Everything either side of those
+is automated:
+
+```bash
+python3 dwell.py deploy     # generates the complete upload, ready to go
+python3 dwell.py app        # writes your server address into the app build
+```
+
+`deploy` produces a zip to upload, a start-up file with every value already
+filled in, and a numbered list of what to click. `app` puts the server address
+into the build so nobody edits code and no participant types a URL.
+
+The unavoidable manual steps — creating accounts — are isolated in
+`deploy/HOSTING_STEPS.txt` and `deploy/PHONE_APP_STEPS.txt`, generated with
+your details already in them.
 
 <details>
-<summary>The same thing by hand, if you would rather see the steps</summary>
+<summary>The individual pieces, if you would rather drive them yourself</summary>
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-python3 tools/generate_sample_data.py --out data/sample   # invent participants
-.venv/bin/python -m backend.load_sample                   # load them locally
-.venv/bin/python -m backend.app                           # start the server
+python3 tools/generate_sample_data.py --out data/sample
+.venv/bin/python -m backend.load_sample
+.venv/bin/python -m backend.app
 ```
 
-`.venv/bin/python manage.py doctor` checks the interpreter, the dependencies,
-the port and the database, and names the command that fixes anything it finds.
+`.venv/bin/python manage.py doctor` diagnoses a broken install.
+`python3 verify.py --production` checks a live server is safe for real people.
 
 </details>
 

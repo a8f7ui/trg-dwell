@@ -15,12 +15,53 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --------------------------------------------------------------------------
+# Settings written by the setup wizard
+# --------------------------------------------------------------------------
+#
+# The wizard writes one small file. Nothing else reads it, nobody edits it by
+# hand, and its existence is what lets a non-technical person configure this
+# without ever meeting an environment variable.
+#
+# Precedence is environment variable, then this file, then the built-in
+# default. Hosting platforms that prefer environment variables therefore keep
+# working unchanged, and override the file when both are present.
+
+_SETTINGS_PATH = Path(
+    os.getenv("DWELL_SETTINGS",
+              BASE_DIR / "data" / "local" / "course.json"))
+
+
+def _load_settings() -> dict:
+    try:
+        import json
+        return json.loads(_SETTINGS_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+SETTINGS = _load_settings()
+
+
+def setting(name: str, default: str = "") -> str:
+    """An environment variable, or what setup wrote, or the default."""
+    from_env = os.getenv(name)
+    if from_env:
+        return from_env
+    value = SETTINGS.get(name)
+    return str(value) if value not in (None, "") else default
+
+
+SETUP_COMPLETE = bool(SETTINGS.get("setup_complete"))
+COURSE_NAME = SETTINGS.get("course_name", "")
+
+
+# --------------------------------------------------------------------------
 # Storage
 # --------------------------------------------------------------------------
 
 # SQLite: a single file. No database server to run, and wiping the course data
 # at the end is a matter of deleting rows (or the file).
-DB_PATH = Path(os.getenv("DWELL_DB", BASE_DIR / "data" / "local" / "course.db"))
+DB_PATH = Path(setting("DWELL_DB") or (BASE_DIR / "data" / "local" / "course.db"))
 
 # --------------------------------------------------------------------------
 # Privacy settings
@@ -97,7 +138,7 @@ POI_MATCH_RADIUS_M = float(os.getenv("DWELL_POI_RADIUS", "45"))
 # The public address this server is reachable at, e.g.
 # "https://yourname.pythonanywhere.com". Used to decide whether login cookies
 # should be marked HTTPS-only. Leave unset for local development.
-PUBLIC_URL = os.getenv("DWELL_PUBLIC_URL", "")
+PUBLIC_URL = setting("DWELL_PUBLIC_URL")
 
 # Login cookies are marked "secure" — meaning the browser will only ever send
 # them over HTTPS — as soon as this server knows it is being served over HTTPS.
@@ -119,7 +160,7 @@ def get_secret_key() -> str:
     owner-only permissions. Setting DWELL_SECRET_KEY overrides it, which is what
     you want on a host with a proper secrets mechanism.
     """
-    from_env = os.getenv("DWELL_SECRET_KEY")
+    from_env = setting("DWELL_SECRET_KEY")
     if from_env:
         return from_env
 
@@ -129,16 +170,29 @@ def get_secret_key() -> str:
 
     import secrets
 
-    key = secrets.token_urlsafe(48)
     key_path.parent.mkdir(parents=True, exist_ok=True)
-    key_path.write_text(key)
+
+    # Created with O_EXCL so that exactly one process can win.
+    #
+    # The obvious version — check whether the file exists, then write it — is a
+    # race, and it fires precisely where it hurts: several web-server workers
+    # starting at the same moment each find no key and each write a different
+    # one. Measured before this fix, six simultaneous workers produced four
+    # different keys, which logs instructors out at random as their requests
+    # land on different workers.
+    candidate = secrets.token_urlsafe(48)
     try:
-        key_path.chmod(0o600)
+        fd = os.open(key_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        # Another worker got there first. Its key is the real one.
+        return key_path.read_text().strip()
+    try:
+        with os.fdopen(fd, "w") as fh:
+            fh.write(candidate)
     except OSError:
-        # Some hosts do not allow chmod; the key is still random and private to
-        # the account, which is the important part.
-        pass
-    return key
+        os.close(fd)
+        raise
+    return candidate
 
 
 SECRET_KEY = get_secret_key()

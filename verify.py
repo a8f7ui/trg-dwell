@@ -402,7 +402,32 @@ def check_in_browser(base: str, expect_groups: bool) -> None:
 
 # --------------------------------------------------------------------------
 
+def check_production_safety(python: Path) -> None:
+    """
+    The handful of things that are dangerous on a server real people will use.
+
+    Folded in here rather than left as a separate command somebody has to know
+    to run. `--production` is the flag; without it these are skipped, because a
+    laptop demo is allowed to have a demo login on it.
+    """
+    group("Safe for real participants")
+    result = subprocess.run([str(python), str(HERE / "manage.py"),
+                             "check-production"],
+                            capture_output=True, text=True, cwd=HERE)
+    out = (result.stdout or "") + (result.stderr or "")
+    for line in out.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PROBLEM"):
+            check(stripped[8:].strip()[:90], False,
+                  "must be fixed before real people use this server")
+        elif stripped.startswith("WARNING"):
+            skipped.append(stripped[8:].strip()[:90])
+        elif stripped.startswith("OK"):
+            passed.append(stripped[3:].strip()[:90])
+
+
 def main() -> int:
+    production = "--production" in sys.argv
     python = python_for_running()
 
     # Re-run under the interpreter that has the dependencies, if this is not it.
@@ -419,7 +444,8 @@ def main() -> int:
     if venv_dir.exists() and not already_there and not os.environ.get(
             "DWELL_VERIFY_REEXEC"):
         os.environ["DWELL_VERIFY_REEXEC"] = "1"
-        return subprocess.run([str(python), str(HERE / "verify.py")]).returncode
+        return subprocess.run(
+            [str(python), str(HERE / "verify.py")] + sys.argv[1:]).returncode
 
     print("\n  Checking Dwell: Privacy Lab\n")
     print("  Using a temporary copy of the data. Nothing you have is touched.")
@@ -470,6 +496,8 @@ def main() -> int:
         check_instructor_api(client)
         check_privacy_rules(client)
         check_javascript()
+        if production:
+            check_production_safety(python)
 
         # Whether the browser should expect a groups section depends on whether
         # the first participant actually has one. Asked here rather than assumed

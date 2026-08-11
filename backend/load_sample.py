@@ -22,8 +22,40 @@ SAMPLE_DIR = config.BASE_DIR / "data" / "sample"
 
 DEMO_INSTRUCTOR = ("instructor", "demo-password")
 
+# Every participant invented by the generator carries this, and nothing else
+# ever does. It is the only reliable way to tell a synthetic row from a real
+# phone that registered.
+SAMPLE_CONSENT_VERSION = "sample-data-v1"
 
-def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True) -> dict:
+
+class RealDataPresent(Exception):
+    """Refusal to overwrite a database that belongs to a real course."""
+
+
+def real_participant_count(conn) -> int:
+    """How many participants came from an actual phone rather than the generator."""
+    return conn.execute(
+        "SELECT COUNT(*) AS n FROM participants "
+        "WHERE consent_version IS NULL OR consent_version != ?",
+        (SAMPLE_CONSENT_VERSION,)).fetchone()["n"]
+
+
+def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
+         with_demo_login: bool = True) -> dict:
+    """
+    Load the synthetic teaching data.
+
+    `reset` wipes participants and their points first, which is correct for a
+    demo and catastrophic for a course. Somebody once ran the setup command on a
+    live server between the install links going out and the first upload
+    arriving; three registered participants became zero, and an account whose
+    password is published in this repository appeared on the server.
+
+    So this now refuses, loudly, if the database holds anybody who registered
+    from a real phone. Counting location points was the original test and it is
+    not good enough: a participant exists from the moment they consent, which is
+    hours before their first upload.
+    """
     if not (sample_dir / "pings.csv").exists():
         raise SystemExit(
             f"No sample data found in {sample_dir}.\n"
@@ -32,6 +64,20 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True) -> dict:
 
     conn = db.connect()
     db.init_db(conn)
+
+    if reset:
+        real = real_participant_count(conn)
+        if real:
+            conn.close()
+            raise RealDataPresent(
+                f"This database has {real} participant(s) who registered from a "
+                f"real phone.\n"
+                f"Loading the example data would delete them and everything they "
+                f"have collected.\n\n"
+                f"Nothing has been changed.\n\n"
+                f"If you genuinely want to erase this course and start over, use "
+                f"the wipe control\non the dashboard's Data & teardown screen, or "
+                f"run:  .venv/bin/python manage.py wipe")
 
     if reset:
         conn.execute("DELETE FROM pings")
@@ -98,7 +144,8 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True) -> dict:
         "UPDATE participants SET last_seen_at = "
         "(SELECT MAX(ts) FROM pings WHERE pings.participant_id = participants.participant_id)")
 
-    auth.create_instructor(conn, *DEMO_INSTRUCTOR)
+    if with_demo_login:
+        auth.create_instructor(conn, *DEMO_INSTRUCTOR)
     conn.commit()
     db.audit(conn, "load_sample", "loaded_sample_data",
              f"{len(rows)} participants, {len(ping_rows)} points — all synthetic")

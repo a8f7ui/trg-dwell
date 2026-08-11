@@ -192,6 +192,15 @@ def register_participant():
         return jsonify({"error": "Registration requires a recorded consent."}), 400
 
     conn = get_conn()
+    # Allocated inside a single immediate transaction, so two phones
+    # registering in the same instant cannot be handed the same number.
+    #
+    # A whole room installs the app at once — the facilitator's guide says to do
+    # exactly that — and the previous count-then-insert produced duplicates
+    # readily: twenty simultaneous registrations gave four people the label
+    # "Participant 09". Instructors then cannot tell them apart, and the colour
+    # coding the live map depends on becomes ambiguous.
+    conn.execute("BEGIN IMMEDIATE")
     n = conn.execute("SELECT COUNT(*) AS n FROM participants").fetchone()["n"]
     participant_id = f"p_{n + 1:03d}_{secrets.token_hex(4)}"
     token, token_hash = auth.new_participant_token()

@@ -153,12 +153,18 @@ def ensure_loaded(python: Path) -> None:
         if int(check.stdout.strip()) > 0:
             return
 
-    step("Loading the sample data...")
+    step("Loading the practice data...")
     result = subprocess.run([str(python), "-m", "backend.load_sample"],
                             capture_output=True, text=True, cwd=HERE)
     if result.returncode != 0:
-        fail("could not load the sample data.", (result.stderr or "").strip())
-    done("Sample data loaded.")
+        detail = (result.stderr or "").strip()
+        if "RealDataPresent" in detail:
+            # This database belongs to a running course. Refusing is the whole
+            # point; explaining why is the rest of it.
+            message = detail.split("RealDataPresent:", 1)[-1].strip()
+            fail("this looks like a real course, not a practice one.", message)
+        fail("could not load the practice data.", detail)
+    done("Practice data loaded.")
 
 
 def in_container() -> bool:
