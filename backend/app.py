@@ -108,6 +108,25 @@ def load_context() -> list[dict]:
     return _context_cache
 
 
+# Cohort-wide group detection, memoised for as long as the data is unchanged.
+#
+# Small and deliberately dumb: one entry, invalidated by a fingerprint of the
+# points that went into it. There is no expiry, because there is nothing to
+# expire — if the data has not changed, neither has the answer, and if it has,
+# the fingerprint no longer matches. A wipe, a withdrawal or a new upload all
+# change it.
+_GROUP_CACHE: dict[str, object] = {"key": None, "value": None}
+
+
+def _cohort_groups(all_points: dict, labels: dict) -> dict:
+    key = tuple(sorted((pid, len(pts), pts[-1].ts.isoformat() if pts else "")
+                       for pid, pts in all_points.items()))
+    if _GROUP_CACHE["key"] != key:
+        _GROUP_CACHE["value"] = assessment.detect_groups(all_points, labels)
+        _GROUP_CACHE["key"] = key
+    return _GROUP_CACHE["value"]
+
+
 def analyse_day(points: list[Point], places_ref: list[dict],
                 env_index: environment.FeatureIndex | None = None,
                 day: str | None = None) -> dict:
@@ -450,8 +469,14 @@ def participant_week(participant_id: str):
     # Recurring small groups across the whole cohort — the thing a third party
     # watching for a week would actually notice, given participants move about
     # in groups by design.
-    groups = assessment.detect_groups(
-        dict(others, **{participant_id: all_points}), labels)
+    #
+    # The answer is the same for every participant, since it describes the whole
+    # cohort and is only filtered afterwards. Recomputing it once per participant
+    # was doing twelve times the necessary work on the slowest thing in the
+    # dashboard, which is felt most on the kind of low-powered machine somebody
+    # is most likely to be demoing from.
+    groups = _cohort_groups(dict(others, **{participant_id: all_points}), labels)
+    groups = dict(groups)
     groups["groups"] = [g for g in groups.get("groups", [])
                         if participant_id in g["members"]]
     groups["available"] = bool(groups["groups"])
@@ -501,7 +526,12 @@ def aggregate():
         "SELECT COUNT(*) AS n FROM participants").fetchone()["n"]
     conn.close()
 
-    result = analysis.hex_aggregate(rows, resolution=resolution, k=k)
+    try:
+        result = analysis.hex_aggregate(rows, resolution=resolution, k=k)
+    except RuntimeError as exc:
+        # Missing h3. Reported as a readable message on the one screen that
+        # needs it, rather than a 500 with a stack trace in the server log.
+        return jsonify({"error": str(exc)}), 503
     result["total_pings"] = len(rows)
     result["total_participants"] = total_participants
     result["day"] = day
@@ -922,4 +952,35 @@ def dashboard_files(filename: str):
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    # Localhost by default: the demo server has an instructor login and
+    # participant data on it, and binding to every interface by accident on a
+    # conference network is not a thing to do quietly.
+    #
+    # DWELL_BIND=0.0.0.0 opts in deliberately, which is what you want when the
+    # server runs on a laptop and the dashboard is being shown on a tablet on
+    # the same network. That is also the arrangement to prefer when the tablet
+    # is too slow to do both jobs at once — see docs/running-and-demoing.md.
+    import os
+    import socket
+
+    host = os.getenv("DWELL_BIND", "127.0.0.1")
+    port = int(os.getenv("DWELL_PORT", "5000"))
+
+    if host != "127.0.0.1":
+        # Print the address to type into the other device, since "0.0.0.0" is
+        # not one. Connecting a UDP socket sends no packets; it only asks the
+        # routing table which local address would be used to reach the wider
+        # network, which on a laptop is its address on the wifi.
+        try:
+            probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            probe.connect(("8.8.8.8", 53))      # nothing is sent to it
+            lan_ip = probe.getsockname()[0]
+            probe.close()
+        except OSError:
+            lan_ip = None
+        print("\n  Open this on the other device, on the same wifi:")
+        print(f"      http://{lan_ip or '<this machine>'}:{port}\n")
+        print("  Anyone who can reach that address gets the login page, so do")
+        print("  not leave the demo password in place on a shared network.\n")
+
+    app.run(host=host, port=port, debug=False)

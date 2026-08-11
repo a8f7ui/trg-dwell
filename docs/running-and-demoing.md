@@ -56,6 +56,77 @@ person.
 
 ---
 
+## Demoing from a tablet, or anything else underpowered
+
+The dashboard is a map with twelve moving things on it, backed by a Python
+server doing real analysis over tens of thousands of points. That is fine on a
+laptop and can be a struggle on a tablet, especially one running the server and
+the browser at the same time.
+
+### The arrangement that works
+
+**Run the server on a laptop; look at the dashboard on the tablet.** The tablet
+then only has to draw a web page, which is what it is good at.
+
+```bash
+DWELL_BIND=0.0.0.0 python -m backend.app          # on the laptop
+```
+
+It prints the address to open on the tablet — the laptop's own IP, port 5000,
+both on the same wifi. The server binds to localhost unless you ask for this,
+deliberately: anyone who can reach it gets the login page, so do not leave the
+demo password in place on a conference network.
+
+### If the tablet has to do both
+
+It can, with three things known in advance.
+
+**Installing is the slow part, and it looks like a hang.** Everything here is
+pure Python except `h3`, the hexagon library. On Termux there are no usable
+prebuilt wheels, so pip compiles it from source, which needs a C toolchain and
+takes **several minutes with no output**. That is not a freeze:
+
+```bash
+pkg install python clang cmake
+pip install -r requirements.txt      # go and make a coffee
+```
+
+If it will not build at all, install everything else and carry on — the whole
+dashboard works without `h3` except the **Whole course** hexagon map, which will
+tell you exactly this if you open it. You would lose the k-anonymity
+demonstration, which is the best thirty seconds in the tool, so it is worth
+persevering with. `gunicorn` is only needed for hosting and can be skipped for a
+demo.
+
+**Generate less data.** The defaults invent about 38,000 location points across
+twelve people. Six people over three days is roughly 13,000, teaches every
+lesson in the week just as well, and roughly halves the work on the heaviest
+screen:
+
+```bash
+python3 tools/generate_sample_data.py --participants 6 --days 3 --out data/sample
+python -m backend.load_sample
+```
+
+**Give playback a bigger step.** Set the speed selector to *30 min / tick*, so
+each redraw covers more ground and there are fewer of them. Playback waits for
+each tick to finish before starting the next, so a slow device plays back more
+slowly rather than falling behind and locking up.
+
+### If it still crawls
+
+In rough order of how much they cost you:
+
+| Symptom | Try |
+|---|---|
+| Whole dashboard sluggish | Fewer participants and days, as above |
+| Playback stutters | 30 min / tick; switch the basemap to **Street map**, which is lighter than satellite imagery |
+| The map is blank | Venue wifi cannot reach Esri — install an [offline map](offline-maps.md) |
+| Participant *Whole course* view is slow | Expected: it is the heaviest screen in the tool. Open it once and leave it open rather than switching participants repeatedly |
+| Android kills the server when you switch apps | `termux-wake-lock` before starting it |
+
+---
+
 ## Running a real course
 
 In order. Each links to a full walkthrough.

@@ -785,7 +785,7 @@ def hex_aggregate(rows: list[dict], resolution: int | None = None,
 
     `rows` need only contain participant_id, lat and lon.
     """
-    import h3
+    h3 = _require_h3()
 
     resolution = resolution if resolution is not None else config.H3_RESOLUTION
     k = k if k is not None else config.K_ANONYMITY_THRESHOLD
@@ -830,5 +830,31 @@ def hex_aggregate(rows: list[dict], resolution: int | None = None,
 
 
 def _hex_edge_m(resolution: int) -> float:
-    import h3
-    return h3.average_hexagon_edge_length(resolution, unit="m")
+    return _require_h3().average_hexagon_edge_length(resolution, unit="m")
+
+
+def _require_h3():
+    """
+    The hexagon library, or an error somebody can act on.
+
+    h3 is the only dependency in this project with compiled C in it, which makes
+    it the only one that can fail to install on an unusual platform — Termux on
+    Android being the case that actually comes up, since it cannot use the
+    prebuilt Linux wheels and has to compile from source.
+
+    Everything else in the dashboard works without it; only the aggregate
+    hexagon map needs it. So the failure is caught here and explained, rather
+    than surfacing as a bare ModuleNotFoundError on the one screen somebody is
+    about to demonstrate k-anonymity from.
+    """
+    try:
+        import h3
+    except ModuleNotFoundError:
+        raise RuntimeError(
+            "The hexagon map needs the 'h3' package, which is not installed. "
+            "Every other part of the dashboard works without it. "
+            "Install it with: pip install h3 "
+            "(on Termux, first: pkg install clang cmake, and expect the build "
+            "to take several minutes)."
+        ) from None
+    return h3

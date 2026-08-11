@@ -535,23 +535,47 @@ $('#play').addEventListener('click', () => {
   if (playTimer) { stopPlayback(); } else { startPlayback(); }
 });
 
+/**
+ * Advance the clock and redraw, one tick at a time.
+ *
+ * Chained rather than run on a fixed interval, and this matters on slow
+ * hardware. A setInterval that fires every 900 ms regardless of whether the
+ * previous tick has finished will, on a machine where a tick takes longer than
+ * that, stack a second request pair on top of the first, then a third, and so
+ * on — every tick falling further behind until the browser is servicing a queue
+ * it can never drain. It looks exactly like a freeze, and it gets worse the
+ * longer you leave it running.
+ *
+ * Waiting for each tick to finish before scheduling the next means a slow
+ * device simply plays back more slowly, which is a thing an instructor can
+ * work with.
+ */
 function startPlayback() {
   if (!courseStart) return;
   $('#play').textContent = '⏸ Pause';
   const stepSeconds = Number($('#speed').value);
   const totalSeconds = (courseEnd - courseStart) / 1000;
-  playTimer = setInterval(() => {
+
+  const tick = async () => {
     const slider = $('#clock');
     const next = Number(slider.value) + (stepSeconds / totalSeconds) * 1000;
-    if (next >= 1000) { slider.value = 1000; stopPlayback(); }
-    else { slider.value = next; }
+    if (next >= 1000) { slider.value = 1000; updateClockReadout(); stopPlayback(); return; }
+    slider.value = next;
     updateClockReadout();
-    renderLive();
-  }, 900);
+    try {
+      await renderLive();
+    } catch (e) {
+      // A failed tick must not kill playback: a dropped request on venue wifi
+      // should cost one frame, not the rest of the demonstration.
+    }
+    if (playTimer) playTimer = setTimeout(tick, 900);
+  };
+
+  playTimer = setTimeout(tick, 900);
 }
 
 function stopPlayback() {
-  if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
   $('#play').textContent = '▶ Play';
 }
 
@@ -1119,8 +1143,22 @@ async function renderAggregate() {
   const res = $('#resolution').value;
   const day = $('#agg-day').value;
 
-  const d = await api(`/api/instructor/aggregate?k=${k}&resolution=${res}` +
-                      (day ? `&day=${day}` : ''));
+  let d;
+  try {
+    d = await api(`/api/instructor/aggregate?k=${k}&resolution=${res}` +
+                  (day ? `&day=${day}` : ''));
+  } catch (ex) {
+    // This is the one view with a dependency that can fail to install, and the
+    // one most likely to be opened in front of a room. Say what is wrong on the
+    // screen rather than in a console nobody has open — least of all on a
+    // tablet.
+    clearLayer('aggregate');
+    $('#map-legend').hidden = true;
+    $('#aggregate-detail').innerHTML =
+      `<div class="caveats"><h4>This view is unavailable</h4>
+        <ul><li>${escapeHtml(ex.message)}</li></ul></div>`;
+    return;
+  }
   clearLayer('aggregate');
 
   const max = d.cells.reduce((m, c) => Math.max(m, c.participant_count), 1);
