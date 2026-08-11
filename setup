@@ -1,0 +1,59 @@
+#!/bin/sh
+# Set up Dwell: Privacy Lab.  Run:   ./setup
+#
+# macOS and Linux. Windows has setup.cmd next to this file.
+#
+# This wrapper exists so that nobody has to know which of python3, python or
+# py is the right word on their computer — a genuinely confusing thing that has
+# nothing to do with running a course.
+
+set -u
+
+DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+# Find a Python that is new enough. Tried in the order most likely to be the
+# one somebody installed on purpose.
+PYTHON=""
+for candidate in python3.13 python3.12 python3.11 python3.10 python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+        if "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+            PYTHON="$candidate"
+            break
+        fi
+    fi
+done
+
+if [ -z "$PYTHON" ]; then
+    echo ""
+    echo "  ──────────────────────────────────────────────────────────────────"
+    echo ""
+    echo "  Setup could not finish."
+    echo ""
+    echo "    What went wrong:  Python is not installed on this computer, or"
+    echo "                      the version installed is too old."
+    echo ""
+    echo "    Why it matters:"
+    echo "      Dwell is written in Python. Without it, nothing here can run."
+    echo ""
+    echo "    What to do next:"
+    if [ "$(uname -s)" = "Darwin" ]; then
+        echo "      1. Go to  https://www.python.org/downloads"
+        echo "      2. Click the big yellow \"Download for macOS\" button."
+        echo "      3. Open the file it downloads and click through the installer."
+        echo "      4. Come back here and run  ./setup  again."
+    else
+        echo "      On Ubuntu or Debian, run:"
+        echo "          sudo apt install python3 python3-venv"
+        echo ""
+        echo "      On Fedora, run:"
+        echo "          sudo dnf install python3"
+        echo ""
+        echo "      Then run  ./setup  again."
+    fi
+    echo ""
+    echo "  ──────────────────────────────────────────────────────────────────"
+    echo ""
+    exit 1
+fi
+
+exec "$PYTHON" "$DIR/setup.py" "$@"

@@ -453,6 +453,11 @@ BEFORE YOU SEND IT TO ANYONE
 
 # --------------------------------------------------------------------------
 
+def cmd_diagnose(_args: list[str]) -> int:
+    """A support report with nothing private in it. Works even if setup failed."""
+    return subprocess.run([sys.executable, str(HERE / "diagnose.py")]).returncode
+
+
 def cmd_help(_args: list[str]) -> int:
     s = settings()
     ready = s.get("setup_complete")
@@ -473,6 +478,7 @@ def cmd_help(_args: list[str]) -> int:
     say("  python3 dwell.py check      confirm everything still works")
     say("  python3 dwell.py deploy     put it on the internet for real phones")
     say("  python3 dwell.py app        prepare the app for participants' phones")
+    say("  python3 dwell.py diagnose   collect a support report if something is wrong")
     say()
     if s.get("DWELL_PUBLIC_URL"):
         say(f"Your course server:  {s['DWELL_PUBLIC_URL']}")
@@ -488,6 +494,7 @@ COMMANDS = {
     "check": cmd_check,
     "deploy": cmd_deploy,
     "app": cmd_app,
+    "diagnose": cmd_diagnose,
     "help": cmd_help,
 }
 

@@ -34,3 +34,6 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Support report from `dwell diagnose` — regenerate rather than commit.
+support-report.txt

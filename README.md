@@ -103,8 +103,9 @@ You do not have to take our word for any of this. That is why the code is public
 ## Repository layout
 
 ```
-setup.py        Set up a course. One command, four questions, does the rest.
-dwell.py        Everything afterwards: start, check, deploy, app.
+setup           Set up a course (setup.cmd on Windows). Seven stages.
+dwell           Everything afterwards (dwell.cmd on Windows).
+diagnose.py     Support report with nothing private in it.
 
 start.py        The server itself (dwell.py start calls this).
 verify.py       Every automated check (dwell.py check calls this).
@@ -197,11 +198,16 @@ it shows how much of the picture comes from the hours nobody was looking at thei
 
 ## Setting it up
 
-**One command.** It asks four questions and does everything else itself.
+**One command.**
 
 ```bash
-python3 setup.py
+./setup            # macOS and Linux
+setup              # Windows
 ```
+
+It works out which Python your computer has, checks everything it needs, asks a
+few questions, and does the rest itself — including starting the server and
+confirming it answers before claiming success.
 
 It checks your computer, installs what it needs, asks what the course is
 called, which city it is in, which timezone, and your name — then generates
@@ -214,12 +220,19 @@ technical identifier. You never edit a file.
 Afterwards there are three commands, and only three:
 
 ```bash
-python3 dwell.py start      # run the course server
-python3 dwell.py check      # confirm everything still works
-python3 dwell.py deploy     # put it on the internet, for real phones
+./dwell start       # run the course server
+./dwell check       # confirm everything still works
+./dwell deploy      # put it on the internet, for real phones
+./dwell diagnose    # collect a support report if something is wrong
 ```
 
-`python3 dwell.py` on its own lists them and tells you where you are.
+`./dwell` on its own lists them and tells you where you are. On Windows, drop
+the `./`.
+
+If setup fails it never shows a stack trace. It tells you what went wrong, why
+it matters, what to do next, and where the detailed log is. `./dwell diagnose`
+packages that log into a report with every password, key, token and coordinate
+stripped out — checked automatically before it is written.
 
 ### Getting it onto real phones
 
@@ -228,8 +241,8 @@ Apple/Google/Expo accounts for building an app. Everything either side of those
 is automated:
 
 ```bash
-python3 dwell.py deploy     # generates the complete upload, ready to go
-python3 dwell.py app        # writes your server address into the app build
+./dwell deploy      # generates the complete upload, ready to go
+./dwell app         # writes your server address into the app build
 ```
 
 `deploy` produces a zip to upload, a start-up file with every value already
