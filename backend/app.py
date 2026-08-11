@@ -16,8 +16,12 @@ on the consent screen.
 
 from __future__ import annotations
 
+import argparse
+import os
 import secrets
+import socket
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory, session
 
@@ -951,36 +955,99 @@ def dashboard_files(filename: str):
     return send_from_directory(DASHBOARD_DIR, filename)
 
 
-if __name__ == "__main__":
-    # Localhost by default: the demo server has an instructor login and
-    # participant data on it, and binding to every interface by accident on a
-    # conference network is not a thing to do quietly.
-    #
-    # DWELL_BIND=0.0.0.0 opts in deliberately, which is what you want when the
-    # server runs on a laptop and the dashboard is being shown on a tablet on
-    # the same network. That is also the arrangement to prefer when the tablet
-    # is too slow to do both jobs at once — see docs/running-and-demoing.md.
-    import os
-    import socket
+def in_container() -> bool:
+    """
+    Are we inside Docker or a similar container?
 
-    host = os.getenv("DWELL_BIND", "127.0.0.1")
-    port = int(os.getenv("DWELL_PORT", "5000"))
+    This matters more than it looks. Inside a container, 127.0.0.1 means the
+    container's own loopback, which nothing outside it can reach — not even
+    with `docker run -p 5000:5000`, because the port mapping forwards to the
+    container's external interface and the server is not listening there.
 
-    if host != "127.0.0.1":
-        # Print the address to type into the other device, since "0.0.0.0" is
-        # not one. Connecting a UDP socket sends no packets; it only asks the
-        # routing table which local address would be used to reach the wider
-        # network, which on a laptop is its address on the wifi.
-        try:
-            probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            probe.connect(("8.8.8.8", 53))      # nothing is sent to it
-            lan_ip = probe.getsockname()[0]
-            probe.close()
-        except OSError:
-            lan_ip = None
-        print("\n  Open this on the other device, on the same wifi:")
-        print(f"      http://{lan_ip or '<this machine>'}:{port}\n")
+    The symptom is a server that says it is running, answers nothing, and gives
+    the browser an empty response. There is no way to guess that from the
+    outside, so it is worth detecting.
+    """
+    if Path("/.dockerenv").exists():
+        return True
+    try:
+        cgroup = Path("/proc/1/cgroup").read_text()
+    except OSError:
+        return False
+    return any(m in cgroup for m in ("docker", "kubepods", "containerd", "lxc"))
+
+
+def _lan_address() -> str | None:
+    """This machine's address on the network it would use to reach outward.
+
+    Connecting a UDP socket sends no packets; it only asks the routing table
+    which local address would be used, which on a laptop is its wifi address.
+    """
+    try:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        probe.connect(("8.8.8.8", 53))          # nothing is sent to it
+        address = probe.getsockname()[0]
+        probe.close()
+        return address
+    except OSError:
+        return None
+
+
+def main(argv: list[str] | None = None) -> None:
+    """
+    Start the development server.
+
+    Accepts --host and --port because those are what everybody types, having
+    used every other Python web server. Silently ignoring them — as this script
+    used to — produces a server bound somewhere the person did not ask for,
+    while printing an address that looks like agreement.
+    """
+    parser = argparse.ArgumentParser(
+        prog=".venv/bin/python -m backend.app",
+        description="Run the Dwell: Privacy Lab server.")
+    parser.add_argument(
+        "--host", default=os.getenv("DWELL_BIND"),
+        help="Address to listen on. Defaults to 127.0.0.1, or 0.0.0.0 inside a "
+             "container, where localhost is unreachable from outside. "
+             "Also settable as DWELL_BIND.")
+    parser.add_argument(
+        "--port", type=int, default=int(os.getenv("DWELL_PORT", "5000")),
+        help="Port to listen on (default 5000). Also settable as DWELL_PORT.")
+    args = parser.parse_args(argv)
+
+    containerised = in_container()
+    host = args.host
+    if host is None:
+        # Localhost by default: this server has an instructor login and
+        # participant data on it, and binding to every interface by accident on
+        # a conference network is not a thing to do quietly.
+        #
+        # Inside a container that reasoning inverts. The container is already an
+        # isolation boundary, nothing reaches in except a port the person
+        # publishing it chose, and localhost-only means the server cannot work
+        # at all. Defaulting to unreachable is not the safe option, it is the
+        # broken one.
+        host = "0.0.0.0" if containerised else "127.0.0.1"
+
+    print(f"\n  Dwell: Privacy Lab — listening on {host}:{args.port}")
+
+    if containerised and host == "0.0.0.0":
+        print("\n  Container detected, so listening on all interfaces — inside a")
+        print("  container, 127.0.0.1 cannot be reached from the host even with")
+        print("  a published port.")
+        print(f"\n  Start the container with:  -p {args.port}:{args.port}")
+        print(f"  Then open on the host:     http://127.0.0.1:{args.port}\n")
+    elif host not in ("127.0.0.1", "localhost"):
+        print("\n  Open this on the other device, on the same network:")
+        print(f"      http://{_lan_address() or '<this machine>'}:{args.port}\n")
         print("  Anyone who can reach that address gets the login page, so do")
         print("  not leave the demo password in place on a shared network.\n")
+    else:
+        print(f"  Open http://127.0.0.1:{args.port} on this machine.")
+        print("  Use --host 0.0.0.0 to reach it from another device.\n")
 
-    app.run(host=host, port=port, debug=False)
+    app.run(host=host, port=args.port, debug=False)
+
+
+if __name__ == "__main__":
+    main()

@@ -185,7 +185,7 @@ Back in a **Bash** console:
 cd ~/trg-dwell
 workon dwell
 export DWELL_DB=/home/YOURNAME/dwell-data/course.db
-python manage.py add-instructor yourname
+.venv/bin/python manage.py add-instructor yourname
 ```
 
 It asks for a password twice. It will not be shown as you type — that is normal.
@@ -202,7 +202,7 @@ reuse one from elsewhere, and do not share it in a group chat.**
 Still in the console:
 
 ```bash
-python manage.py check-production
+.venv/bin/python manage.py check-production
 ```
 
 This checks the handful of things that are genuinely dangerous to get wrong. It
@@ -213,12 +213,12 @@ to see on a first run:
   `demo-password` is written in this project's public README, so anybody who has
   read it could log in and watch your participants. Remove it:
   ```bash
-  python manage.py remove-instructor instructor
+  .venv/bin/python manage.py remove-instructor instructor
   ```
 - **Synthetic sample participants are still loaded** — only if you loaded the
   sample data. Clear it so invented people are not mixed in with real ones:
   ```bash
-  python manage.py wipe
+  .venv/bin/python manage.py wipe
   ```
 
 Run the check again until it says **No blocking problems found.**

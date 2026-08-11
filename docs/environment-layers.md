@@ -82,7 +82,7 @@ furniture, needs no account:
 
 ```bash
 python3 tools/fetch_osm_environment.py --around 43.0389,-87.9065 --radius 6000
-python -m backend.load_sample
+.venv/bin/python -m backend.load_sample
 ```
 
 The sample dataset ships with **invented** infrastructure so the feature can be
@@ -135,7 +135,7 @@ What remains are platforms that publish geotagged material openly and mean it:
 python3 tools/fetch_nearby_posts.py --around 43.0389,-87.9065 --radius 1500 \
     --days 2026-09-14:2026-09-18 --flickr-key YOUR_KEY \
     --out data/context/milwaukee-posts.json
-python -m backend.load_sample
+.venv/bin/python -m backend.load_sample
 ```
 
 Flickr is the closest lawful equivalent to what TikTok would have given you:

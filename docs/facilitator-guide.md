@@ -53,10 +53,10 @@ unremarkable is what makes it a real option.
 
 - [ ] **Course location set**, if you are not teaching in Milwaukee. Dashboard →
       *Data & teardown → Course location*, or
-      `python manage.py set-location "Your City, State" --timezone America/...`.
+      `.venv/bin/python manage.py set-location "Your City, State" --timezone America/...`.
       This decides where the map opens and which timezone every time on screen
       is shown in. Getting it wrong is not subtle but it is easy to miss:
-      `python manage.py check-production` warns you.
+      `.venv/bin/python manage.py check-production` warns you.
 - [ ] Server online and tested (`docs/hosting.md`).
 - [ ] Install links sent at least a week ahead (`docs/distribution.md`).
 - [ ] You have run the app on your own phone for **at least two days** — you

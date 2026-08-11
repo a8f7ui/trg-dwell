@@ -170,7 +170,7 @@ python3 tools/generate_sample_data.py --out data/sample   # invent participants
 Then open <http://localhost:5000> and log in as `instructor` / `demo-password`.
 
 That demo password is fine on a laptop and unacceptable anywhere else. Before
-hosting this, make a real account with `python manage.py add-instructor <name>`.
+hosting this, make a real account with `.venv/bin/python manage.py add-instructor <name>`.
 
 ### Teaching it somewhere other than Milwaukee
 
@@ -183,10 +183,10 @@ From the dashboard: **Data & teardown → Course location**. Type a city, pick f
 the matches, done. Or from the command line:
 
 ```bash
-python manage.py where                       # where is it anchored now?
-python manage.py set-location "Cincinnati, Ohio" --timezone America/New_York
+.venv/bin/python manage.py where                       # where is it anchored now?
+.venv/bin/python manage.py set-location "Cincinnati, Ohio" --timezone America/New_York
 python3 tools/generate_sample_data.py --use-course-location --out data/sample
-python -m backend.load_sample
+.venv/bin/python -m backend.load_sample
 ```
 
 `--use-course-location` also works on `tools/fetch_osm_environment.py` and
@@ -203,7 +203,7 @@ Two things worth knowing:
   Looking up a place name is the only part that needs a connection, and it is
   an instructor action at setup time, never anything automatic during a course.
 
-`python manage.py check-production` warns if the location is still the default,
+`.venv/bin/python manage.py check-production` warns if the location is still the default,
 in case a course in Ohio is about to open on a map of Wisconsin.
 
 ### Two skins, switchable at any time
@@ -327,7 +327,7 @@ service that needs no credit card. Allow about 45 minutes.
 Before real participants use it, run:
 
 ```bash
-python manage.py check-production
+.venv/bin/python manage.py check-production
 ```
 
 It checks the handful of things that are genuinely dangerous to get wrong — most

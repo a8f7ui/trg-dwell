@@ -2,7 +2,7 @@
 Load the synthetic sample data into a local database, so the backend and
 dashboard can be developed and demonstrated with nothing real involved.
 
-    python -m backend.load_sample
+    .venv/bin/python -m backend.load_sample
 
 Also creates a demo instructor login. That account uses a well-known password
 and is fine for a laptop demo, but `manage.py add-instructor` should be used to
@@ -125,4 +125,4 @@ if __name__ == "__main__":
     for key, value in result.items():
         print(f"  {key:14s}: {value}")
     print(f"\nDemo instructor login: {DEMO_INSTRUCTOR[0]} / {DEMO_INSTRUCTOR[1]}")
-    print("Change this before hosting anywhere: python manage.py add-instructor <name>")
+    print("Change this before hosting anywhere: .venv/bin/python manage.py add-instructor <name>")

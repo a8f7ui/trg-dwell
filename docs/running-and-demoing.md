@@ -69,7 +69,7 @@ the browser at the same time.
 then only has to draw a web page, which is what it is good at.
 
 ```bash
-DWELL_BIND=0.0.0.0 python -m backend.app          # on the laptop
+.venv/bin/python -m backend.app --host 0.0.0.0          # on the laptop
 ```
 
 It prints the address to open on the tablet — the laptop's own IP, port 5000,
@@ -77,26 +77,94 @@ both on the same wifi. The server binds to localhost unless you ask for this,
 deliberately: anyone who can reach it gets the login page, so do not leave the
 demo password in place on a conference network.
 
+`DWELL_BIND` and `DWELL_PORT` do the same thing if environment variables suit
+you better.
+
+---
+
+## Running it in Docker
+
+The one thing to know: **inside a container, `127.0.0.1` means the container's
+own loopback**, which nothing outside can reach — not even with
+`-p 5000:5000`, because the published port forwards to the container's external
+interface and a localhost-bound server is not listening there.
+
+The symptom is nasty because it looks like nothing is wrong: the server says it
+is running, the port mapping is present in `docker ps`, and the browser gets an
+empty response.
+
+**The server now detects containers and listens on `0.0.0.0` automatically**, so
+this should not bite. It says so on startup. Publish the port when you start the
+container and open it on the host:
+
+```bash
+docker run --rm -it -p 5000:5000 ubuntu:24.04 bash
+# inside:
+apt-get update && apt-get install -y git python3 python3-venv
+git clone https://github.com/a8f7ui/trg-dwell.git && cd trg-dwell
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 tools/generate_sample_data.py --out data/sample
+.venv/bin/python -m backend.load_sample
+.venv/bin/python manage.py doctor        # confirms everything before you start
+.venv/bin/python -m backend.app
+```
+
+Then <http://127.0.0.1:5000> on the host.
+
+Two traps this repository used to set, both now fixed but worth knowing:
+
+- **`python` often does not exist** on a minimal Ubuntu image — only `python3`.
+  And even where it does, it is not the virtual environment, so the
+  dependencies are invisible to it. Always use `.venv/bin/python`, which every
+  command in these docs now does.
+- **The server used to ignore `--host`**, so `--host 0.0.0.0` bound to
+  localhost anyway while printing an address that looked like agreement. It
+  accepts the flag now.
+
+If something still will not start, `.venv/bin/python manage.py doctor` checks
+the interpreter, the dependencies, the port, the database and the bind address,
+and names the command that fixes whatever it finds.
+
 ### If the tablet has to do both
 
 It can, with three things known in advance.
 
-**Installing is the slow part, and it looks like a hang.** Everything here is
-pure Python except `h3`, the hexagon library. On Termux there are no usable
-prebuilt wheels, so pip compiles it from source, which needs a C toolchain and
-takes **several minutes with no output**. That is not a freeze:
+**Installing is the part that goes wrong.** Everything here is pure Python
+except `h3`, the hexagon library, which contains compiled C. On Termux there is
+no prebuilt wheel for it.
+
+Left alone, pip responds to that by building h3 from source; h3's build wants
+CMake; there is no CMake wheel either; so pip downloads the CMake *source* and
+starts compiling a C++ build system, file by file, on a tablet. That is hours of
+work for a hexagon library, and it commonly fails or runs out of memory at the
+end anyway. If you see page after page of `g++ ... -c ... cmake-4.4.2/Source/...`
+scrolling past, that is what is happening — stop it.
+
+`requirements.txt` now pins h3 to prebuilt wheels only, so instead of that,
+pip fails in seconds with "no matching distribution". Then:
 
 ```bash
-pkg install python clang cmake
-pip install -r requirements.txt      # go and make a coffee
+pip install -r requirements-core.txt     # everything except the hexagon map
 ```
 
-If it will not build at all, install everything else and carry on — the whole
-dashboard works without `h3` except the **Whole course** hexagon map, which will
-tell you exactly this if you open it. You would lose the k-anonymity
-demonstration, which is the best thirty seconds in the tool, so it is worth
-persevering with. `gunicorn` is only needed for hosting and can be skipped for a
-demo.
+You lose the **Whole course** aggregate view and the k-anonymity slider with it,
+which is a real loss — it is the best thirty seconds in the tool. Everything
+else works normally, and that screen explains itself rather than failing blankly.
+
+If you want the hexagon map on the tablet badly enough, install Termux's own
+CMake first so pip does not try to build one:
+
+```bash
+pkg install clang cmake ninja
+pip install scikit-build-core
+pip install h3 --no-build-isolation      # still several minutes, but minutes
+```
+
+`--no-build-isolation` is the part that matters: without it pip builds in a
+fresh environment and fetches CMake from PyPI again, ignoring the one you just
+installed.
+
+`gunicorn` is only needed for hosting and can be skipped entirely for a demo.
 
 **Generate less data.** The defaults invent about 38,000 location points across
 twelve people. Six people over three days is roughly 13,000, teaches every
@@ -105,7 +173,7 @@ screen:
 
 ```bash
 python3 tools/generate_sample_data.py --participants 6 --days 3 --out data/sample
-python -m backend.load_sample
+.venv/bin/python -m backend.load_sample
 ```
 
 **Give playback a bigger step.** Set the speed selector to *30 min / tick*, so
@@ -124,6 +192,7 @@ In rough order of how much they cost you:
 | The map is blank | Venue wifi cannot reach Esri — install an [offline map](offline-maps.md) |
 | Participant *Whole course* view is slow | Expected: it is the heaviest screen in the tool. Open it once and leave it open rather than switching participants repeatedly |
 | Android kills the server when you switch apps | `termux-wake-lock` before starting it |
+| Anything at all refuses to start | `.venv/bin/python manage.py doctor` |
 
 ---
 
@@ -134,8 +203,8 @@ In order. Each links to a full walkthrough.
 | # | Step | Time | Guide |
 |---|---|---|---|
 | 1 | Put the server online | ~45 min | [`hosting.md`](hosting.md) |
-| 2 | Set the course location | 2 min | `python manage.py set-location "City, State" --timezone America/...` |
-| 3 | Run the safety check | 5 min | `python manage.py check-production` |
+| 2 | Set the course location | 2 min | `.venv/bin/python manage.py set-location "City, State" --timezone America/...` |
+| 3 | Run the safety check | 5 min | `.venv/bin/python manage.py check-production` |
 | 4 | Build the app, point it at your server | ~1 hour | [`distribution.md`](distribution.md) |
 | 5 | Team dry-run on real phones | 2 days | [`distribution.md`](distribution.md) |
 | 6 | Submit to TestFlight / Play | 2–7 days waiting | [`distribution.md`](distribution.md) |
@@ -237,12 +306,12 @@ changes it live without restarting anything.
 Run from the project folder, with the virtual environment active.
 
 ```bash
-python manage.py status              # what is stored right now
-python manage.py where               # which city the course is anchored to
-python manage.py check-production    # safety check before going live
-python manage.py add-instructor NAME # create a teaching login
-python manage.py audit               # log of deletions, wipes, logins
-python manage.py wipe                # delete everything (asks for confirmation)
+.venv/bin/python manage.py status              # what is stored right now
+.venv/bin/python manage.py where               # which city the course is anchored to
+.venv/bin/python manage.py check-production    # safety check before going live
+.venv/bin/python manage.py add-instructor NAME # create a teaching login
+.venv/bin/python manage.py audit               # log of deletions, wipes, logins
+.venv/bin/python manage.py wipe                # delete everything (asks for confirmation)
 ```
 
 Checking the app and server still agree, after any change:
