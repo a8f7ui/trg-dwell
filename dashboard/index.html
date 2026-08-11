@@ -7,6 +7,14 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📍</text></svg>">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="style.css">
+<script>
+  // Applied before the stylesheet paints, so switching skins and reloading
+  // does not flash the other one at the room mid-demo.
+  try {
+    var t = localStorage.getItem('dwell-theme');
+    if (t === 'console') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) { /* private browsing: fall back to the field skin */ }
+</script>
 </head>
 <body>
 
@@ -41,6 +49,14 @@
       <button data-view="admin">Data &amp; teardown</button>
     </nav>
     <div class="user">
+      <!-- Both skins, switchable at any time. See the note at the top of
+           style.css for why shipping both is a teaching decision. -->
+      <div class="theme-switch" role="group" aria-label="Dashboard appearance">
+        <button data-theme-set="field" aria-pressed="true"
+                title="Consumer family-safety app">Field</button>
+        <button data-theme-set="console" aria-pressed="false"
+                title="Surveillance monitoring station">Console</button>
+      </div>
       <span id="who"></span>
       <button id="logout" class="link">Log out</button>
     </div>

@@ -307,6 +307,37 @@ async function showView(name) {
 $$('#tabs button').forEach((b) =>
   b.addEventListener('click', () => showView(b.dataset.view)));
 
+// ---------------------------------------------------------------- appearance
+
+/**
+ * Two skins over identical data: 'field' reads like a consumer family-safety
+ * app, 'console' like a surveillance monitoring station. See the note at the
+ * top of style.css for why both ship.
+ *
+ * Every visual difference lives in CSS custom properties, including the map
+ * pins, so switching is a single attribute on <html>. Nothing is re-fetched
+ * and nothing is redrawn — which means an instructor can flip skins in the
+ * middle of playback without the dots stopping, and that is the version of
+ * this demonstration worth having.
+ */
+function applyTheme(name) {
+  if (name === 'console') document.documentElement.setAttribute('data-theme', 'console');
+  else document.documentElement.removeAttribute('data-theme');
+  try { localStorage.setItem('dwell-theme', name); } catch (e) { /* private mode */ }
+  $$('[data-theme-set]').forEach((b) =>
+    b.setAttribute('aria-pressed', String(b.dataset.themeSet === name)));
+}
+
+$$('[data-theme-set]').forEach((b) =>
+  b.addEventListener('click', () => applyTheme(b.dataset.themeSet)));
+
+applyTheme(
+  (() => {
+    try { return localStorage.getItem('dwell-theme') === 'console' ? 'console' : 'field'; }
+    catch (e) { return 'field'; }
+  })()
+);
+
 // ---------------------------------------------------------------- live view
 
 let playTimer = null;
@@ -463,19 +494,18 @@ function drawLive() {
             .join('<br>')
     ).addTo(layers.live);
 
+    // A soft white pill in the field skin, stencilled text in the person's own
+    // colour in the console skin. Both live in style.css; the only thing passed
+    // in here is whose colour it is.
     L.marker([c.lat, c.lon], {
       icon: L.divIcon({
         className: '',
         html: n > 1
-          ? `<div style="color:#04121f;font:800 12px system-ui;width:${
-              Math.min(44, 22 + n * 3.2)}px;text-align:center;
-              transform:translate(-50%,-8px);pointer-events:none">${n}</div>`
-          : `<div style="color:#16202c;font:600 11.5px system-ui;
-              background:rgba(255,255,255,.92);border-radius:999px;
-              padding:1px 8px;box-shadow:0 1px 4px rgba(22,32,44,.22);
-              white-space:nowrap;
-              transform:translate(12px,-10px);pointer-events:none">${
-                escapeHtml(c.members[0].label)}</div>`,
+          ? `<div class="pin-cluster" style="width:${
+              Math.min(44, 22 + n * 3.2)}px">${n}</div>`
+          : `<div class="pin-label" style="--own:${
+              colorFor(c.members[0].participant_id)}">${
+              escapeHtml(c.members[0].label)}</div>`,
       }),
     }).addTo(layers.live);
   });
@@ -1044,7 +1074,7 @@ function showLegend(title, entries, note) {
   el.innerHTML = `<h4>${escapeHtml(title)}</h4>` +
     entries.map(([c, label]) =>
       `<div><span class="swatch" style="background:${c}"></span>${escapeHtml(label)}</div>`).join('') +
-    (note ? `<div style="margin-top:7px;color:#9fb0c2">${escapeHtml(note)}</div>` : '');
+    (note ? `<div style="margin-top:7px;color:var(--ink-dim)">${escapeHtml(note)}</div>` : '');
   el.hidden = false;
 }
 

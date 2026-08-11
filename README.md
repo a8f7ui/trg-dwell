@@ -172,6 +172,21 @@ Then open <http://localhost:5000> and log in as `instructor` / `demo-password`.
 That demo password is fine on a laptop and unacceptable anywhere else. Before
 hosting this, make a real account with `python manage.py add-instructor <name>`.
 
+### Two skins, switchable at any time
+
+Top right of the dashboard: **Field** and **Console**.
+
+Field reads like a consumer family-safety app — white, rounded, friendly. Console
+reads like a surveillance monitoring station — dark, dense, monospaced. They show
+identical data, and switching is instant even mid-playback.
+
+Both ship because both teach. Console makes the room recognise the screen as what
+it resembles. Field takes away the escape hatch: *"that's a spy tool, not the app
+on my phone"* stops working when the same trails and the same social graph sit
+behind an interface that looks like the one a parent installs to watch their
+teenager. Flipping between them in front of a class, on the same participant, is
+worth more than either alone.
+
 ### What you can show from the dashboard
 
 - **Live map** — participants as dots on satellite imagery, with a clock you can

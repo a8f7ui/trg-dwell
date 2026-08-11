@@ -68,6 +68,39 @@ pretend sample data is real.
 
 ---
 
+## The two skins, and how to use them
+
+Top right of the dashboard, always available:
+
+| | Looks like | What it does in the room |
+|---|---|---|
+| **Field** | A consumer family-safety app — white, rounded, friendly, round colour avatars | Removes the escape hatch. This is the interface people already have on their phones and do not think of as surveillance. |
+| **Console** | A surveillance monitoring station — dark, dense, monospaced, uppercase | Makes the room recognise the screen as what it resembles. |
+
+**They show identical data.** Same trails, same corroboration, same social
+graph, same everything. The only difference is the palette.
+
+Switching is instant and does not interrupt anything — you can flip skins in
+the middle of playback and the dots keep moving. Your choice is remembered on
+that machine.
+
+**The move worth rehearsing:** put a volunteer's week on the projector in
+Console, let the room settle into *that's a spy tool*, then switch to Field
+mid-sentence without changing anything else.
+
+> Same data. Same person. Same week. Same conclusions.
+>
+> One of these two screens is what you picture when somebody says
+> "surveillance". The other is what is actually on your phone.
+>
+> Nothing changed but the colours. Whatever you were feeling ten seconds ago
+> was a reaction to the styling, not to what the system knows.
+
+Use whichever suits the day otherwise. Field is easier to read from the back of
+a lit room; Console suits Day 4, when the subject is who buys this.
+
+---
+
 ## Day 1 — Consent, and the permission prompts
 
 **Objective:** everyone installed and consenting, and the first lesson landed
