@@ -183,6 +183,10 @@ hosting this, make a real account with `python manage.py add-instructor <name>`.
 - **Whole course** — everybody at once as a hexagon grid, with the k-anonymity
   threshold on a slider. Dragging it to 1 in front of a class is the single most
   effective demonstration in the whole tool.
+- **What else was watching** — for each day, the cameras, plate readers, mapped
+  Wi-Fi and card terminals the route passed, and which stops several independent
+  sources could confirm. A phone ping alone is deniable; four sources agreeing
+  are not. See [docs/environment-layers.md](docs/environment-layers.md).
 - **Data & teardown** — what is stored, the audit log, and the wipe-everything
   control.
 

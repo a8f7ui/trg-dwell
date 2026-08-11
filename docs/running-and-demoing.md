@@ -76,7 +76,9 @@ dashboard does not depend on anyone else's tile servers —
 
 Store privacy forms are in [`store-disclosures.md`](store-disclosures.md), with
 exact answers. The evidence base for the illustrated screens is in
-[`sdk-research.md`](sdk-research.md); read it before you teach.
+[`sdk-research.md`](sdk-research.md); read it before you teach. The corroboration
+lesson — how a phone trail becomes undeniable once other sources agree with it —
+is in [`environment-layers.md`](environment-layers.md).
 
 ---
 

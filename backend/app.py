@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 
 from flask import Flask, jsonify, request, send_from_directory, session
 
-from . import analysis, auth, config, db
+from . import analysis, auth, config, db, environment
 from .analysis import Point
 
 DASHBOARD_DIR = config.BASE_DIR / "dashboard"
@@ -70,12 +70,40 @@ def load_places(conn) -> list[dict]:
     return [dict(r) for r in conn.execute("SELECT poi_id, name, kind, lat, lon FROM places")]
 
 
-def analyse_day(points: list[Point], places_ref: list[dict]) -> dict:
+_env_index_cache: environment.FeatureIndex | None = None
+
+
+def load_environment(conn) -> environment.FeatureIndex:
+    """
+    Observing infrastructure, indexed once and reused.
+
+    This is reference data about places — it never changes during a course and
+    is the same for every participant — so rebuilding the index on each request
+    would be pure waste.
+    """
+    global _env_index_cache
+    if _env_index_cache is None:
+        features = [
+            environment.Feature(
+                feature_id=r["feature_id"], kind=r["kind"], lat=r["lat"],
+                lon=r["lon"], name=r["name"] or "", source=r["source"] or "")
+            for r in conn.execute(
+                "SELECT feature_id, kind, lat, lon, name, source "
+                "FROM environment_features")
+        ]
+        _env_index_cache = environment.FeatureIndex(features)
+    return _env_index_cache
+
+
+def analyse_day(points: list[Point], places_ref: list[dict],
+                env_index: environment.FeatureIndex | None = None) -> dict:
     """Run the full pipeline for one day and return everything the UI needs."""
     stops = analysis.detect_stops(points)
     analysis.attach_poi_context(stops, places_ref)
     clustered = analysis.cluster_places(stops)
     assessment = analysis.infer_day(points, stops, clustered)
+    exposure = (environment.assess_exposure(points, stops, env_index)
+                if env_index else {"available": False})
 
     # Group the trail into the separate windows when the app was open, so the
     # map can draw them as distinct segments instead of joining them with a
@@ -97,6 +125,7 @@ def analyse_day(points: list[Point], places_ref: list[dict]) -> dict:
         "stops": [s.as_dict() for s in stops],
         "places": [p.as_dict() for p in clustered],
         "assessment": assessment,
+        "exposure": exposure,
     }
 
 
@@ -201,13 +230,14 @@ def my_reveal():
         return jsonify({"error": "No data collected yet."}), 404
 
     places_ref = load_places(conn)
-    today = analyse_day(load_points(conn, participant_id, day), places_ref)
+    env_index = load_environment(conn)
+    today = analyse_day(load_points(conn, participant_id, day), places_ref, env_index)
 
     prior = []
     for d in all_days:
         if d >= day:
             break
-        prior.append(analyse_day(load_points(conn, participant_id, d), places_ref))
+        prior.append(analyse_day(load_points(conn, participant_id, d), places_ref, env_index))
 
     day_index = all_days.index(day) if day in all_days else 0
     conn.close()
@@ -322,9 +352,10 @@ def list_participants():
 def participant_day(participant_id: str, day: str):
     conn = get_conn()
     places_ref = load_places(conn)
+    env_index = load_environment(conn)
     all_days = days_for(conn, participant_id)
-    today = analyse_day(load_points(conn, participant_id, day), places_ref)
-    prior = [analyse_day(load_points(conn, participant_id, d), places_ref)
+    today = analyse_day(load_points(conn, participant_id, day), places_ref, env_index)
+    prior = [analyse_day(load_points(conn, participant_id, d), places_ref, env_index)
              for d in all_days if d < day]
     day_index = all_days.index(day) if day in all_days else 0
     conn.close()

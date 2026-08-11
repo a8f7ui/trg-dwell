@@ -595,6 +595,53 @@ function renderVerdictCard(a) {
     </div>` : ''}`;
 }
 
+/**
+ * What else could have seen them.
+ *
+ * The point of this block is corroboration, not surveillance-spotting: a phone
+ * ping alone places a device and can be argued with, whereas a ping that agrees
+ * with a camera and a card terminal cannot. That is how a location feed becomes
+ * something an agency or a broker can act on.
+ */
+function renderExposure(ex) {
+  if (!ex || !ex.available) return '';
+
+  const kinds = Object.entries(ex.passed || {});
+  const corroborated = (ex.stops || []).filter((s) => s.source_kinds.length >= 2);
+
+  return `
+    <h3>What else was watching</h3>
+    <div class="card">
+      <h4>Sources the route passed</h4>
+      ${kinds.map(([k, v]) => `
+        <div class="place">
+          <div><div>${escapeHtml(v.label)}</div>
+            <div class="kind">${escapeHtml(v.observes)}</div></div>
+          <div class="dwell">${v.count}</div>
+        </div>`).join('')}
+      <p class="basis">${escapeHtml(ex.narrative)}</p>
+    </div>
+
+    ${corroborated.length ? `
+      <div class="card">
+        <h4>Stops more than one source could confirm</h4>
+        ${corroborated.slice(0, 4).map((s) => `
+          <div class="place">
+            <div><div>${escapeHtml(s.poi_name || 'Unidentified stop')}</div>
+              <div class="kind">${escapeHtml(s.verdict)}</div></div>
+            <div class="dwell">${s.source_count}&times;</div>
+          </div>`).join('')}
+        <p class="basis">A phone ping places a device, not a person, and can be
+          argued with. Several independent sources agreeing at the same place and
+          minute cannot.</p>
+      </div>` : ''}
+
+    ${(ex.caveats || []).length ? `<div class="caveats">
+      <h4>What this does not prove</h4>
+      <ul>${ex.caveats.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
+    </div>` : ''}`;
+}
+
 function renderCaveats(caveats) {
   if (!caveats || !caveats.length) return '';
   return `<div class="caveats">
@@ -649,6 +696,8 @@ function renderAssessment(d) {
       <h4>Compared with earlier days</h4>
       <p class="basis">${escapeHtml(cmp.narrative)}</p>
     </div>` : ''}
+
+    ${renderExposure(d.exposure)}
 
     ${renderCaveats(a.caveats)}
 

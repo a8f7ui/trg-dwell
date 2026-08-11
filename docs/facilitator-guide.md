@@ -234,6 +234,26 @@ Open **Live map**. Dots move.
 > looks like. The only differences are that you were told this exists, you agreed
 > to it, and this map never leaves the room.
 
+### What else was watching (15 minutes)
+
+Open a volunteer's day and scroll to **What else was watching**.
+
+**Talking point — corroboration:**
+
+> Everything so far came from one source: your phone. One source can be argued
+> with. "That's my phone, not me."
+>
+> At this stop, four sources agree — your phone, a camera on the corner, the
+> shop's Wi-Fi, and a card terminal. Individually each is circumstantial.
+> Together there is no version of events where you were not there.
+>
+> Nobody had to build that. It was assembled from things that already existed,
+> owned by four organisations who have never spoken to each other.
+
+Read the "what this does not prove" note aloud too. A camera near somebody is not
+proof it filmed them, and the tool says so — which is exactly the hedging a
+commercial system would omit. Full background in `docs/environment-layers.md`.
+
 ### The aggregate map and k-anonymity (25 minutes)
 
 This is the best demonstration in the whole week. Do it live and slowly.
