@@ -187,12 +187,15 @@ hosting this, make a real account with `python manage.py add-instructor <name>`.
   Wi-Fi and card terminals the route passed, and which stops several independent
   sources could confirm. A phone ping alone is deniable; four sources agreeing
   are not. Toggle each source on and off as a map overlay.
-- **Pattern of life, association and anomaly** — the questions a security service
-  asks rather than the ones an advertiser asks: how predictable somebody is, who
-  keeps turning up beside them, and what today did that the baseline did not.
-  Association analysis is instructor-only and never shown to participants.
+- **Pattern of life, signature, groups and anomaly** — the questions a security
+  service asks rather than the ones an advertiser asks: how predictable somebody
+  is, a description specific enough to pick them out of the room without knowing
+  their name, which small groups reform day after day, and what today did that
+  the baseline did not. Association and group analysis are instructor-only and
+  never shown to participants — the contract test checks it.
 - **Area context** — public news and event listings matched to stops by place and
-  time, offered as leads rather than findings.
+  time, plus public photographs strangers posted within 120 metres and two hours
+  of where somebody was standing. Offered as leads rather than findings.
 
   See [docs/environment-layers.md](docs/environment-layers.md). The default
   location is Milwaukee, Wisconsin.
@@ -252,7 +255,8 @@ python3 tools/contract_test.py           # in another
 ```
 
 It replays the exact requests the app makes and verifies the responses, including
-that a device token stops working the moment somebody withdraws.
+that a device token stops working the moment somebody withdraws, and that a
+participant's own reveal never names another participant.
 
 ## Putting it online
 

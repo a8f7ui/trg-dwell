@@ -215,6 +215,29 @@ confidence percentage.
 **If the app is wrong about a volunteer, that is a gift.** Spend time on it. A
 confident, wrong, unchallengeable judgement is the whole risk in one example.
 
+### The behavioural signature (10 minutes)
+
+Still in the whole-course view, scroll to **Behavioural signature**. Read the
+sentence out as written — when they start, when they stop, how tightly that
+varies, how far they range.
+
+Then stop, and put the question to the room rather than answering it:
+
+> Nothing I just read is a name. It is not an address, an account, a phone
+> number or an email. By most privacy policies, none of it is personal
+> information.
+>
+> Hands up if you could tell me which of the twelve of you that describes.
+
+Most rooms can. That is the point, and it is better made by them than by you.
+
+**Talking point:**
+
+> "We don't collect personally identifiable information" is not a promise that
+> you cannot be identified. It is a promise about which *fields* are stored.
+> Identification is a property of the whole picture, not of any one column in
+> it — and this picture was built from coordinates and a clock.
+
 ---
 
 ## Day 4 — Consequence: the buyer's console
@@ -253,6 +276,57 @@ Open a volunteer's day and scroll to **What else was watching**.
 Read the "what this does not prove" note aloud too. A camera near somebody is not
 proof it filmed them, and the tool says so — which is exactly the hedging a
 commercial system would omit. Full background in `docs/environment-layers.md`.
+
+### Who you were with (10 minutes)
+
+Scroll to **Recurring groups**. You will have moved people around in small groups
+this week, so the groups it finds will be real ones the room recognises.
+
+**Talking point:**
+
+> Nobody handed over a contact list. Nobody's messages were read. No app asked
+> who your friends are.
+>
+> Two sets of coordinates and two clocks. That is the entire input, and it
+> reconstructed who you have been spending the week with.
+
+Then the part that matters more than the finding:
+
+> Notice what this does to consent. Every one of you agreed to this. But the
+> moment two people's trails are compared, what comes out is a fact about a
+> *relationship* — and a relationship cannot consent. It only takes one person
+> in a pair carrying a tracked phone to expose both.
+
+**Handle carefully.** Groups here are innocuous by design. In the real world the
+same computation is what exposes a source meeting a journalist, or who somebody
+is quietly seeing. Say that; do not act it out.
+
+**Do not show this to participants on their own phones, and say so.** Association
+and group analysis exist only on the instructor dashboard. Telling somebody "you
+spent three hours near Participant 07" would disclose Participant 07's movements
+to a person who was never given the right to see them — and the fact that we
+could have shown it, and chose not to, is itself worth a minute of the room's
+time.
+
+### What was posted around you (10 minutes)
+
+Scroll to **Area context**. Alongside the news items are public photographs
+posted within 120 metres and two hours of where the volunteer was standing.
+
+**Talking point:**
+
+> None of these are about you. Nobody photographed you, nobody tagged you, and
+> nobody knew you were there. They are strangers, posting in public, from where
+> you happened to be standing.
+>
+> That is what makes it work. A determined observer does not need to follow you.
+> They need only to read what everyone else is already publishing about the
+> places you go.
+
+Be straight about the source when asked, because somebody will ask about TikTok:
+there is no lawful way to get geotagged TikTok posts, so this uses platforms that
+publish coordinates openly. Which means what they are looking at is a *fraction*
+of what actually exists — the real picture is denser, not thinner.
 
 ### The aggregate map and k-anonymity (25 minutes)
 
@@ -367,6 +441,24 @@ permission.*
 *No. The app only ever returns your own — that is enforced on the server, not
 just hidden in the interface. I can see everyone's, and I told you that before
 you agreed.*
+
+**"You said it doesn't identify me, but that description was obviously me."**
+*Both are true, and the gap between them is the lesson. It holds no name, no
+address and no account, so by most privacy policies it holds nothing personal.
+It still describes exactly one of you. Identification is a property of the whole
+picture, not of any single field in it.*
+
+**"Did you scrape TikTok for those posts?"**
+*No, and we couldn't have lawfully — TikTok has no public way to search posts by
+location, so the only route would be scraping, which breaks their terms. These
+come from platforms that publish coordinates openly. Which means you are looking
+at a fraction of what actually exists out there, not all of it.*
+
+**"How did you know who I was with? I never told the app that."**
+*You didn't, and it never asked. It compared your coordinates with everyone
+else's, minute by minute. That is the whole method. Note that you consented and
+so did they — but what came out is a fact about the pair of you, and a
+relationship can't consent. One tracked phone exposes both people.*
 
 ---
 

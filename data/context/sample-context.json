@@ -38,5 +38,38 @@
     "kind": "weather",
     "source": "SAMPLE ENTRY \u2014 not real reporting",
     "url": ""
+  },
+  {
+    "title": "\u201cthis band is unreal right now\u201d \u2014 short video posted publicly",
+    "date": "2026-09-16",
+    "time": "20:45",
+    "lat": 43.049205,
+    "lon": -87.891801,
+    "place": "Verdigris Bar",
+    "kind": "post",
+    "source": "SAMPLE ENTRY \u2014 public post, author not recorded",
+    "url": ""
+  },
+  {
+    "title": "\u201cbest tacos downtown, no notes\u201d \u2014 photo posted publicly",
+    "date": "2026-09-16",
+    "time": "12:40",
+    "lat": 43.038596,
+    "lon": -87.899458,
+    "place": "Sable Grill",
+    "kind": "post",
+    "source": "SAMPLE ENTRY \u2014 public post, author not recorded",
+    "url": ""
+  },
+  {
+    "title": "\u201cconference crowd everywhere today\u201d \u2014 public check-in",
+    "date": "2026-09-16",
+    "time": "09:30",
+    "lat": 43.04546,
+    "lon": -87.914774,
+    "place": "Tallow Conference Centre",
+    "kind": "post",
+    "source": "SAMPLE ENTRY \u2014 public post, author not recorded",
+    "url": ""
   }
 ]

@@ -40,7 +40,10 @@ Open <http://localhost:5000>, log in as `instructor` / `demo-password`.
    segment a commercial system would assign them. Point at the line saying what
    proportion was collected while the app was closed.
 2. **Day selector → Whole course.** The places they return to light up. *"One day
-   is dots. Five days is a routine."*
+   is dots. Five days is a routine."* Keep scrolling: the **behavioural
+   signature** describes this person in a sentence with no name in it, and
+   **recurring groups** shows who they kept turning up beside — reconstructed
+   from coordinates and clocks, with no contact list anywhere.
 3. **Whole course tab.** Drag the k-anonymity slider from 5 down to 1. The map
    fills with hexagons that each contain one person. Drag it back. This is the
    best thirty seconds in the whole tool.

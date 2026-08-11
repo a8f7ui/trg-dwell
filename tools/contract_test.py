@@ -143,6 +143,19 @@ agency = rev.get("agency_step", {})
 check("agency step has all three parts",
       all(k in agency for k in ("title", "detail", "what_would_have_changed")))
 
+# The reveal describes the participant to themselves and nobody else to them.
+# Association and group analysis are other people's movements by implication,
+# and only instructors were disclosed as able to see those. This is a promise
+# on the consent screen, so it gets a test rather than a comment.
+for leaked in ("associations", "groups"):
+    check(f"reveal does not disclose '{leaked}'", leaked not in rev,
+          "another participant's movements would be exposed to this one")
+
+blob = json.dumps(rev)
+check("reveal never names another participant",
+      "Participant " not in blob.replace(f"Participant {participant_id}", ""),
+      "a co-participant label appeared in a personal reveal")
+
 status, _ = call("GET", "/api/v1/me/reveal", token="not-a-real-token")
 check("reveal with a bad token is refused", status == 401, f"got {status}")
 

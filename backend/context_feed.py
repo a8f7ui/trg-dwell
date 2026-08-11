@@ -47,6 +47,16 @@ from .analysis import Stop, haversine_m
 CONTEXT_RADIUS_M = 400.0
 CONTEXT_WINDOW_HOURS = 6
 
+# Public posts are held to a much tighter radius. The point of them is "somebody
+# standing near you posted this while you were there" — at four hundred metres
+# that is just "somebody in the same neighbourhood", which is not the same feeling
+# at all.
+POST_RADIUS_M = 120.0
+POST_WINDOW_HOURS = 2
+
+# Items of these kinds are treated as posts rather than reporting.
+POST_KINDS = {"post", "social", "photo", "video", "check-in"}
+
 
 def load_items(context_dir: Path) -> list[dict]:
     """
@@ -106,13 +116,16 @@ def match_to_day(stops: list[Stop], day: str, items: list[dict]) -> dict:
                 d = haversine_m(stop.lat, stop.lon, float(item["lat"]), float(item["lon"]))
             except (TypeError, ValueError):
                 continue
-            if d > CONTEXT_RADIUS_M:
+            is_post = item.get("kind") in POST_KINDS
+            radius = POST_RADIUS_M if is_post else CONTEXT_RADIUS_M
+            window = POST_WINDOW_HOURS if is_post else CONTEXT_WINDOW_HOURS
+            if d > radius:
                 continue
             if item.get("time"):
                 try:
                     when = datetime.fromisoformat(f"{item['date']}T{item['time']}")
                     ref = stop.start.replace(tzinfo=None)
-                    if abs((ref - when).total_seconds()) > CONTEXT_WINDOW_HOURS * 3600:
+                    if abs((ref - when).total_seconds()) > window * 3600:
                         continue
                 except ValueError:
                     pass
@@ -135,9 +148,14 @@ def match_to_day(stops: list[Stop], day: str, items: list[dict]) -> dict:
         seen.add(key)
         deduped.append(m)
     matches = deduped
+    posts = [m for m in matches if m.get("kind") in POST_KINDS]
+    news = [m for m in matches if m.get("kind") not in POST_KINDS]
+
     return {
         "available": True,
         "matches": matches[:10],
+        "posts": posts[:8],
+        "news": news[:8],
         "city_wide": city_wide[:6],
         "narrative": _narrative(matches, city_wide),
         "caveat": (
@@ -152,6 +170,16 @@ def _narrative(matches: list[dict], city_wide: list[dict]) -> str:
     if not matches and not city_wide:
         return "No public reporting matches this day's stops."
     bits = []
+    posts = [m for m in matches if m.get("kind") in POST_KINDS]
+    if posts:
+        top = posts[0]
+        bits.append(
+            f"{len(posts)} public post(s) were made within {POST_RADIUS_M:.0f} m "
+            f"of where this person was standing, at around the same time. The "
+            f"closest is {top['distance_m']} m away.")
+        bits.append(
+            "Strangers documenting their own evening also documented the corner "
+            "somebody else happened to be standing on.")
     if matches:
         top = matches[0]
         bits.append(

@@ -107,6 +107,50 @@ This constraint is worth teaching in its own right: *we wanted this dataset, we
 could have had it, and the promise we made to you cost us it.* Very few products
 can say that.
 
+### Nearby posts: what is actually obtainable
+
+The moment worth engineering for is a participant realising that while they
+stood on a particular corner, a stranger a hundred metres away posted a photo of
+it publicly, and it is still there.
+
+**TikTok cannot supply this, and it is worth saying why rather than quietly
+substituting something else.** TikTok has no public API for searching posts by
+location; its research API is grant-gated, does not expose geosearch, and its
+terms forbid this use. The only route is scraping the web client, which breaks
+TikTok's terms of service. A privacy course cannot run on data taken in breach
+of somebody's terms — the contradiction would be the first thing a sharp
+participant noticed, and they would be right.
+
+Instagram and Facebook removed public location search in 2018, for exactly the
+reason this exercise illustrates. X removed its free geo-search tier.
+
+What remains are platforms that publish geotagged material openly and mean it:
+
+| Source | Key needed | Genuinely geotagged | Dated |
+|---|---|---|---|
+| Wikimedia Commons | no | yes | not in geosearch results — pin with `--undated` |
+| Flickr | free, one form | yes | yes, to the minute |
+
+```bash
+python3 tools/fetch_nearby_posts.py --around 43.0389,-87.9065 --radius 1500 \
+    --days 2026-09-14:2026-09-18 --flickr-key YOUR_KEY \
+    --out data/context/milwaukee-posts.json
+python -m backend.load_sample
+```
+
+Flickr is the closest lawful equivalent to what TikTok would have given you:
+real strangers, real coordinates, real timestamps. It is thinner than TikTok
+would be, and the honest framing in the room is to say so —
+
+> This is a fraction of what is actually out there. The platform with the most
+> of it will not let us have it lawfully, so we did not take it. Assume the real
+> picture is several times denser than what you are looking at.
+
+— which lands harder than pretending the sample is complete.
+
+The sample dataset ships with invented posts anchored to the sample locations, so
+the feature demonstrates without any fetching at all.
+
 ---
 
 ## The assessment layer
@@ -120,11 +164,36 @@ visited at 09:06 ± 6 minutes on five of six days is not a habit, it is a
 schedule. The tool says so plainly: *somebody wanting to find this person would
 not need to follow them; they would need only to be there and wait.*
 
+**Behavioural signature** — the same person described rather than counted: when
+they typically start and stop moving, how tightly that varies, how far from one
+centre they range, how much ground they cover, and whether they explore or
+return. It reads out as a sentence — *"an early start most days, stays within a
+small central area, returns to the same handful of places"* — and then makes the
+point the sentence exists for:
+
+> That description fits one person in this room and not the other eleven. It was
+> assembled from coordinates and a clock.
+
+This is the sharpest illustration in the tool of why "we don't collect personal
+information" is a hollow claim. Nothing here is a name, an address or an
+account. It is still enough to pick somebody out of a group, which is what
+identification actually means.
+
 **Association** — who was repeatedly in the same place at the same minute.
 Moments when four or more participants were together are discarded as crowd
 rather than company, since everyone shares a venue; what remains is time spent
 together away from the group. Nobody collected a contact list. The network falls
 out of two sets of coordinates and two clocks.
+
+**Recurring groups** — the same question asked of the cohort rather than of one
+person: which *sets* of people reformed, day after day, away from the whole-group
+moments. Participants on this course move in small groups by design, so this is
+not a hypothetical — a third party watching for a week would notice exactly this,
+and the dashboard shows them noticing it.
+
+Pairs and threes are reported; anything from four people up is treated as the
+class being the class. A group that reforms on five separate days is the finding.
+Two people who queued together once is not.
 
 **Anomaly** — what today did that the baseline did not. Monitoring systems are
 not interested in the routine; they are interested in the day it breaks.
@@ -133,12 +202,26 @@ not interested in the routine; they are interested in the day it breaks.
 listings, matched to stops by place and time. This is the step where a trail
 stops being coordinates and becomes an account of somebody's day.
 
+**Nearby public posts** — the same idea at much closer range: photographs
+strangers posted publicly, within **120 metres and two hours** of where a
+participant was actually standing. The wider 400-metre radius used for news is
+deliberately not used here, because at 400 metres this only means "somebody in
+the same neighbourhood", and the feeling the moment depends on is *right where I
+was*.
+
+Nothing about this is person-targeted. It does not search for posts by or about
+a participant, and author names are discarded on the way in — the item format
+has no field to put them in. It searches a **place**, and the place happens to be
+where somebody stood.
+
 Two constraints, both load-bearing:
 
-- **Association analysis is instructor-only.** It is never returned to a
-  participant's own reveal, because telling somebody "you spent three hours near
-  Participant 07" discloses another participant's movements to them. Instructors
-  were disclosed as able to see everyone. Participants were not.
+- **Association and group analysis are instructor-only.** Neither is ever
+  returned to a participant's own reveal, because telling somebody "you spent
+  three hours near Participant 07" discloses another participant's movements to
+  them. Instructors were disclosed as able to see everyone. Participants were
+  not. `tools/contract_test.py` asserts this on every run rather than trusting
+  the code to stay that way.
 - **Context is about places and events, never people.** Nothing searches for
   posts by or about a participant, and nothing matches anybody to a social media
   account. Person-targeted collection is precisely what a real service adds

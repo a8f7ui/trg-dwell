@@ -256,12 +256,16 @@ def my_reveal():
         prior.append(analyse_day(load_points(conn, participant_id, d), places_ref, env_index, d))
 
     day_index = all_days.index(day) if day in all_days else 0
+
+    # The participant's own points across every day so far, for the personal
+    # signature. Loaded before the connection closes.
+    own_points = load_points(conn, participant_id)
     conn.close()
 
-    # Pattern-of-life and anomaly describe the participant's own behaviour, so
-    # they are safe to show them. Association analysis is deliberately absent:
-    # it would disclose other participants' movements to somebody who was never
-    # given the right to see them.
+    # Pattern of life, personal signature and anomaly all describe the
+    # participant's own behaviour, so they are safe to show them. Association
+    # and group analysis are deliberately absent: they would disclose other
+    # participants' movements to somebody never given the right to see them.
     history = prior + [today]
     for entry, d in zip(history, all_days[:len(history)]):
         entry.setdefault("day", d)
@@ -274,6 +278,7 @@ def my_reveal():
         **today,
         "comparison": analysis.compare_with_prior(today, prior),
         "pattern_of_life": assessment.assess_pattern_of_life(history),
+        "signature": assessment.assess_signature(own_points, history),
         "anomaly": assessment.assess_anomaly(today, prior),
         "agency_step": analysis.agency_step(day_index),
     })
@@ -440,6 +445,21 @@ def participant_week(participant_id: str):
     }
     associations = assessment.assess_associations(
         participant_id, all_points, others, labels)
+
+    # Recurring small groups across the whole cohort — the thing a third party
+    # watching for a week would actually notice, given participants move about
+    # in groups by design.
+    groups = assessment.detect_groups(
+        dict(others, **{participant_id: all_points}), labels)
+    groups["groups"] = [g for g in groups.get("groups", [])
+                        if participant_id in g["members"]]
+    groups["available"] = bool(groups["groups"])
+    # The narrative has to be rebuilt after filtering, or it would describe the
+    # strongest group in the whole cohort rather than the strongest group this
+    # participant is actually in.
+    groups["narrative"] = assessment._group_narrative(groups["groups"])
+
+    signature = assessment.assess_signature(all_points, per_day)
     conn.close()
 
     return jsonify({
@@ -450,7 +470,9 @@ def participant_week(participant_id: str):
         "recurring_places": recurring,
         "week_assessment": week_assessment,
         "pattern_of_life": pattern,
+        "signature": signature,
         "associations": associations,
+        "groups": groups,
         "summary": (
             f"Across {len(all_days)} day(s), {len(week_places)} distinct places were "
             f"observed, {len(recurring)} of them on more than one day. Places somebody "

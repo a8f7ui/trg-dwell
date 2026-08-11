@@ -187,6 +187,151 @@ def _pattern_narrative(n_days: int, anchors: list[dict],
 
 
 # --------------------------------------------------------------------------
+# Individual signature: what makes this person's pattern theirs
+# --------------------------------------------------------------------------
+
+def assess_signature(points: list[Point], per_day: list[dict]) -> dict:
+    """
+    The traits that distinguish one anonymous participant from another.
+
+    This is the part of the lesson people find hardest to shrug off. Without a
+    name, an address or an account, a week of movement still produces a
+    description specific enough that a participant recognises themselves in it
+    immediately — and specific enough to tell them apart from eleven others.
+
+    Everything here is derived from their own coordinates and clock. Nothing is
+    looked up.
+    """
+    if len(points) < 20:
+        return {"available": False}
+
+    pts = sorted(points, key=lambda p: p.ts)
+
+    # Chronotype: when the day starts and ends, averaged over days observed.
+    starts: list[float] = []
+    ends: list[float] = []
+    by_day: dict[str, list[Point]] = defaultdict(list)
+    for p in pts:
+        by_day[p.ts.date().isoformat()].append(p)
+
+    for day_pts in by_day.values():
+        # Ignore the overnight tail: the first real movement of the day is what
+        # says whether somebody is an early riser, not the phone on the bedside
+        # table at 3am.
+        moving = _first_movement(day_pts)
+        if moving:
+            starts.append(moving.ts.hour + moving.ts.minute / 60)
+        last = _last_movement(day_pts)
+        if last:
+            ends.append(last.ts.hour + last.ts.minute / 60)
+
+    # Mobility: how far from their anchor they range, and how much ground covered.
+    lats = [p.lat for p in pts]
+    lons = [p.lon for p in pts]
+    centre = (statistics.median(lats), statistics.median(lons))
+    radii = [haversine_m(centre[0], centre[1], p.lat, p.lon) for p in pts]
+    radius_km = round(max(radii) / 1000, 1) if radii else 0
+
+    distance_km = 0.0
+    for a, b in zip(pts, pts[1:]):
+        gap = (b.ts - a.ts).total_seconds()
+        if gap <= 1800:
+            distance_km += haversine_m(a.lat, a.lon, b.lat, b.lon) / 1000
+
+    # Exploration: how much of the week was spent somewhere new.
+    seen: set[str] = set()
+    new_by_day = []
+    for day in per_day:
+        names = {pl["name"] for pl in day.get("places", [])}
+        new_by_day.append(len(names - seen))
+        seen |= names
+    exploration = (round(sum(new_by_day[1:]) / max(1, len(new_by_day) - 1), 1)
+                   if len(new_by_day) > 1 else 0)
+
+    traits = []
+    if starts:
+        mean_start = statistics.mean(starts)
+        traits.append(_chronotype(mean_start))
+    if ends:
+        mean_end = statistics.mean(ends)
+        if mean_end >= 22:
+            traits.append("out late most evenings")
+        elif mean_end <= 19:
+            traits.append("home early most evenings")
+    if radius_km >= 8:
+        traits.append("ranges well beyond the city centre")
+    elif radius_km <= 2:
+        traits.append("stays within a small central area")
+    if exploration >= 2:
+        traits.append("visits somewhere new most days")
+    elif exploration <= 0.5:
+        traits.append("returns to the same handful of places")
+
+    return {
+        "available": True,
+        "typical_start": _fmt_hour(statistics.mean(starts)) if starts else None,
+        "typical_end": _fmt_hour(statistics.mean(ends)) if ends else None,
+        "start_spread_hours": (round(statistics.pstdev(starts), 2)
+                               if len(starts) >= 2 else None),
+        "max_radius_km": radius_km,
+        "distance_travelled_km": round(distance_km, 1),
+        "new_places_per_day": exploration,
+        "traits": traits,
+        "narrative": _signature_narrative(traits, starts, ends, radius_km, distance_km),
+    }
+
+
+def _first_movement(day_pts: list[Point], threshold_m: float = 120) -> Point | None:
+    """The first point meaningfully away from where the day started."""
+    if not day_pts:
+        return None
+    ordered = sorted(day_pts, key=lambda p: p.ts)
+    origin = ordered[0]
+    for p in ordered:
+        if haversine_m(origin.lat, origin.lon, p.lat, p.lon) > threshold_m:
+            return p
+    return None
+
+
+def _last_movement(day_pts: list[Point], threshold_m: float = 120) -> Point | None:
+    if not day_pts:
+        return None
+    ordered = sorted(day_pts, key=lambda p: p.ts)
+    end = ordered[-1]
+    for p in reversed(ordered):
+        if haversine_m(end.lat, end.lon, p.lat, p.lon) > threshold_m:
+            return p
+    return None
+
+
+def _chronotype(mean_start: float) -> str:
+    if mean_start < 7:
+        return "up and out before seven"
+    if mean_start < 8.5:
+        return "an early start most days"
+    if mean_start < 10:
+        return "a conventional morning"
+    return "a late start most days"
+
+
+def _signature_narrative(traits, starts, ends, radius_km, distance_km) -> str:
+    if not traits:
+        return "Not enough movement to describe a personal pattern yet."
+    bits = ["Without a name, an address, or an account, this week describes "
+            "somebody who is " + ", ".join(traits) + "."]
+    if starts and ends:
+        bits.append(
+            f"Typically moving by {_fmt_hour(statistics.mean(starts))} and "
+            f"settled by {_fmt_hour(statistics.mean(ends))}, covering roughly "
+            f"{round(distance_km)} km across the week within about "
+            f"{radius_km} km of one centre.")
+    bits.append(
+        "That description fits one person in this room and not the other eleven. "
+        "It was assembled from coordinates and a clock.")
+    return " ".join(bits)
+
+
+# --------------------------------------------------------------------------
 # Association: who moves with whom
 # --------------------------------------------------------------------------
 
@@ -280,6 +425,94 @@ def assess_associations(subject_id: str,
             "not proof: two people in the same cafe are not necessarily "
             "together."),
     }
+
+
+def detect_groups(all_points: dict[str, list[Point]],
+                  labels: dict[str, str] | None = None,
+                  min_days: int = 2) -> dict:
+    """
+    Recurring small groups, rather than pairs one at a time.
+
+    Participants on this course move about in small groups by design, and that
+    is precisely what a third party watching over a week would pick out: not
+    "these two were once in the same bar", but "these four are together most
+    evenings". Groups are far more revealing than pairs, because a group that
+    keeps reforming is a relationship rather than a coincidence.
+
+    Moments with the whole cohort present are still excluded — a lecture theatre
+    is not a friendship — so what surfaces is the sub-group that keeps meeting
+    away from the room.
+    """
+    labels = labels or {}
+    buckets: dict[int, list[tuple[str, Point]]] = defaultdict(list)
+    for pid, pts in all_points.items():
+        for p in pts:
+            buckets[int(p.ts.timestamp() // COLOCATION_WINDOW_S)].append((pid, p))
+
+    # For each moment, which small sets of people were together.
+    seen_groups: dict[frozenset, dict] = defaultdict(
+        lambda: {"windows": set(), "days": set()})
+
+    for bucket, members in buckets.items():
+        if len(members) < 2:
+            continue
+        # Cluster the people present at this moment by proximity.
+        remaining = list(members)
+        while remaining:
+            pid, anchor = remaining.pop()
+            cluster = {pid}
+            still = []
+            for other_pid, q in remaining:
+                if haversine_m(anchor.lat, anchor.lon, q.lat, q.lon) <= COLOCATION_RADIUS_M:
+                    cluster.add(other_pid)
+                else:
+                    still.append((other_pid, q))
+            remaining = still
+            # Two is a pair, and the whole room is a lecture. The interesting
+            # band is in between.
+            if 2 <= len(cluster) < CROWD_THRESHOLD:
+                rec = seen_groups[frozenset(cluster)]
+                rec["windows"].add(bucket)
+                rec["days"].add(anchor.ts.date().isoformat())
+
+    groups = []
+    for members, rec in seen_groups.items():
+        if len(rec["days"]) < min_days:
+            continue
+        groups.append({
+            "members": sorted(members),
+            "labels": [labels.get(m, m) for m in sorted(members)],
+            "size": len(members),
+            "days_together": len(rec["days"]),
+            "days": sorted(rec["days"]),
+            "minutes_together": round(len(rec["windows"]) * COLOCATION_WINDOW_S / 60),
+        })
+
+    groups.sort(key=lambda g: (g["days_together"], g["minutes_together"]), reverse=True)
+    return {
+        "available": bool(groups),
+        "groups": groups[:12],
+        "narrative": _group_narrative(groups),
+        "caveat": (
+            "Groups are inferred from being in the same place at the same minute, "
+            "repeatedly. That is strong evidence of association and weak evidence "
+            "of anything else — people share a lift, a queue and a bus stop "
+            "without knowing each other."),
+    }
+
+
+def _group_narrative(groups: list[dict]) -> str:
+    if not groups:
+        return ("No small group reformed on more than one day, once moments with "
+                "the whole cohort present are excluded.")
+    top = groups[0]
+    names = ", ".join(top["labels"])
+    return (
+        f"{len(groups)} recurring group(s) were detected. The strongest is "
+        f"{names} — together on {top['days_together']} days for around "
+        f"{top['minutes_together']} minutes, away from the whole-cohort moments. "
+        f"Nobody collected a contact list, and no message was read. This social "
+        f"graph fell out of coordinates and timestamps alone.")
 
 
 def _association_strength(minutes: float, days: int) -> str:

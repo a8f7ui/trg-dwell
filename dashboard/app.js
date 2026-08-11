@@ -470,11 +470,12 @@ function drawLive() {
           ? `<div style="color:#04121f;font:800 12px system-ui;width:${
               Math.min(44, 22 + n * 3.2)}px;text-align:center;
               transform:translate(-50%,-8px);pointer-events:none">${n}</div>`
-          : `<div style="color:${colorFor(c.members[0].participant_id)};
-              font:600 10px ui-monospace,monospace;letter-spacing:.04em;
-              text-shadow:0 1px 4px #000,0 0 2px #000;white-space:nowrap;
-              transform:translate(11px,-7px);pointer-events:none">${
-                escapeHtml(c.members[0].label).toUpperCase()}</div>`,
+          : `<div style="color:#16202c;font:600 11.5px system-ui;
+              background:rgba(255,255,255,.92);border-radius:999px;
+              padding:1px 8px;box-shadow:0 1px 4px rgba(22,32,44,.22);
+              white-space:nowrap;
+              transform:translate(12px,-10px);pointer-events:none">${
+                escapeHtml(c.members[0].label)}</div>`,
       }),
     }).addTo(layers.live);
   });
@@ -561,8 +562,65 @@ async function renderParticipantWeek(pid) {
         : '<p class="empty">No place was seen on more than one day.</p>'
     }</div>
     ${renderCaveats(a.caveats)}
+    ${renderSignature(w.signature)}
     ${renderPatternOfLife(w.pattern_of_life)}
+    ${renderGroups(w.groups)}
     ${renderAssociations(w.associations)}`;
+}
+
+/**
+ * The behavioural signature: a description specific enough to pick one person
+ * out of the room, built without ever learning who they are. That gap — highly
+ * identifying, entirely nameless — is the point of the card.
+ */
+function renderSignature(sig) {
+  if (!sig || !sig.available) return '';
+  const facts = [
+    sig.typical_start ? ['Typical first move', sig.typical_start] : null,
+    sig.typical_end ? ['Typical last move', sig.typical_end] : null,
+    sig.start_spread_hours !== null && sig.start_spread_hours !== undefined
+      ? ['Start varies by', `±${sig.start_spread_hours} h`] : null,
+    ['Range from centre', `${sig.max_radius_km} km`],
+    ['Distance covered', `${sig.distance_travelled_km} km`],
+    ['New places per day', sig.new_places_per_day],
+  ].filter(Boolean);
+  return `
+    <h3>Behavioural signature</h3>
+    <div class="card">
+      <p class="basis">${escapeHtml(sig.narrative)}</p>
+      <div class="place-list">${facts.map(([k, v]) => `
+        <div class="place">
+          <div><div>${escapeHtml(k)}</div></div>
+          <div class="dwell">${escapeHtml(String(v))}</div>
+        </div>`).join('')}</div>
+    </div>`;
+}
+
+/**
+ * Recurring small groups. Instructor-only, for the same reason association is:
+ * it describes other participants' movements, and only instructors were
+ * disclosed as able to see those.
+ */
+function renderGroups(groups) {
+  if (!groups || !groups.available) return '';
+  return `
+    <h3>Recurring groups</h3>
+    <div class="card">
+      ${groups.groups.map((g) => `
+        <div class="place">
+          <div><div>${g.members.map((m, i) => `<span class="swatch"
+            style="display:inline-block;width:9px;height:9px;border-radius:50%;
+            margin-right:4px;background:${colorFor(m)}"></span>${
+            escapeHtml(g.labels[i] || m)}`).join(' ')}</div>
+            <div class="kind">${g.size} people · ${g.days_together} days</div></div>
+          <div class="dwell">${g.minutes_together} min</div>
+        </div>`).join('')}
+      <p class="basis">${escapeHtml(groups.narrative)}</p>
+    </div>
+    <div class="caveats">
+      <h4>Why this is not proof</h4>
+      <ul><li>${escapeHtml(groups.caveat)}</li></ul>
+    </div>`;
 }
 
 /**
