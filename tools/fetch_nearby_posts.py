@@ -201,8 +201,11 @@ def day_range(spec: str) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--around", required=True, metavar="LAT,LON",
+    ap.add_argument("--around", metavar="LAT,LON",
                     help="centre of the course area")
+    ap.add_argument("--use-course-location", action="store_true",
+                    help="Centre on the course location set in the database, "
+                         "so this matches wherever the dashboard opens.")
     ap.add_argument("--radius", type=int, default=DEFAULT_RADIUS_M,
                     help=f"metres (default {DEFAULT_RADIUS_M})")
     ap.add_argument("--days", help="YYYY-MM-DD[:YYYY-MM-DD], required for Flickr")
@@ -213,11 +216,26 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=Path("data/context/nearby-posts.json"))
     args = ap.parse_args()
 
-    try:
-        lat_s, lon_s = args.around.split(",")
-        lat, lon = float(lat_s), float(lon_s)
-    except ValueError:
-        print("--around must look like 43.0389,-87.9065")
+    if args.around:
+        try:
+            lat_s, lon_s = args.around.split(",")
+            lat, lon = float(lat_s), float(lon_s)
+        except ValueError:
+            print("--around must look like 43.0389,-87.9065")
+            return 2
+    elif args.use_course_location:
+        # Imported here so the tool still runs standalone without the flag.
+        import sys as _sys
+        _sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from backend import course as _course, db as _db
+        conn = _db.connect()
+        _db.init_db(conn)
+        loc = _course.get_location(conn)
+        conn.close()
+        lat, lon = loc["lat"], loc["lon"]
+        print(f"  using course location: {loc['name']} ({lat}, {lon})")
+    else:
+        print("Give either --around LAT,LON or --use-course-location.")
         return 2
 
     days = day_range(args.days) if args.days else []

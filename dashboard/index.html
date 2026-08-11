@@ -152,6 +152,37 @@
         <h2>Data &amp; teardown</h2>
         <div id="admin-stats" class="stats"></div>
 
+        <h3>Course location</h3>
+        <p class="hint">
+          Where this course is being taught. Decides where the map opens and
+          which timezone times are shown in. Set it once, at the start.
+        </p>
+        <p id="course-current" class="card"></p>
+        <label class="field">Town or city
+          <input type="text" id="course-search" placeholder="Cincinnati, Ohio">
+        </label>
+        <div class="row">
+          <button id="course-lookup">Look up</button>
+          <button id="course-reset">Reset to Milwaukee</button>
+        </div>
+        <div id="course-results"></div>
+        <details id="course-manual">
+          <summary class="hint" style="cursor:pointer">
+            Enter coordinates instead (works with no internet)
+          </summary>
+          <label class="field">Name for the room
+            <input type="text" id="course-name" placeholder="Cincinnati, Ohio">
+          </label>
+          <label class="field">Latitude, longitude
+            <input type="text" id="course-latlon" placeholder="39.1031, -84.5120">
+          </label>
+          <label class="field">Timezone
+            <select id="course-tz"></select>
+          </label>
+          <button id="course-save" class="wide">Save location</button>
+        </details>
+        <p id="course-result" class="result" hidden></p>
+
         <h3>Wipe all data</h3>
         <p class="hint">Deletes every participant and every location point. Cannot be undone.</p>
         <label class="field">Type <code>DELETE ALL DATA</code> to confirm
@@ -168,13 +199,8 @@
         <label class="field">Label for this source
           <input type="text" id="import-label" placeholder="wardrive-milwaukee">
         </label>
-        <input type="file" id="import-file" accept=".csv,.json,.txt"
-               style="width:100%;font-size:12px;color:#7f93a6;margin:6px 0">
-        <button id="import-btn" class="buttonQuiet"
-                style="width:100%;padding:9px;background:#161f29;color:#dce8f2;
-                       border:1px solid #2f4457;border-radius:2px;cursor:pointer;
-                       font-family:ui-monospace,monospace;font-size:11px;
-                       text-transform:uppercase;letter-spacing:.1em">Import</button>
+        <input type="file" id="import-file" accept=".csv,.json,.txt" class="file-input">
+        <button id="import-btn" class="wide">Import</button>
         <p id="import-result" class="result" hidden></p>
 
         <h3>Audit log</h3>

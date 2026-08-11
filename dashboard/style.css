@@ -393,6 +393,32 @@ main { display: flex; flex: 1; min-height: 0; }
   text-transform: var(--label-transform); letter-spacing: var(--label-spacing);
 }
 .row button:hover { border-color: var(--accent); color: var(--accent); }
+/* Full-width secondary action. Previously written as inline styles carrying
+ * dark-theme colours, which is exactly the mistake the token system exists to
+ * prevent — it looked correct until the field skin existed. */
+button.wide {
+  width: 100%; padding: 10px; margin-top: 4px;
+  background: var(--panel-2); color: var(--ink);
+  border: 1px solid var(--line-bright); border-radius: var(--radius-sm);
+  cursor: pointer; font-family: var(--label-font);
+  font-size: 13px; font-weight: 600;
+  text-transform: var(--label-transform); letter-spacing: var(--label-spacing);
+}
+button.wide:hover { border-color: var(--accent); color: var(--accent); }
+.file-input {
+  width: 100%; font-size: 12px; color: var(--ink-dim); margin: 6px 0;
+}
+
+/* Geocoding results: one clickable row per candidate. */
+.pick {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  background: var(--panel-2); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 8px 11px; margin: 5px 0; font-family: inherit; font-size: 12.5px;
+}
+.pick:hover { border-color: var(--accent); }
+.pick .where { color: var(--ink-dim); font-size: 11.5px; margin-top: 2px; }
+
 button.danger {
   width: 100%; padding: 13px; background: var(--danger-bg); color: var(--danger);
   border: 1px solid var(--danger-line); border-radius: var(--radius-sm);

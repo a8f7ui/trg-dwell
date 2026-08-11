@@ -137,6 +137,23 @@ def bbox_around(lat: float, lon: float, radius_m: float) -> str:
     return f"{lat - dlat:.6f},{lon - dlon:.6f},{lat + dlat:.6f},{lon + dlon:.6f}"
 
 
+def course_centre() -> tuple[float, float, str]:
+    """
+    Where the course is being taught, from the database.
+
+    Imported inside the function so this script keeps working as a standalone
+    tool when the flag is not used.
+    """
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from backend import course, db
+    conn = db.connect()
+    db.init_db(conn)
+    loc = course.get_location(conn)
+    conn.close()
+    return loc["lat"], loc["lon"], loc["name"]
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -147,15 +164,23 @@ def main() -> None:
     ap.add_argument("--out", default="data/sample/environment.json")
     ap.add_argument("--merge", action="store_true",
                     help="Add to the existing file rather than replacing it.")
+    ap.add_argument("--use-course-location", action="store_true",
+                    help="Centre on the course location set in the database, "
+                         "so this matches wherever the dashboard opens.")
     args = ap.parse_args()
 
-    if args.around:
+    if args.use_course_location and not args.around and not args.bbox:
+        lat, lon, name = course_centre()
+        print(f"Using course location: {name} ({lat}, {lon})")
+        bbox = bbox_around(lat, lon, args.radius)
+    elif args.around:
         lat, lon = (float(x) for x in args.around.split(","))
         bbox = bbox_around(lat, lon, args.radius)
     elif args.bbox:
         bbox = args.bbox
     else:
-        raise SystemExit("Give either --bbox or --around. See --help.")
+        raise SystemExit(
+            "Give --use-course-location, --bbox or --around. See --help.")
 
     print(f"Asking OpenStreetMap for observing infrastructure in {bbox} ...")
     features = fetch(bbox)

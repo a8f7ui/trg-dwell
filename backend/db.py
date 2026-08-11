@@ -117,6 +117,16 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 
 CREATE INDEX IF NOT EXISTS idx_login_attempts_ts ON login_attempts(ts);
 
+-- Instance settings that outlive a restart: currently the course location.
+-- Deliberately key/value rather than a column per setting, because the
+-- alternative is a migration every time the course needs to know one more
+-- thing about itself.
+CREATE TABLE IF NOT EXISTS settings (
+    key     TEXT PRIMARY KEY,
+    value   TEXT NOT NULL,
+    updated TEXT NOT NULL
+);
+
 -- A record of consequential actions: withdrawals, wipes, logins. So that
 -- "we deleted the data" is a checkable claim rather than a promise.
 CREATE TABLE IF NOT EXISTS audit_log (

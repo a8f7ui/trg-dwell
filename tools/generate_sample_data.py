@@ -833,6 +833,51 @@ python3 tools/generate_sample_data.py --seed {result['meta']['seed']} \\
 """)
 
 
+def apply_course_location(args) -> None:
+    """
+    Point the generator at wherever the course is actually being taught.
+
+    Sample data in the wrong city is worse than no sample data: the dashboard
+    opens on Cincinnati and the invented participants are all in Wisconsin, and
+    the first thing anybody concludes is that the tool is broken.
+
+    Imported here rather than at the top of the file so the generator keeps its
+    promise of running on the standard library alone when this flag is not used.
+    """
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from backend import course, db
+
+    conn = db.connect()
+    db.init_db(conn)
+    loc = course.get_location(conn)
+    conn.close()
+
+    args.center_lat = loc["lat"]
+    args.center_lon = loc["lon"]
+    args.timezone_name = loc["timezone"]
+    args.utc_offset = _utc_offset_hours(loc["timezone"], args.start_date)
+    print(f"  using course location: {loc['name']} "
+          f"({loc['lat']}, {loc['lon']}, {loc['timezone']}, "
+          f"UTC{args.utc_offset:+g})")
+
+
+def _utc_offset_hours(tz_name: str, start_date: str) -> float:
+    """
+    The offset in effect on the course start date, not today's.
+
+    A course in mid-September is inside daylight saving in most of the US; a
+    generator run in December would otherwise bake in an hour's error and put
+    every invented participant's breakfast in the middle of the night.
+    """
+    from zoneinfo import ZoneInfo
+    try:
+        when = datetime.fromisoformat(start_date).replace(tzinfo=ZoneInfo(tz_name))
+    except (ValueError, KeyError):
+        return -5.0
+    return (when.utcoffset() or timedelta()).total_seconds() / 3600.0
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
         description="Generate synthetic participant data for Dwell: Privacy Lab.")
@@ -859,8 +904,15 @@ def main() -> None:
                     help="'background' (default) collects around the clock, as the app "
                          "does. 'foreground' collects only while the app is on screen, "
                          "producing far patchier data.")
+    ap.add_argument("--use-course-location", action="store_true",
+                    help="Take the centre and timezone from the course location "
+                         "set in the database, so sample data lands in the same "
+                         "city the dashboard opens on.")
     ap.add_argument("--out", default="data/sample")
     args = ap.parse_args()
+
+    if args.use_course_location:
+        apply_course_location(args)
 
     result = generate(args)
     write_outputs(result, Path(args.out))

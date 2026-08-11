@@ -21,7 +21,8 @@ from datetime import datetime, timedelta, timezone
 
 from flask import Flask, jsonify, request, send_from_directory, session
 
-from . import analysis, assessment, auth, config, context_feed, db, environment
+from . import (analysis, assessment, auth, config, context_feed, course, db,
+               environment)
 from .analysis import Point
 
 DASHBOARD_DIR = config.BASE_DIR / "dashboard"
@@ -587,15 +588,22 @@ def monitoring():
     # rather than in whatever zone the instructor's laptop happens to be set to —
     # otherwise a machine left on UTC would tell the room somebody went to dinner
     # at one in the morning.
+    # Participants' own phones win: they are the ground truth for where the
+    # course is actually happening. The configured location is the fallback for
+    # before anybody has registered, which is exactly when a dashboard is being
+    # set up and most needs to look right.
     tz_row = conn.execute(
         "SELECT timezone, COUNT(*) AS n FROM participants "
         "WHERE timezone IS NOT NULL AND timezone != '' "
         "GROUP BY timezone ORDER BY n DESC LIMIT 1").fetchone()
+    location = course.get_location(conn)
     conn.close()
 
     return jsonify({
         "at": at.isoformat(),
-        "course_timezone": tz_row["timezone"] if tz_row else None,
+        "course_timezone": (tz_row["timezone"] if tz_row
+                            else location["timezone"]),
+        "course_location": location,
         "window_seconds": window,
         "participants_registered": participants,
         "participants_with_data": totals["people"] or 0,
@@ -761,6 +769,63 @@ def _parse_environment_upload(raw: str, label: str) -> list[dict]:
         if len(features) > 60_000:
             break
     return features
+
+
+# --------------------------------------------------------------------------
+# Course location
+# --------------------------------------------------------------------------
+#
+# Where the course is being taught, which decides where the dashboard opens and
+# which timezone times are read out in. Milwaukee until somebody says otherwise.
+# See backend/course.py for why geocoding here does not contradict the promise
+# that participant locations are never sent anywhere.
+
+@app.get("/api/instructor/course")
+@auth.instructor_required
+def get_course():
+    conn = get_conn()
+    location = course.get_location(conn)
+    conn.close()
+    return jsonify({"location": location, "timezones": course.COMMON_TIMEZONES})
+
+
+@app.post("/api/instructor/course")
+@auth.instructor_required
+def set_course():
+    body = request.get_json(silent=True) or {}
+    conn = get_conn()
+    try:
+        if body.get("reset"):
+            location = course.reset_location(conn)
+            detail = "reset to default"
+        else:
+            location = course.set_location(
+                conn,
+                name=body.get("name", ""),
+                lat=body.get("lat"),
+                lon=body.get("lon"),
+                tz_name=body.get("timezone", ""),
+                zoom=body.get("zoom", 14))
+            detail = f"{location['name']} ({location['lat']}, {location['lon']})"
+    except course.LocationError as exc:
+        conn.close()
+        return jsonify({"error": str(exc)}), 400
+    db.audit(conn, session["instructor"], "course_location_set", detail)
+    conn.commit()
+    conn.close()
+    return jsonify({"location": location})
+
+
+@app.get("/api/instructor/course/geocode")
+@auth.instructor_required
+def geocode_course():
+    """Look up a place name. Instructor action, at setup, never automatic."""
+    try:
+        return jsonify({"results": course.geocode(request.args.get("q", ""))})
+    except course.LocationError as exc:
+        # 200 with an error field: this is an expected outcome an instructor
+        # needs to read, not a fault in the request they made.
+        return jsonify({"results": [], "error": str(exc)})
 
 
 @app.post("/api/instructor/wipe")

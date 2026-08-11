@@ -172,6 +172,40 @@ Then open <http://localhost:5000> and log in as `instructor` / `demo-password`.
 That demo password is fine on a laptop and unacceptable anywhere else. Before
 hosting this, make a real account with `python manage.py add-instructor <name>`.
 
+### Teaching it somewhere other than Milwaukee
+
+Milwaukee is the **default**, not a hard-coded assumption. Set the course
+location once and the whole system follows it — where the dashboard opens, which
+timezone times are read out in, where the sample generator invents a week, and
+what area the fetch tools collect.
+
+From the dashboard: **Data & teardown → Course location**. Type a city, pick from
+the matches, done. Or from the command line:
+
+```bash
+python manage.py where                       # where is it anchored now?
+python manage.py set-location "Cincinnati, Ohio" --timezone America/New_York
+python3 tools/generate_sample_data.py --use-course-location --out data/sample
+python -m backend.load_sample
+```
+
+`--use-course-location` also works on `tools/fetch_osm_environment.py` and
+`tools/fetch_nearby_posts.py`, so the surveillance infrastructure and the nearby
+posts come from the right city too.
+
+Two things worth knowing:
+
+- **The timezone is asked for, not guessed.** Nothing in a geocoding response
+  knows one, and guessing would show every time in the course an hour out for
+  half the year. `EST` and similar fixed offsets are rejected for the same
+  reason — use `America/New_York`.
+- **Coordinates can be typed directly**, so this works with no internet at all.
+  Looking up a place name is the only part that needs a connection, and it is
+  an instructor action at setup time, never anything automatic during a course.
+
+`python manage.py check-production` warns if the location is still the default,
+in case a course in Ohio is about to open on a map of Wisconsin.
+
 ### Two skins, switchable at any time
 
 Top right of the dashboard: **Field** and **Console**.

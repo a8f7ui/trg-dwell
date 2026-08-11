@@ -62,15 +62,16 @@ In order. Each links to a full walkthrough.
 | # | Step | Time | Guide |
 |---|---|---|---|
 | 1 | Put the server online | ~45 min | [`hosting.md`](hosting.md) |
-| 2 | Run the safety check | 5 min | `python manage.py check-production` |
-| 3 | Build the app, point it at your server | ~1 hour | [`distribution.md`](distribution.md) |
-| 4 | Team dry-run on real phones | 2 days | [`distribution.md`](distribution.md) |
-| 5 | Submit to TestFlight / Play | 2–7 days waiting | [`distribution.md`](distribution.md) |
-| 6 | Send install links | — | template in [`distribution.md`](distribution.md) |
-| 7 | Run the week | 5 days | [`facilitator-guide.md`](facilitator-guide.md) |
-| 8 | Wipe everything | 5 min | dashboard, then [`hosting.md`](hosting.md) |
+| 2 | Set the course location | 2 min | `python manage.py set-location "City, State" --timezone America/...` |
+| 3 | Run the safety check | 5 min | `python manage.py check-production` |
+| 4 | Build the app, point it at your server | ~1 hour | [`distribution.md`](distribution.md) |
+| 5 | Team dry-run on real phones | 2 days | [`distribution.md`](distribution.md) |
+| 6 | Submit to TestFlight / Play | 2–7 days waiting | [`distribution.md`](distribution.md) |
+| 7 | Send install links | — | template in [`distribution.md`](distribution.md) |
+| 8 | Run the week | 5 days | [`facilitator-guide.md`](facilitator-guide.md) |
+| 9 | Wipe everything | 5 min | dashboard, then [`hosting.md`](hosting.md) |
 
-**Step 2 is the one not to skip.** It catches the demo login — whose password is
+**Step 3 is the one not to skip.** It catches the demo login — whose password is
 published in this repository — still being active on a live server.
 
 Satellite and street basemaps are both built in and switchable from the map's
@@ -165,6 +166,7 @@ Run from the project folder, with the virtual environment active.
 
 ```bash
 python manage.py status              # what is stored right now
+python manage.py where               # which city the course is anchored to
 python manage.py check-production    # safety check before going live
 python manage.py add-instructor NAME # create a teaching login
 python manage.py audit               # log of deletions, wipes, logins
@@ -177,8 +179,8 @@ Checking the app and server still agree, after any change:
 python3 tools/contract_test.py https://your-server-address
 ```
 
-Thirty-one checks, including that a participant's token stops working the moment
-they withdraw. Safe against a live server — it creates a throwaway participant
+Thirty-four checks, including that a participant's token stops working the
+moment they withdraw, and that their own reveal never names another participant. Safe against a live server — it creates a throwaway participant
 and deletes it.
 
 ---

@@ -78,8 +78,10 @@ let map, baseSatellite, baseStreet, labelLayer, layerControl;
 const layers = {};      // one layer group per view
 
 function initMap() {
+  // Milwaukee only as the opening frame before the server answers; startApp
+  // moves the map to the configured course location a moment later.
   map = L.map('map', { zoomControl: true, preferCanvas: true })
-         .setView([43.0389, -87.9065], 14);   // downtown Milwaukee
+         .setView([43.0389, -87.9065], 14);
 
   // Two basemaps, both built in and both always available. Neither is an
   // optional extra: satellite shows what a place looks like, streets show what
@@ -304,6 +306,10 @@ $('#logout').addEventListener('click', async () => {
 
 let courseStart = null, courseEnd = null, participants = [], allDays = [];
 
+// Where the course is being taught. Milwaukee unless an instructor has set
+// otherwise; the server is the authority and this is only the local copy.
+let courseLocation = null;
+
 async function startApp(username) {
   $('#login-screen').hidden = true;
   $('#app').hidden = false;
@@ -318,6 +324,15 @@ async function startApp(username) {
   participants = people;
   assignColors(people);
   courseTz = mon.course_timezone || null;
+
+  // Open on wherever the course is being taught, before any data exists to
+  // frame the map for us. Views with data refit to it; this is what stops a
+  // freshly set-up dashboard opening on the wrong city.
+  courseLocation = mon.course_location || courseLocation;
+  if (courseLocation && !map._dwellFramed) {
+    map.setView([courseLocation.lat, courseLocation.lon], courseLocation.zoom);
+    map._dwellFramed = true;
+  }
 
   if (mon.first_ping && mon.last_ping) {
     courseStart = new Date(mon.first_ping);
@@ -1076,7 +1091,125 @@ async function renderAdmin() {
     `<div>${escapeHtml(r.ts.slice(0, 19).replace('T', ' '))} · ${escapeHtml(r.actor)} · ` +
     `${escapeHtml(r.action)}${r.detail ? ' · ' + escapeHtml(r.detail) : ''}</div>`).join('')
     || '<p class="empty">Nothing recorded yet.</p>';
+  await renderCourseLocation();
 }
+
+// ------------------------------------------------------- course location
+
+/**
+ * Where the course is being taught.
+ *
+ * Everything downstream reads this: where the map opens, and which timezone
+ * times are read out in before any participant phone has reported one. Getting
+ * it wrong is not subtle — the dashboard opens on the wrong city — but it is
+ * only obvious to somebody who knows what they are looking at, so the current
+ * value is shown plainly rather than hidden behind a settings screen.
+ */
+async function renderCourseLocation() {
+  const { location, timezones } = await api('/api/instructor/course');
+  courseLocation = location;
+
+  $('#course-current').innerHTML =
+    `<b>${escapeHtml(location.name)}</b>` +
+    `<div class="basis">${location.lat}, ${location.lon} · ` +
+    `${escapeHtml(location.timezone)}${
+      location.is_default ? ' · still the built-in default' : ''}</div>`;
+
+  const tzSelect = $('#course-tz');
+  const options = timezones.includes(location.timezone)
+    ? timezones : [location.timezone, ...timezones];
+  tzSelect.innerHTML = options.map((t) =>
+    `<option value="${escapeHtml(t)}"${
+      t === location.timezone ? ' selected' : ''}>${escapeHtml(t)}</option>`).join('');
+}
+
+function courseMessage(text, ok = true) {
+  const out = $('#course-result');
+  out.textContent = text;
+  out.style.color = ok ? 'var(--good)' : 'var(--danger)';
+  out.hidden = false;
+}
+
+/** Move the map to the newly set location, so the change is visibly real. */
+async function afterLocationSaved(location) {
+  courseLocation = location;
+  map.setView([location.lat, location.lon], location.zoom);
+  $('#course-results').innerHTML = '';
+  $('#course-search').value = '';
+  await renderCourseLocation();
+  courseMessage(`Course location set to ${location.name}. The map has moved ` +
+                `there, and times are now shown in ${location.timezone}.`);
+}
+
+$('#course-lookup').addEventListener('click', async () => {
+  const q = $('#course-search').value.trim();
+  if (!q) return courseMessage('Type a town or city to look up.', false);
+  $('#course-results').innerHTML = '<p class="empty">Looking up…</p>';
+  try {
+    const { results, error } = await api(
+      `/api/instructor/course/geocode?q=${encodeURIComponent(q)}`);
+    if (error || !results.length) {
+      $('#course-results').innerHTML = '';
+      // The manual entry path always works, so point at it rather than
+      // leaving somebody stuck behind a network they cannot fix.
+      $('#course-manual').open = true;
+      return courseMessage(error || `Nothing found for '${q}'.`, false);
+    }
+    $('#course-result').hidden = true;
+    $('#course-results').innerHTML = results.map((r, i) =>
+      `<button class="pick" data-pick="${i}">${escapeHtml(r.short_name)}
+        <div class="where">${escapeHtml(r.name)}</div></button>`).join('');
+    $$('#course-results [data-pick]').forEach((b) =>
+      b.addEventListener('click', async () => {
+        const r = results[Number(b.dataset.pick)];
+        // The lookup gives coordinates, not a timezone — nothing in the
+        // response knows one. Whatever is selected below is used, which is why
+        // the current zone stays selected by default rather than resetting.
+        try {
+          const { location } = await api('/api/instructor/course', {
+            method: 'POST',
+            body: JSON.stringify({
+              name: r.short_name, lat: r.lat, lon: r.lon,
+              timezone: $('#course-tz').value, zoom: 14,
+            }),
+          });
+          await afterLocationSaved(location);
+        } catch (ex) { courseMessage(ex.message, false); }
+      }));
+  } catch (ex) {
+    $('#course-results').innerHTML = '';
+    courseMessage(ex.message, false);
+  }
+});
+
+$('#course-save').addEventListener('click', async () => {
+  const raw = $('#course-latlon').value.trim();
+  const [latText, lonText] = raw.split(/[,\s]+/);
+  if (!latText || !lonText) {
+    return courseMessage('Enter latitude and longitude, as in 39.1031, -84.5120.',
+                         false);
+  }
+  try {
+    const { location } = await api('/api/instructor/course', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: $('#course-name').value.trim() || raw,
+        lat: Number(latText), lon: Number(lonText),
+        timezone: $('#course-tz').value, zoom: 14,
+      }),
+    });
+    await afterLocationSaved(location);
+  } catch (ex) { courseMessage(ex.message, false); }
+});
+
+$('#course-reset').addEventListener('click', async () => {
+  try {
+    const { location } = await api('/api/instructor/course', {
+      method: 'POST', body: JSON.stringify({ reset: true }),
+    });
+    await afterLocationSaved(location);
+  } catch (ex) { courseMessage(ex.message, false); }
+});
 
 /**
  * Import wardrive or infrastructure data.

@@ -7,6 +7,8 @@ Administrative commands for a course.
     python manage.py remove-instructor <username>   delete a login
     python manage.py list-instructors               who can log in
     python manage.py status                         what is currently stored
+    python manage.py where                          where the course is being taught
+    python manage.py set-location <place> [...]     move the course to another city
     python manage.py load-sample                    load the synthetic sample data
     python manage.py wipe                           delete ALL participant data
     python manage.py sweep                          delete data past its retention date
@@ -24,7 +26,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from backend import auth, config, db
+from backend import auth, config, course, db
 
 
 def cmd_add_instructor(args: list[str]) -> None:
@@ -211,7 +213,23 @@ def cmd_check_production(_args: list[str]) -> None:
     else:
         good.append("No synthetic sample data is loaded.")
 
-    # 5. Can the database actually be written to?
+    # 5. Is the course anchored where it is actually being taught?
+    loc = course.get_location(conn)
+    if loc["is_default"]:
+        warnings.append(
+            "The course location is still the built-in default "
+            "(Milwaukee, Wisconsin).\n"
+            "     If that is where you are teaching, ignore this. If not, the "
+            "dashboard will\n"
+            "     open on the wrong city and every time will be shown in the "
+            "wrong zone.\n"
+            "     Fix: python manage.py set-location \"Your City, State\" "
+            "--timezone America/...")
+    else:
+        good.append(f"Course location is set to {loc['name']} "
+                    f"({loc['timezone']}).")
+
+    # 6. Can the database actually be written to?
     try:
         conn.execute("CREATE TABLE IF NOT EXISTS _writecheck (x INTEGER)")
         conn.execute("DROP TABLE _writecheck")
@@ -249,8 +267,121 @@ def cmd_remove_instructor(args: list[str]) -> None:
     print(f"Removed {cur.rowcount} account(s) named '{args[0]}'.")
 
 
+def cmd_where(_args: list[str]) -> None:
+    """Where the course is currently anchored."""
+    conn = db.connect()
+    db.init_db(conn)
+    loc = course.get_location(conn)
+    conn.close()
+    print(f"\n  {loc['name']}")
+    print(f"  {loc['lat']}, {loc['lon']}   zoom {loc['zoom']}")
+    print(f"  Times shown in {loc['timezone']}")
+    if loc["is_default"]:
+        print("\n  This is the built-in default, not something anybody chose.")
+        print("  If the course is not in Milwaukee, set it:")
+        print("      python manage.py set-location \"Cincinnati, Ohio\" "
+              "--timezone America/New_York")
+    print()
+
+
+def cmd_set_location(args: list[str]) -> None:
+    """
+    Move the course. Either look up a place name, or give coordinates.
+
+        python manage.py set-location "Cincinnati, Ohio" \\
+            --timezone America/New_York
+        python manage.py set-location "Cincinnati" --at 39.1031,-84.5120 \\
+            --timezone America/New_York
+        python manage.py set-location --reset
+
+    The timezone cannot be looked up from a place name — nothing in a geocoding
+    response knows one — so it is asked for rather than guessed. Guessing it
+    would show every time in the course an hour out for half the year.
+    """
+    conn = db.connect()
+    db.init_db(conn)
+
+    if "--reset" in args:
+        loc = course.reset_location(conn)
+        db.audit(conn, "cli", "course_location_set", "reset to default")
+        conn.commit()
+        conn.close()
+        print(f"\n  Reset to {loc['name']} ({loc['timezone']}).\n")
+        return
+
+    positional = [a for a in args if not a.startswith("--")]
+    flags = {}
+    for i, a in enumerate(args):
+        if a.startswith("--") and i + 1 < len(args) and not args[i + 1].startswith("--"):
+            flags[a] = args[i + 1]
+
+    if not positional:
+        conn.close()
+        print(cmd_set_location.__doc__)
+        raise SystemExit(1)
+
+    name = positional[0]
+    current = course.get_location(conn)
+    tz_name = flags.get("--timezone", current["timezone"])
+
+    if "--at" in flags:
+        try:
+            lat_s, lon_s = flags["--at"].split(",")
+            lat, lon = float(lat_s), float(lon_s)
+        except ValueError:
+            conn.close()
+            print("  --at must look like 39.1031,-84.5120")
+            raise SystemExit(1)
+    else:
+        print(f"  Looking up '{name}' ...")
+        try:
+            results = course.geocode(name)
+        except course.LocationError as exc:
+            conn.close()
+            print(f"\n  {exc}\n")
+            print("  To skip the lookup entirely:")
+            print(f"      python manage.py set-location \"{name}\" "
+                  f"--at LAT,LON --timezone {tz_name}\n")
+            raise SystemExit(1)
+        # More than one match is normal — there are Cincinnatis in several
+        # states. Show them rather than silently taking the first.
+        if len(results) > 1:
+            print("\n  Several matches. Re-run with --at to pick one:\n")
+            for r in results:
+                print(f"      --at {r['lat']},{r['lon']}   {r['name']}")
+            conn.close()
+            print()
+            raise SystemExit(1)
+        name, lat, lon = results[0]["short_name"], results[0]["lat"], results[0]["lon"]
+
+    try:
+        loc = course.set_location(conn, name, lat, lon, tz_name)
+    except course.LocationError as exc:
+        conn.close()
+        print(f"\n  {exc}\n")
+        raise SystemExit(1)
+
+    db.audit(conn, "cli", "course_location_set",
+             f"{loc['name']} ({loc['lat']}, {loc['lon']})")
+    conn.commit()
+    conn.close()
+
+    print(f"\n  Course location set to {loc['name']}")
+    print(f"  {loc['lat']}, {loc['lon']}   times in {loc['timezone']}")
+    if "--timezone" not in flags:
+        print(f"\n  Timezone left as {loc['timezone']} — pass --timezone if that "
+              f"is wrong for\n  this city, or every time shown will be off.")
+    print("\n  The dashboard will open here from now on. To regenerate sample")
+    print("  data for the new city:")
+    print("      python3 tools/generate_sample_data.py --use-course-location "
+          "--out data/sample")
+    print("      python -m backend.load_sample\n")
+
+
 COMMANDS = {
     "add-instructor": cmd_add_instructor,
+    "where": cmd_where,
+    "set-location": cmd_set_location,
     "remove-instructor": cmd_remove_instructor,
     "check-production": cmd_check_production,
     "list-instructors": cmd_list_instructors,
