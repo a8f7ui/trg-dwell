@@ -106,10 +106,10 @@ tools/          Sample-data generator — builds realistic synthetic participant
                 data so the backend and dashboard can be built and demonstrated
                 without any real phone or real person involved.
 data/sample/    Generated sample data (committed, safe, entirely invented).
-docs/           Facilitator's guide, store disclosures, hosting and demo guides.
-backend/        The server that receives pings and serves the dashboard.  (later stage)
-dashboard/      The instructor dashboard.                                  (later stage)
-app/            The mobile app (iOS + Android, one codebase).              (later stage)
+docs/           Hosting, distribution, store disclosures, SDK research.
+backend/        The server that receives pings and serves the dashboard.
+dashboard/      The instructor dashboard.
+app/            The mobile app (iOS + Android, one codebase).
 ```
 
 ---
@@ -124,8 +124,9 @@ Built in stages, each one runnable and demonstrable before the next begins.
 - [x] **Stage 4 — SDK research** feeding the "illustrated" categories
       (`docs/sdk-research.md`).
 - [x] **Stage 5 — Backend hosting** (guided walkthrough: `docs/hosting.md`).
-- [ ] Stage 6 — Getting it onto attendee phones (guided walkthrough).
-- [ ] Stage 7 — Store disclosures, facilitator's guide, demo guide.
+- [x] **Stage 6 — Getting it onto attendee phones**
+      (`docs/distribution.md`, `docs/store-disclosures.md`).
+- [ ] Stage 7 — Facilitator's guide and run-and-demo guide.
 
 ---
 
