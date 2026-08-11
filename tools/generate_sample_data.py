@@ -130,6 +130,70 @@ _POI_PLAN = {
 }
 
 
+# Public infrastructure that can observe somebody: cameras, plate readers,
+# mapped Wi-Fi, card terminals, transit gates. Invented here, exactly like the
+# places; a real course loads the genuine article for its own city with
+# tools/fetch_osm_environment.py.
+#
+# Densities are set to be plausible for a city centre rather than alarming.
+# Cameras cluster near commercial and transit sites, because that is where they
+# really are — not scattered evenly.
+_ENVIRONMENT_PLAN = {
+    "camera":   {"count": 55, "near": ["retail", "bar", "transit", "hotel",
+                                       "conference_venue", "grocery", "office"]},
+    "alpr":     {"count": 14, "near": ["transit", "office", "retail"]},
+    "wifi":     {"count": 90, "near": ["coffee", "hotel", "restaurant", "retail",
+                                        "library", "coworking", "campus", "bar"]},
+    "payment":  {"count": 70, "near": ["restaurant", "coffee", "bar", "retail",
+                                       "grocery"]},
+    "transit":  {"count": 10, "near": ["transit"]},
+}
+
+
+@dataclass
+class EnvFeature:
+    feature_id: str
+    kind: str
+    lat: float
+    lon: float
+    name: str
+    source: str
+
+
+def build_environment(pois: list["Poi"], rng: random.Random) -> list[EnvFeature]:
+    """
+    Scatter observing infrastructure around the invented city.
+
+    Placed near the kinds of place it really congregates around, at a small
+    offset, so that a participant walking to a shop passes cameras rather than
+    finding them in empty fields.
+    """
+    features: list[EnvFeature] = []
+    counter = 0
+    for kind, plan in _ENVIRONMENT_PLAN.items():
+        anchors = [p for p in pois if p.kind in plan["near"]]
+        if not anchors:
+            continue
+        for _ in range(plan["count"]):
+            anchor = rng.choice(anchors)
+            # Cameras and readers sit on the street outside, not inside.
+            offset = rng.uniform(8, 55) if kind != "payment" else rng.uniform(2, 12)
+            bearing = rng.uniform(0, 2 * math.pi)
+            lat, lon = offset_meters(anchor.lat, anchor.lon,
+                                     offset * math.cos(bearing),
+                                     offset * math.sin(bearing))
+            counter += 1
+            features.append(EnvFeature(
+                feature_id=f"env_{counter:04d}",
+                kind=kind,
+                lat=round(lat, 6),
+                lon=round(lon, 6),
+                name=f"near {anchor.name}",
+                source="synthetic",
+            ))
+    return features
+
+
 @dataclass
 class Poi:
     poi_id: str
@@ -547,6 +611,8 @@ def generate(args: argparse.Namespace) -> dict:
     # The one venue everybody attends.
     venue = rng.choice(pois_of(pois, "conference_venue"))
 
+    environment = build_environment(pois, rng)
+
     participants: list[Participant] = []
     persona_names = list(PERSONAS.keys())
     for i in range(args.participants):
@@ -684,6 +750,7 @@ def generate(args: argparse.Namespace) -> dict:
 
     return {
         "pois": pois,
+        "environment": environment,
         "participants": participants,
         "pings": pings,
         "ground_truth": truth_rows,
@@ -693,6 +760,7 @@ def generate(args: argparse.Namespace) -> dict:
             "collection_mode": args.mode,
             "days": args.days,
             "participant_count": len(participants),
+            "environment_feature_count": len(environment),
             "ping_count": len(pings),
             "session_count": session_counter,
             "center": {"lat": args.center_lat, "lon": args.center_lon},
@@ -714,6 +782,9 @@ def write_outputs(result: dict, out_dir: Path) -> None:
 
     (out_dir / "pois.json").write_text(
         json.dumps([asdict(p) for p in result["pois"]], indent=2) + "\n")
+
+    (out_dir / "environment.json").write_text(
+        json.dumps([asdict(f) for f in result["environment"]], indent=2) + "\n")
 
     (out_dir / "participants.json").write_text(
         json.dumps([asdict(p) for p in result["participants"]], indent=2) + "\n")

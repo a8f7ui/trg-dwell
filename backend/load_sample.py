@@ -45,6 +45,19 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True) -> dict:
         "INSERT OR REPLACE INTO places (poi_id, name, kind, lat, lon) VALUES (?,?,?,?,?)",
         [(p["poi_id"], p["name"], p["kind"], p["lat"], p["lon"]) for p in pois])
 
+    # --- observing infrastructure (cameras, readers, Wi-Fi, terminals) -----
+    env_path = sample_dir / "environment.json"
+    env_rows = []
+    if env_path.exists():
+        conn.execute("DELETE FROM environment_features")
+        env_rows = [
+            (f["feature_id"], f["kind"], f["lat"], f["lon"], f["name"], f["source"])
+            for f in json.loads(env_path.read_text())
+        ]
+        conn.executemany(
+            "INSERT OR REPLACE INTO environment_features "
+            "(feature_id, kind, lat, lon, name, source) VALUES (?,?,?,?,?,?)", env_rows)
+
     # --- participants ------------------------------------------------------
     people = json.loads((sample_dir / "participants.json").read_text())
     tokens: dict[str, str] = {}
@@ -100,6 +113,7 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True) -> dict:
         "participants": len(rows),
         "pings": len(ping_rows),
         "places": len(pois),
+        "environment": len(env_rows),
         "db": str(config.DB_PATH),
         "tokens": str(token_file),
     }

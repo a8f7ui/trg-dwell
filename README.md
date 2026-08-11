@@ -11,8 +11,8 @@ Participants in a week-long course install this app on their own phones, give ex
 consent, and each evening receive a short summary of what the app was able to work out
 about their day. Instructors use a separate dashboard to teach from the patterns.
 
-> **Status: in development.** This repository is being built in stages. See
-> [Project status](#project-status) for what currently works.
+> **Start here:** [docs/running-and-demoing.md](docs/running-and-demoing.md) — how to
+> demo this in ten minutes with no phones and no server, and how to run a real course.
 
 ---
 
@@ -106,7 +106,8 @@ tools/          Sample-data generator — builds realistic synthetic participant
                 data so the backend and dashboard can be built and demonstrated
                 without any real phone or real person involved.
 data/sample/    Generated sample data (committed, safe, entirely invented).
-docs/           Hosting, distribution, store disclosures, SDK research.
+docs/           Hosting, distribution, store disclosures, SDK research,
+                facilitator's guide, offline maps.
 backend/        The server that receives pings and serves the dashboard.
 dashboard/      The instructor dashboard.
 app/            The mobile app (iOS + Android, one codebase).
@@ -118,7 +119,7 @@ app/            The mobile app (iOS + Android, one codebase).
 
 Built in stages, each one runnable and demonstrable before the next begins.
 
-- [x] **Stage 1 — Foundation.** Licence, README, sample-data generator.
+- [x] **Stage 1 — Foundation.** License, README, sample-data generator.
 - [x] **Stage 2 — Backend and instructor dashboard**, running locally on sample data.
 - [x] **Stage 3 — Mobile app**: consent flow, collection, teaching flow, daily reveal.
 - [x] **Stage 4 — SDK research** feeding the "illustrated" categories
@@ -126,7 +127,8 @@ Built in stages, each one runnable and demonstrable before the next begins.
 - [x] **Stage 5 — Backend hosting** (guided walkthrough: `docs/hosting.md`).
 - [x] **Stage 6 — Getting it onto attendee phones**
       (`docs/distribution.md`, `docs/store-disclosures.md`).
-- [ ] Stage 7 — Facilitator's guide and run-and-demo guide.
+- [x] **Stage 7 — Facilitator's guide and run-and-demo guide**
+      (`docs/facilitator-guide.md`, `docs/running-and-demoing.md`).
 
 ---
 
@@ -181,12 +183,19 @@ hosting this, make a real account with `python manage.py add-instructor <name>`.
 - **Whole course** — everybody at once as a hexagon grid, with the k-anonymity
   threshold on a slider. Dragging it to 1 in front of a class is the single most
   effective demonstration in the whole tool.
+- **What else was watching** — for each day, the cameras, plate readers, mapped
+  Wi-Fi and card terminals the route passed, and which stops several independent
+  sources could confirm. A phone ping alone is deniable; four sources agreeing
+  are not. See [docs/environment-layers.md](docs/environment-layers.md).
 - **Data & teardown** — what is stored, the audit log, and the wipe-everything
   control.
 
-The satellite imagery comes from Esri, which is free and needs no API key,
-no billing account and no per-view charge. Google's tiles would require all
-three.
+The satellite imagery comes from Esri, which is free and needs no API key, no
+billing account and no per-view charge. Google's tiles would require all three.
+
+If venue wifi is unreliable, you can install an **offline street map** so the
+dashboard stops depending on anyone else's servers for tiles — see
+[docs/offline-maps.md](docs/offline-maps.md). Optional, and about 15 minutes.
 
 ## The app
 
@@ -267,7 +276,7 @@ short:
 
 ---
 
-## Licence
+## License
 
 Apache License 2.0 — see [LICENSE](LICENSE). You may use, modify and redistribute this
 freely, including commercially. Contributors grant patent rights along with copyright, and

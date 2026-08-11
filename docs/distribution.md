@@ -87,13 +87,16 @@ eas init
 In `app/app.json`, check:
 
 ```json
-"bundleIdentifier": "org.trg.dwell",
-"package": "org.trg.dwell"
+"bundleIdentifier": "com.techresearchgroupllc.dwell",
+"package": "com.techresearchgroupllc.dwell"
 ```
 
-**This cannot be changed after your first submission.** It should be a domain TRG
-controls, reversed. If TRG's domain is `trg.com`, this should be `com.trg.dwell`.
-Fix it now if it is wrong.
+This is `techresearchgroupllc.com` reversed, which is the convention: an app's
+identifier is built from a domain its publisher controls. It is already correct
+and needs no change.
+
+Mentioned only because **it cannot be changed after your first submission**. If
+TRG ever moves to a different domain, this identifier stays as it is.
 
 ---
 

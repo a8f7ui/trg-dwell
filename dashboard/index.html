@@ -52,10 +52,7 @@
       <!-- ---------- Live controls ---------- -->
       <section class="panel" data-panel="live">
         <h2>Live map</h2>
-        <p class="hint">
-          Each dot is a participant who had the app open recently. Use the clock
-          to replay the course.
-        </p>
+        <p class="hint">Positions by participant. Scrub or play to replay the course.</p>
 
         <label class="field">Time
           <input type="range" id="clock" min="0" max="100" value="0">
@@ -64,6 +61,7 @@
 
         <div class="row">
           <button id="play">▶ Play</button>
+          <button id="recentre" title="Fit the map to everyone currently visible">⤢ Fit</button>
           <select id="speed">
             <option value="60">1 min / tick</option>
             <option value="300" selected>5 min / tick</option>
@@ -80,20 +78,20 @@
           </select>
         </label>
 
-        <div class="teaching-note">
-          <strong>Worth saying out loud:</strong> nobody in this room has the app
-          open right now, and you can still watch them move. That is what
-          background collection means. The only thing separating this screen from
-          a commercial tracking console is that everyone here was told it exists
-          and agreed to it — and that this map never leaves the room.
-        </div>
-
         <div id="monitoring" class="stats"></div>
+
+        <h3>Tracks</h3>
+        <div id="roster" class="roster"></div>
+
+        <div class="teaching-note">
+          <strong>Say out loud:</strong> nobody here has the app open, and you can
+          still watch them move.
+        </div>
       </section>
 
       <!-- ---------- Participant controls ---------- -->
       <section class="panel" data-panel="participant" hidden>
-        <h2>One participant</h2>
+        <h2>Participant</h2>
         <label class="field">Participant
           <select id="participant-select"></select>
         </label>
@@ -106,9 +104,7 @@
       <!-- ---------- Aggregate controls ---------- -->
       <section class="panel" data-panel="aggregate" hidden>
         <h2>Whole course</h2>
-        <p class="hint">
-          Everybody's data at once, bucketed into hexagons.
-        </p>
+        <p class="hint">All participants combined, bucketed into hexagons.</p>
 
         <label class="field">
           Hide hexagons with fewer than <output id="k-out">5</output> participants
@@ -130,10 +126,8 @@
         <div id="aggregate-detail"></div>
 
         <div class="teaching-note">
-          <strong>Try this live:</strong> drag the slider down to 1. Hexagons
-          appear in places only one person ever went — someone's hotel, someone's
-          street. That is why the threshold exists: an "anonymous" aggregate map
-          stops being anonymous as soon as the groups get small.
+          <strong>Demo:</strong> drag the threshold to 1. Hexagons appear that
+          hold exactly one person.
         </div>
       </section>
 
@@ -142,18 +136,15 @@
         <h2>Data &amp; teardown</h2>
         <div id="admin-stats" class="stats"></div>
 
-        <h3>Wipe all session data</h3>
-        <p class="hint">
-          Deletes every participant and every location point. Use this at the end
-          of the course. It cannot be undone.
-        </p>
+        <h3>Wipe all data</h3>
+        <p class="hint">Deletes every participant and every location point. Cannot be undone.</p>
         <label class="field">Type <code>DELETE ALL DATA</code> to confirm
           <input type="text" id="wipe-confirm" placeholder="DELETE ALL DATA">
         </label>
         <button id="wipe-btn" class="danger">Wipe everything</button>
         <p id="wipe-result" class="result" hidden></p>
 
-        <h3>Recent actions</h3>
+        <h3>Audit log</h3>
         <div id="audit" class="audit"></div>
       </section>
     </aside>
@@ -166,6 +157,8 @@
 </div>
 
 <script src="vendor/leaflet.js"></script>
+<script src="vendor/pmtiles.js"></script>
+<script src="vendor/protomaps-leaflet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

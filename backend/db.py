@@ -81,6 +81,21 @@ CREATE TABLE IF NOT EXISTS places (
     lon    REAL NOT NULL
 );
 
+-- Public infrastructure that can observe a person: cameras, plate readers,
+-- mapped Wi-Fi, card terminals, transit gates. Describes PLACES, never people.
+-- Used to show how a phone trail becomes corroborated — and therefore
+-- undeniable — when other sources agree with it.
+CREATE TABLE IF NOT EXISTS environment_features (
+    feature_id TEXT PRIMARY KEY,
+    kind       TEXT NOT NULL,
+    lat        REAL NOT NULL,
+    lon        REAL NOT NULL,
+    name       TEXT,
+    source     TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_env_kind ON environment_features(kind);
+
 -- Instructor logins. Passwords are stored as scrypt hashes, never in the clear.
 CREATE TABLE IF NOT EXISTS instructors (
     username      TEXT PRIMARY KEY,
@@ -88,6 +103,19 @@ CREATE TABLE IF NOT EXISTS instructors (
     salt          TEXT NOT NULL,
     created_at    TEXT NOT NULL
 );
+
+-- Failed login attempts, used to slow down password guessing. Without this,
+-- somebody could try passwords against the instructor login as fast as the
+-- network allows, and that login opens a map of where participants have been.
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts       TEXT NOT NULL,
+    username TEXT,
+    ip       TEXT,
+    ok       INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ts ON login_attempts(ts);
 
 -- A record of consequential actions: withdrawals, wipes, logins. So that
 -- "we deleted the data" is a checkable claim rather than a promise.

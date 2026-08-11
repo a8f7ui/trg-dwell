@@ -125,8 +125,13 @@ def cmd_audit(_args: list[str]) -> None:
         "SELECT ts, actor, action, detail FROM audit_log ORDER BY id DESC LIMIT 50"
     ).fetchall()
     conn.close()
-    for r in rows:
-        print(f"  {r['ts']}  {r['actor']:24s} {r['action']:22s} {r['detail']}")
+    try:
+        for r in rows:
+            print(f"  {r['ts']}  {r['actor']:24s} {r['action']:22s} {r['detail']}")
+    except BrokenPipeError:
+        # Piping into `head`, or quitting a pager, closes the output early.
+        # That is normal and should not print a traceback at somebody.
+        pass
 
 
 def cmd_check_production(_args: list[str]) -> None:
