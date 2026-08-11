@@ -11,8 +11,8 @@ Participants in a week-long course install this app on their own phones, give ex
 consent, and each evening receive a short summary of what the app was able to work out
 about their day. Instructors use a separate dashboard to teach from the patterns.
 
-> **Status: in development.** This repository is being built in stages. See
-> [Project status](#project-status) for what currently works.
+> **Start here:** [docs/running-and-demoing.md](docs/running-and-demoing.md) — how to
+> demo this in ten minutes with no phones and no server, and how to run a real course.
 
 ---
 
@@ -118,7 +118,7 @@ app/            The mobile app (iOS + Android, one codebase).
 
 Built in stages, each one runnable and demonstrable before the next begins.
 
-- [x] **Stage 1 — Foundation.** Licence, README, sample-data generator.
+- [x] **Stage 1 — Foundation.** License, README, sample-data generator.
 - [x] **Stage 2 — Backend and instructor dashboard**, running locally on sample data.
 - [x] **Stage 3 — Mobile app**: consent flow, collection, teaching flow, daily reveal.
 - [x] **Stage 4 — SDK research** feeding the "illustrated" categories
@@ -126,7 +126,8 @@ Built in stages, each one runnable and demonstrable before the next begins.
 - [x] **Stage 5 — Backend hosting** (guided walkthrough: `docs/hosting.md`).
 - [x] **Stage 6 — Getting it onto attendee phones**
       (`docs/distribution.md`, `docs/store-disclosures.md`).
-- [ ] Stage 7 — Facilitator's guide and run-and-demo guide.
+- [x] **Stage 7 — Facilitator's guide and run-and-demo guide**
+      (`docs/facilitator-guide.md`, `docs/running-and-demoing.md`).
 
 ---
 
@@ -267,7 +268,7 @@ short:
 
 ---
 
-## Licence
+## License
 
 Apache License 2.0 — see [LICENSE](LICENSE). You may use, modify and redistribute this
 freely, including commercially. Contributors grant patent rights along with copyright, and
