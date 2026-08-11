@@ -47,7 +47,8 @@ Open <http://localhost:5000>, log in as `instructor` / `demo-password`.
 3. **Whole course tab.** Drag the k-anonymity slider from 5 down to 1. The map
    fills with hexagons that each contain one person. Drag it back. This is the
    best thirty seconds in the whole tool.
-4. **Live map → press Play.** Dots move across the week.
+4. **Live map → press Play.** Dots move across the week, and the map follows
+   them. Pan it yourself and following stands down; **Fit** resumes it.
 5. **Data & teardown.** Show the audit log and the wipe control.
 
 Say out loud that this is invented data. It is a demo of the tool, not of a

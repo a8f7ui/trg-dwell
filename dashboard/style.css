@@ -381,11 +381,13 @@ main { display: flex; flex: 1; min-height: 0; }
   font-family: var(--label-font); text-transform: none; letter-spacing: 0;
 }
 .field input[type=range] { width: 100%; margin-top: 7px; accent-color: var(--accent); }
-.row { display: flex; gap: 5px; align-items: center; margin: 9px 0; }
+/* Wraps rather than squeezing. A squeezed row breaks button labels across two
+ * lines, which reads as broken and is harder to hit. */
+.row { display: flex; gap: 5px; align-items: center; margin: 9px 0; flex-wrap: wrap; }
 .row button, .row select {
   padding: 8px 13px; background: var(--panel-2); color: var(--ink);
   border: 1px solid var(--line-bright); border-radius: var(--radius-pill);
-  cursor: pointer;
+  cursor: pointer; white-space: nowrap;
   font-family: var(--label-font); font-size: 12.5px;
 }
 .row button {
@@ -393,6 +395,12 @@ main { display: flex; flex: 1; min-height: 0; }
   text-transform: var(--label-transform); letter-spacing: var(--label-spacing);
 }
 .row button:hover { border-color: var(--accent); color: var(--accent); }
+/* A toggle that is currently on — Follow, at present. Reads as engaged rather
+ * than merely hovered, since it stays that way for the whole of a playback. */
+.row button.active {
+  background: var(--nav-active-bg); color: var(--accent);
+  border-color: var(--accent);
+}
 /* Full-width secondary action. Previously written as inline styles carrying
  * dark-theme colours, which is exactly the mistake the token system exists to
  * prevent — it looked correct until the field skin existed. */

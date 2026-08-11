@@ -224,7 +224,10 @@ worth more than either alone.
 ### What you can show from the dashboard
 
 - **Live map** — participants as dots on satellite imagery, with a clock you can
-  play, pause and scrub through the whole course.
+  play, pause and scrub through the whole course. The map **follows** them as
+  they move, so nobody has to chase dots with a trackpad while teaching; it
+  holds still while people stay put, and stands down the moment you pan or zoom
+  it yourself.
 - **Participant** — one person, one day: their movement, their stops sized by how
   long they were observed there, and what a marketing system would conclude about
   them, including where it is unsure. Switch the day selector to *Whole course*

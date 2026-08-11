@@ -149,6 +149,15 @@ function initMap() {
   map.on('zoomend', () => {
     if (currentView === 'live') drawLive();
   });
+
+  // Follow mode yields the moment a person touches the map. Dragging is always
+  // the user, so it needs no guard; zooming also happens under our own control,
+  // so that one is only counted when we are not the ones doing it.
+  map.on('dragstart', () => { if (followLive) setFollow(false); });
+  map.on('zoomstart', () => {
+    if (followLive && !programmaticMove) setFollow(false);
+  });
+  map.on('moveend', () => { programmaticMove = false; });
 }
 
 /**
@@ -421,6 +430,62 @@ applyTheme(
 
 // ---------------------------------------------------------------- live view
 
+let lastLive = null;        // kept so the map can redraw on zoom without refetching
+let liveFitted = false;     // has this view been framed at all yet
+
+// ------------------------------------------------------------ follow mode
+
+/**
+ * Keep the map on whoever is currently visible.
+ *
+ * The obvious implementation — refit on every tick — is unwatchable. Twelve
+ * people drifting a few metres would slide the map continuously, and nobody
+ * could point at anything on a projector. So the map only moves when it
+ * genuinely needs to: when somebody has left a margin inside the view, or when
+ * the group has clustered so tightly that the current zoom is well past useful.
+ * In between it holds still, which is what makes it possible to talk over.
+ *
+ * And it always yields to a person. Pan or zoom the map yourself and follow
+ * switches off, because a map that argues with the hand on the trackpad during
+ * a class is worse than one that never moved.
+ */
+let followLive = true;
+let programmaticMove = false;   // true while the code, not the user, is moving
+
+function setFollow(on) {
+  followLive = on;
+  const btn = $('#follow');
+  btn.setAttribute('aria-pressed', String(on));
+  btn.classList.toggle('active', on);
+  btn.textContent = on ? '◎ Following' : '◎ Follow';
+}
+
+/** Whether the visible people have drifted far enough to justify moving. */
+function needsReframe(bounds) {
+  // A 15% margin inside the view: somebody reaching the edge of the screen is
+  // about to leave it, and waiting until they have is too late to look smooth.
+  if (!map.getBounds().pad(-0.15).contains(bounds)) return true;
+  // Everyone has bunched into a corner — the view is now far wider than the
+  // thing it is showing. Two zoom levels of slack keeps this from oscillating.
+  const target = Math.min(16, map.getBoundsZoom(bounds.pad(0.4)));
+  return Math.abs(target - map.getZoom()) >= 2;
+}
+
+function frameLive(points, force = false) {
+  if (!points.length) return;
+  const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lon]));
+  if (!force && !needsReframe(bounds)) return;
+  programmaticMove = true;
+  // Belt and braces: if the flight ends up being a no-op the map may never fire
+  // moveend, and a stuck flag would stop follow ever releasing to the user.
+  clearTimeout(frameLive._release);
+  frameLive._release = setTimeout(() => { programmaticMove = false; }, 1500);
+  // Flown rather than jumped: a cut leaves the room wondering whether the map
+  // moved or the people did. Watching it travel answers that.
+  map.flyToBounds(bounds.pad(0.4), { maxZoom: 16, duration: 0.6 });
+}
+
+
 let playTimer = null;
 
 function setupClock() {
@@ -448,7 +513,23 @@ $('#clock').addEventListener('input', () => {
   renderLive();
 });
 $('#live-window').addEventListener('change', () => { liveFitted = false; renderLive(); });
-$('#recentre').addEventListener('click', () => { liveFitted = false; renderLive(); });
+
+// Fit is the "put it back" button, so it also resumes following. Somebody who
+// panned away and now wants the map recentred is asking for it to stay there.
+$('#recentre').addEventListener('click', () => {
+  setFollow(true);
+  if (lastLive && lastLive.live.visible.length) frameLive(lastLive.live.visible, true);
+  else { liveFitted = false; renderLive(); }
+});
+
+$('#follow').addEventListener('click', () => {
+  setFollow(!followLive);
+  if (followLive && lastLive && lastLive.live.visible.length) {
+    frameLive(lastLive.live.visible, true);
+  }
+});
+
+setFollow(true);   // on by default; the button has to say so from the start
 
 $('#play').addEventListener('click', () => {
   if (playTimer) { stopPlayback(); } else { startPlayback(); }
@@ -474,9 +555,6 @@ function stopPlayback() {
   $('#play').textContent = '▶ Play';
 }
 
-let lastLive = null;        // kept so the map can redraw on zoom without refetching
-let liveFitted = false;     // only auto-fit once, or playback fights the user
-
 async function renderLive() {
   if (!courseStart) {
     $('#monitoring').innerHTML = '<p class="empty">No data loaded yet.</p>';
@@ -493,10 +571,15 @@ async function renderLive() {
   lastLive = { live, windowS: Number(windowS) };
   drawLive();
 
-  if (live.visible.length && !liveFitted) {
-    map.fitBounds(L.latLngBounds(live.visible.map((p) => [p.lat, p.lon])).pad(0.4),
-      { maxZoom: 16 });
-    liveFitted = true;
+  if (live.visible.length) {
+    // The first frame of a view is unconditional — there is nothing sensible to
+    // hold still for yet. After that, only when following and only when needed.
+    if (!liveFitted) {
+      frameLive(live.visible, true);
+      liveFitted = true;
+    } else if (followLive) {
+      frameLive(live.visible);
+    }
   }
 
   const seen = new Set(live.visible.map((p) => p.participant_id));

@@ -307,6 +307,15 @@ Most rooms can. That is the point, and it is better made by them than by you.
 
 Open **Live map**. Dots move.
 
+The map follows them on its own — **Follow** is on by default, so as the group
+moves across the city the view goes with them and you never have to chase the
+dots with a trackpad while talking. It holds still while people stay put, so
+nothing slides around under you mid-sentence.
+
+Pan or zoom the map yourself and Follow switches off, because a map that argues
+with your hand during a class is worse than one that never moved. **Fit** puts
+you back on everybody and resumes following.
+
 **Talking point:**
 
 > Nobody in this room has the app open. You are all looking at me. And I can
