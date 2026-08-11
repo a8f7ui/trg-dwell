@@ -28,17 +28,18 @@ DB_PATH = Path(os.getenv("DWELL_DB", BASE_DIR / "data" / "local" / "course.db"))
 
 # k-anonymity threshold for the whole-course aggregate map.
 #
-# A map hexagon is only drawn if at least this many DIFFERENT participants were
-# seen inside it. If four people visited a hexagon and the threshold is five,
-# that hexagon is hidden entirely. This stops the "aggregate" view from
+# A map cell is only drawn if at least this many DIFFERENT participants were
+# seen inside it. If four people visited a cell and the threshold is five,
+# that cell is hidden entirely. This stops the "aggregate" view from
 # quietly identifying an individual — if only one person ever went somewhere,
 # showing that place on an aggregate map tells you exactly where that one
 # person was.
 K_ANONYMITY_THRESHOLD = int(os.getenv("DWELL_K", "5"))
 
-# Size of the aggregate map hexagons (H3 resolution).
-# 9 is roughly a 200 m hexagon — small enough to show real patterns, large
-# enough that a hexagon is not a single building.
+# Size of the aggregate map cells. Kept on the old 8/9/10 scale so the
+# dashboard's size selector is unchanged.
+# 9 is roughly a 200 m cell — small enough to show real patterns, large
+# enough that a cell is not a single building.
 H3_RESOLUTION = int(os.getenv("DWELL_H3_RES", "9"))
 
 # How long participant data is kept. The course runs, then everything goes.

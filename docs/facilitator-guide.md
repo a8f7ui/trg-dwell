@@ -64,10 +64,9 @@ unremarkable is what makes it a real option.
 - [ ] Dashboard logged in on the projector machine, with the demo participant
       view already open.
 - [ ] Know how many participants installed. Chase the stragglers.
-- [ ] If the venue's wifi is doubtful, install an *offline* copy of the street
-      map (`docs/offline-maps.md`) and check it covers the venue and the hotels.
-      Satellite and street basemaps are built in either way — this is only about
-      surviving a bad connection.
+- [ ] If the venue's wifi is doubtful, know that the map tiles come from Esri
+      and will not draw without a connection. Everything in the sidebar — the
+      stops, the inferences, the assessment — works regardless.
 
 **Have the sample data ready as a fallback.** If the server misbehaves, or too
 few people installed, every teaching point below works against the synthetic
@@ -400,12 +399,12 @@ of what actually exists — the real picture is denser, not thinner.
 
 This is the best demonstration in the whole week. Do it live and slowly.
 
-Open **Whole course**. The threshold starts at 5. A handful of hexagons show —
+Open **Whole course**. The threshold starts at 5. A handful of cells show —
 mostly the venue.
 
 **Talking point — k-anonymity:**
 
-> This is everybody's data at once. A hexagon only appears if at least five
+> This is everybody's data at once. A cell only appears if at least five
 > different people were recorded inside it. That rule is called k-anonymity, and
 > five is the k.
 >
@@ -413,11 +412,11 @@ mostly the venue.
 
 Drag the slider to 1. The map fills.
 
-> At one, every hexagon appears — including places exactly one person went. That
+> At one, every cell appears — including places exactly one person went. That
 > one over there is somebody's hotel. That one is somebody's street.
 >
 > This map is still "anonymous". Nobody's name is on it. But if only one person
-> was ever in that hexagon at eight in the morning, and you know who was on this
+> was ever in that cell at eight in the morning, and you know who was on this
 > course, it is not anonymous at all.
 >
 > That is why the threshold exists. "Anonymised" is not a property of a dataset.

@@ -1,24 +1,13 @@
 # Backend dependencies. Deliberately few — everything else uses the Python
 # standard library, including the database (SQLite).
+#
+# Nothing here contains compiled code, which is the point. The one dependency
+# that did — h3, for the aggregate map's hexagons — has been replaced with a
+# plain rectangular grid computed in Python. It teaches the same lesson: at a
+# threshold of five, hexagons and the grid showed the same number of cells on
+# the sample data. It was not worth being the only thing in the project that
+# could fail to install, which on Android under Termux meant a tablet spending
+# hours compiling a C++ build system before anybody reached the lesson.
 
 Flask==3.1.3          # the web server
 gunicorn==23.0.0      # production web server, used when hosting
-
-# The hexagon grid behind the k-anonymity aggregate map. The only dependency
-# here containing compiled C, and therefore the only one that can fail to
-# install.
-#
-# --only-binary matters more than it looks. Without it, a platform with no
-# prebuilt wheel — Termux on Android being the real case — falls back to
-# building from source, and h3's build wants CMake. If CMake is not installed
-# either, pip fetches the `cmake` package from PyPI, which on that platform
-# also has no wheel, and proceeds to compile the entire CMake C++ codebase.
-# That is hours of build on a tablet, for a hexagon library, and it frequently
-# fails or runs out of memory at the end anyway.
-#
-# With this line, such a platform fails in seconds with "no matching
-# distribution", which is a thing somebody can read and act on. Everything
-# except the aggregate map works without h3, and the dashboard says so on the
-# one screen that needs it.
---only-binary=h3
-h3==4.5.0

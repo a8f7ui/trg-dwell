@@ -124,15 +124,7 @@ def check_dependencies(python: Path) -> bool:
     ok = subprocess.run([str(python), "-c", "import flask"],
                         capture_output=True).returncode == 0
     check("Flask is installed", ok, "run: python3 start.py")
-    if not ok:
-        return False
-    hexmap = subprocess.run([str(python), "-c", "import h3"],
-                            capture_output=True).returncode == 0
-    if hexmap:
-        passed.append("h3 is installed (hexagon map available)")
-    else:
-        skipped.append("Hexagon map — h3 is not installed on this machine")
-    return True
+    return ok
 
 
 def check_pages(client: Client) -> None:
@@ -164,7 +156,7 @@ def check_participant_api(python: Path, base: str) -> None:
           "\n".join(l for l in tail if l.strip().startswith("FAIL")))
 
 
-def check_instructor_api(client: Client, hexmap: bool) -> None:
+def check_instructor_api(client: Client) -> None:
     group("Instructor API")
 
     status, _ = client.post("/api/instructor/login",
@@ -196,12 +188,7 @@ def check_instructor_api(client: Client, hexmap: bool) -> None:
         check(f"{name} loads", status == 200, f"got HTTP {status}")
 
     status, agg = client.get("/api/instructor/aggregate")
-    if hexmap:
-        check("hexagon map loads", status == 200, f"got HTTP {status}")
-    else:
-        check("hexagon map explains why it is unavailable",
-              status == 503 and "h3" in str(agg.get("error", "")),
-              f"got HTTP {status} — should be a readable message, not a crash")
+    check("the aggregate map loads", status == 200, f"got HTTP {status}")
 
     status, week = client.get(f"/api/instructor/participant/{pid}/week")
     if check("a participant's whole week loads", status == 200, f"got HTTP {status}"):
@@ -245,17 +232,26 @@ def check_privacy_rules(client: Client) -> None:
               all(pid in g["members"] for g in groups),
               "another participant's group was attributed to this one")
 
-    # k-anonymity: at a high threshold, no hexagon may hold fewer people.
+    # k-anonymity: at a high threshold, no cell may hold fewer people.
     status, agg = client.get("/api/instructor/aggregate?k=5")
     if status == 200:
         cells = agg.get("cells", [])
-        check("k-anonymity hides hexagons with fewer than 5 people",
+        check("k-anonymity hides cells with fewer than 5 people",
               all(c["participant_count"] >= 5 for c in cells),
-              "a hexagon was shown that could point at an individual")
-        check("k-anonymity reports what it hid",
-              agg.get("suppressed", 0) >= 0, "")
-    elif status == 503:
-        skipped.append("k-anonymity — needs h3, which is not installed")
+              "a cell was shown that could point at an individual")
+        check("k-anonymity actually draws something at the default threshold",
+              len(cells) > 0,
+              "no cells at all — the aggregate map would be blank")
+
+    # And the demonstration itself: dropping the threshold to 1 must expose
+    # cells that hold exactly one person. If it does not, the best thirty
+    # seconds in the tool silently stops working.
+    status, exposed = client.get("/api/instructor/aggregate?k=1")
+    if status == 200:
+        counts = [c["participant_count"] for c in exposed.get("cells", [])]
+        check("dropping the threshold to 1 exposes single-person cells",
+              any(n == 1 for n in counts),
+              "the k-anonymity demonstration would show nothing new")
 
     # The participant's own reveal is checked by contract_test, which asserts
     # it names nobody else. Stated here so the list of promises reads complete.
@@ -430,8 +426,6 @@ def main() -> int:
     if not check_dependencies(python):
         report()
         return 1
-    hexmap = subprocess.run([str(python), "-c", "import h3"],
-                            capture_output=True).returncode == 0
 
     workdir = Path(tempfile.mkdtemp(prefix="dwell-verify-"))
     port = free_port()
@@ -473,7 +467,7 @@ def main() -> int:
 
         check_pages(client)
         check_participant_api(python, base)
-        check_instructor_api(client, hexmap)
+        check_instructor_api(client)
         check_privacy_rules(client)
         check_javascript()
 

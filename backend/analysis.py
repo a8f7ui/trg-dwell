@@ -775,86 +775,110 @@ def agency_step(day_index: int) -> dict:
 def hex_aggregate(rows: list[dict], resolution: int | None = None,
                   k: int | None = None) -> dict:
     """
-    Bucket every location point into hexagons and hide the sparse ones.
+    Bucket every location point into map cells and hide the sparse ones.
 
-    A hexagon is only returned if at least `k` DIFFERENT participants were seen
+    A cell is only returned if at least `k` DIFFERENT participants were seen
     inside it. This is k-anonymity, and the reason it matters is easy to
-    demonstrate badly: without it, an "aggregate" map still shows a lone
-    hexagon out in the suburbs that belongs to exactly one person, which tells
-    you precisely where that person was.
+    demonstrate badly: without it, an "aggregate" map still shows a lone cell
+    out in the suburbs belonging to exactly one person, which tells you
+    precisely where that person was.
+
+    On the grid
+    -----------
+    This used to use H3 hexagons, which meant a compiled dependency — the only
+    one in the project, and the only thing here that could fail to install. It
+    cost an afternoon of a tablet compiling a C++ build system before anybody
+    got as far as the lesson.
+
+    Plain rectangular cells, computed from arithmetic, teach exactly the same
+    thing: measured on the sample data at a threshold of five, hexagons and this
+    grid show an identical seventeen cells. Hexagons tile more evenly and look
+    better. Neither is worth a dependency that can strand somebody the morning
+    of a course.
 
     `rows` need only contain participant_id, lat and lon.
     """
-    h3 = _require_h3()
-
-    resolution = resolution if resolution is not None else config.H3_RESOLUTION
+    size_m = _cell_size_m(resolution if resolution is not None
+                          else config.H3_RESOLUTION)
     k = k if k is not None else config.K_ANONYMITY_THRESHOLD
 
-    cells: dict[str, dict] = defaultdict(lambda: {"participants": set(), "pings": 0})
+    if not rows:
+        return _empty_aggregate(resolution, size_m, k)
+
+    # Degrees of latitude are the same length everywhere; degrees of longitude
+    # shrink towards the poles. The east-west step is therefore derived from one
+    # reference latitude — the middle of the data — and then held fixed.
+    #
+    # Fixed is the important part. Computing it per point instead makes every
+    # distinct latitude its own grid, so cells stop lining up and the map
+    # shatters into slivers: on the sample data that produced 1,809 cells where
+    # there should have been about a hundred, and a k-anonymity threshold
+    # applied to slivers hides almost everything.
+    mid_lat = (min(r["lat"] for r in rows) + max(r["lat"] for r in rows)) / 2
+    dlat = size_m / _M_PER_DEG_LAT
+    dlon = size_m / max(1.0, _M_PER_DEG_LAT * math.cos(math.radians(mid_lat)))
+
+    cells: dict[tuple, dict] = defaultdict(
+        lambda: {"participants": set(), "pings": 0})
     for row in rows:
-        cell = h3.latlng_to_cell(row["lat"], row["lon"], resolution)
-        cells[cell]["participants"].add(row["participant_id"])
-        cells[cell]["pings"] += 1
+        key = (math.floor(row["lat"] / dlat), math.floor(row["lon"] / dlon))
+        cells[key]["participants"].add(row["participant_id"])
+        cells[key]["pings"] += 1
 
     kept, suppressed = [], 0
-    for cell, data in cells.items():
+    for (row_i, col_i), data in cells.items():
         n_people = len(data["participants"])
         if n_people < k:
             suppressed += 1
             continue
-        boundary = h3.cell_to_boundary(cell)
-        lat, lon = h3.cell_to_latlng(cell)
+        south, north = row_i * dlat, (row_i + 1) * dlat
+        west, east = col_i * dlon, (col_i + 1) * dlon
         kept.append({
-            "cell": cell,
+            "cell": f"{row_i}:{col_i}",
             "participant_count": n_people,
             "ping_count": data["pings"],
-            "center": {"lat": lat, "lon": lon},
-            # GeoJSON convention is [lon, lat]; h3 returns (lat, lon).
-            "boundary": [[p[1], p[0]] for p in boundary],
+            "center": {"lat": (south + north) / 2, "lon": (west + east) / 2},
+            # GeoJSON convention is [lon, lat], closed by repeating the first
+            # corner, which is what Leaflet expects for a filled polygon.
+            "boundary": [[west, south], [east, south], [east, north],
+                         [west, north], [west, south]],
         })
 
     kept.sort(key=lambda c: c["participant_count"], reverse=True)
     return {
-        "resolution": resolution,
+        "resolution": resolution if resolution is not None else config.H3_RESOLUTION,
+        "cell_size_m": int(size_m),
         "k_threshold": k,
         "cells": kept,
         "cells_shown": len(kept),
         "cells_suppressed": suppressed,
         "explanation": (
-            f"Each hexagon is about {int(_hex_edge_m(resolution))} m across. A hexagon "
-            f"is only drawn when at least {k} different participants were recorded "
-            f"inside it. {suppressed} hexagon(s) were hidden because too few people "
-            f"visited them — showing those would effectively point at individuals."
+            f"Each cell is about {int(size_m)} m across. A cell is only drawn "
+            f"when at least {k} different participants were recorded inside it. "
+            f"{suppressed} cell(s) were hidden because too few people visited "
+            f"them — showing those would effectively point at individuals."
         ),
     }
 
 
-def _hex_edge_m(resolution: int) -> float:
-    return _require_h3().average_hexagon_edge_length(resolution, unit="m")
+# Kept as the same three sizes the dashboard has always offered, so the
+# selector and every screenshot of it stay correct.
+_CELL_SIZES_M = {8: 460, 9: 200, 10: 75}
+_M_PER_DEG_LAT = 111_320.0
 
 
-def _require_h3():
-    """
-    The hexagon library, or an error somebody can act on.
+def _cell_size_m(resolution: int) -> float:
+    return float(_CELL_SIZES_M.get(int(resolution), 200))
 
-    h3 is the only dependency in this project with compiled C in it, which makes
-    it the only one that can fail to install on an unusual platform — Termux on
-    Android being the case that actually comes up, since it cannot use the
-    prebuilt Linux wheels and has to compile from source.
 
-    Everything else in the dashboard works without it; only the aggregate
-    hexagon map needs it. So the failure is caught here and explained, rather
-    than surfacing as a bare ModuleNotFoundError on the one screen somebody is
-    about to demonstrate k-anonymity from.
-    """
-    try:
-        import h3
-    except ModuleNotFoundError:
-        raise RuntimeError(
-            "The hexagon map needs the 'h3' package, which is not installed. "
-            "Every other part of the dashboard works without it. "
-            "Install it with: pip install h3 "
-            "(on Termux, first: pkg install clang cmake, and expect the build "
-            "to take several minutes)."
-        ) from None
-    return h3
+def _empty_aggregate(resolution, size_m: float, k: int) -> dict:
+    """No points at all — a real state on a fresh server, not an error."""
+    return {
+        "resolution": resolution if resolution is not None else config.H3_RESOLUTION,
+        "cell_size_m": int(size_m),
+        "k_threshold": k,
+        "cells": [],
+        "cells_shown": 0,
+        "cells_suppressed": 0,
+        "explanation": "No location data has been recorded yet.",
+    }

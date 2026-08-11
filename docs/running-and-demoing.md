@@ -61,7 +61,7 @@ python3 tools/generate_sample_data.py --out data/sample
    **recurring groups** shows who they kept turning up beside — reconstructed
    from coordinates and clocks, with no contact list anywhere.
 3. **Whole course tab.** Drag the k-anonymity slider from 5 down to 1. The map
-   fills with hexagons that each contain one person. Drag it back. This is the
+   fills with cells that each contain one person. Drag it back. This is the
    best thirty seconds in the whole tool.
 4. **Live map → press Play.** Dots move across the week, and the map follows
    them. Pan it yourself and following stands down; **Fit** resumes it.
@@ -141,46 +141,11 @@ and names the command that fixes whatever it finds.
 
 It can, with three things known in advance.
 
-**`python3 start.py` handles this too** — if the hexagon library will not
-install, it says so in one line and carries on without it. The rest of this
-section is only worth reading if you want to know why, or want that feature
-back.
-
-Everything here is pure Python except `h3`, the hexagon library, which contains
-compiled C. On Termux there is no prebuilt wheel for it.
-
-Left alone, pip responds to that by building h3 from source; h3's build wants
-CMake; there is no CMake wheel either; so pip downloads the CMake *source* and
-starts compiling a C++ build system, file by file, on a tablet. That is hours of
-work for a hexagon library, and it commonly fails or runs out of memory at the
-end anyway. If you see page after page of `g++ ... -c ... cmake-4.4.2/Source/...`
-scrolling past, that is what is happening — stop it.
-
-`requirements.txt` now pins h3 to prebuilt wheels only, so instead of that,
-pip fails in seconds with "no matching distribution". Then:
-
-```bash
-pip install -r requirements-core.txt     # everything except the hexagon map
-```
-
-You lose the **Whole course** aggregate view and the k-anonymity slider with it,
-which is a real loss — it is the best thirty seconds in the tool. Everything
-else works normally, and that screen explains itself rather than failing blankly.
-
-If you want the hexagon map on the tablet badly enough, install Termux's own
-CMake first so pip does not try to build one:
-
-```bash
-pkg install clang cmake ninja
-pip install scikit-build-core
-pip install h3 --no-build-isolation      # still several minutes, but minutes
-```
-
-`--no-build-isolation` is the part that matters: without it pip builds in a
-fresh environment and fetches CMake from PyPI again, ignoring the one you just
-installed.
-
-`gunicorn` is only needed for hosting and can be skipped entirely for a demo.
+**Installing is quick and cannot fail interestingly.** Every dependency is
+pure Python — there is nothing here that compiles. This used to be the worst
+part of a tablet setup, because the hexagon library had to be built from source
+and dragged a C++ build system in with it. That library is gone, replaced by a
+plain grid computed in Python.
 
 **Generate less data.** The defaults invent about 38,000 location points across
 twelve people. Six people over three days is roughly 13,000, teaches every
@@ -205,7 +170,7 @@ In rough order of how much they cost you:
 |---|---|
 | Whole dashboard sluggish | Fewer participants and days, as above |
 | Playback stutters | 30 min / tick; switch the basemap to **Street map**, which is lighter than satellite imagery |
-| The map is blank | Venue wifi cannot reach Esri — install an [offline map](offline-maps.md) |
+| The map is blank | Venue wifi cannot reach Esri — switch the basemap, or teach from the sidebar until it recovers |
 | Participant *Whole course* view is slow | Expected: it is the heaviest screen in the tool. Open it once and leave it open rather than switching participants repeatedly |
 | Android kills the server when you switch apps | `termux-wake-lock` before starting it |
 | Anything at all refuses to start | `.venv/bin/python manage.py doctor` |
@@ -232,9 +197,7 @@ In order. Each links to a full walkthrough.
 published in this repository — still being active on a live server.
 
 Satellite and street basemaps are both built in and switchable from the map's
-layer panel — nothing to set up. Optional: if venue wifi is unreliable, add an
-*offline* copy of the street map so the dashboard depends on nobody else's tile
-servers — [`offline-maps.md`](offline-maps.md), about 15 minutes.
+layer panel — nothing to set up.
 
 Store privacy forms are in [`store-disclosures.md`](store-disclosures.md), with
 exact answers. The evidence base for the illustrated screens is in
@@ -299,10 +262,10 @@ how many people are hiding in each bucket.
 
 **Say this, while dragging to 1:**
 
-> A hexagon only appears if at least five different people were recorded inside
+> A cell only appears if at least five different people were recorded inside
 > it. Watch what happens at one.
 >
-> Now every hexagon appears, including places exactly one person went. That is
+> Now every cell appears, including places exactly one person went. That is
 > somebody's hotel. That is somebody's street. Nobody's name is on this map and
 > it is not anonymous at all.
 

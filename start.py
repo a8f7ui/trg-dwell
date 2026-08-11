@@ -109,41 +109,24 @@ def have(python: Path, module: str) -> bool:
     return result.returncode == 0
 
 
-def ensure_dependencies(python: Path) -> bool:
+def ensure_dependencies(python: Path) -> None:
     """
-    Install what the server needs. Returns whether the hexagon map is available.
+    Install what the server needs.
 
-    The hexagon library is the only dependency containing compiled C, and the
-    only one that can fail to install — on Android under Termux there is no
-    prebuilt version of it. Everything else works without it, so a failure there
-    is reported in one sentence and stepped around rather than being fatal.
+    Two pure-Python packages, so this either works or the machine has no network
+    — there is no longer a dependency here that can fail to build.
     """
     if have(python, "flask"):
-        return have(python, "h3")
+        return
 
     step("Installing what the server needs (once, about a minute)...")
-    full = subprocess.run(
-        [str(python), "-m", "pip", "install", "-q", "-r", str(HERE / "requirements.txt")],
-        capture_output=True, text=True)
-
-    if full.returncode == 0:
-        done("Dependencies installed.")
-        return have(python, "h3")
-
-    # The most likely cause by far is h3 having no prebuilt version for this
-    # machine. Install everything else and carry on.
-    core = subprocess.run(
+    result = subprocess.run(
         [str(python), "-m", "pip", "install", "-q",
-         "-r", str(HERE / "requirements-core.txt")],
+         "-r", str(HERE / "requirements.txt")],
         capture_output=True, text=True)
-    if core.returncode != 0:
-        fail("could not install the dependencies.",
-             (core.stderr or full.stderr or "").strip())
-
-    done("Dependencies installed, except the hexagon map.")
-    step("  (This machine has no prebuilt version of that one library.")
-    step("   Everything works except the 'Whole course' hexagon view.)")
-    return False
+    if result.returncode != 0:
+        fail("could not install the dependencies.", (result.stderr or "").strip())
+    done("Dependencies installed.")
 
 
 def ensure_sample_data(python: Path) -> None:
@@ -215,7 +198,7 @@ def main() -> None:
              f"{sys.version_info.major}.{sys.version_info.minor}.")
 
     python = ensure_venv()
-    hexmap = ensure_dependencies(python)
+    ensure_dependencies(python)
     ensure_sample_data(python)
     ensure_loaded(python)
 
@@ -235,9 +218,6 @@ def main() -> None:
     if containerised:
         print(f"  (Running in a container. Start it with -p {port}:{port} for")
         print("   that address to work from outside.)\n")
-    if not hexmap:
-        print("  The 'Whole course' hexagon view is unavailable on this machine.")
-        print("  Everything else works.\n")
     print("  Press Ctrl-C here to stop the server.")
     print("\n  " + "-" * 56 + "\n")
 

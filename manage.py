@@ -283,7 +283,7 @@ def cmd_doctor(_args: list[str]) -> None:
 
     Written for the failures that have actually happened to people rather than
     the ones that are interesting: the wrong Python, a container binding to an
-    address nothing can reach, h3 refusing to install, an empty database. Each
+    address nothing can reach, an empty database. Each
     finding names the command that fixes it.
     """
     import socket
@@ -335,18 +335,6 @@ def cmd_doctor(_args: list[str]) -> None:
         bad.append(
             "Flask is not installed, so the server cannot start.\n"
             "     Fix: .venv/bin/pip install -r requirements.txt")
-
-    try:
-        import h3                                          # noqa: F401
-        ok.append("h3 is installed, so the hexagon map will work.")
-    except ImportError:
-        warn.append(
-            "h3 is not installed. Everything works except the 'Whole course' "
-            "hexagon\n     map, which is where the k-anonymity demonstration "
-            "lives.\n"
-            "     Fix: .venv/bin/pip install h3\n"
-            "     If that tries to compile CMake — it can on Termux — stop it "
-            "and carry on\n     without: the rest of the dashboard is unaffected.")
 
     # 3. Where the server will listen, which is the failure nobody can see.
     try:

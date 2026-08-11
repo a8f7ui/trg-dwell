@@ -136,7 +136,6 @@ function initMap() {
     }, 0);
   });
 
-  addOfflineBasemaps();
   addEnvironmentOverlays();
 
   ['live', 'participant', 'aggregate'].forEach((v) => {
@@ -158,73 +157,6 @@ function initMap() {
     if (followLive && !programmaticMove) setFollow(false);
   });
   map.on('moveend', () => { programmaticMove = false; });
-}
-
-/**
- * Offer any offline map the server has, as a further basemap choice.
- *
- * This is not how you get streets — the street map above is built in and always
- * there. This is about *independence from the internet*. Both Esri basemaps are
- * fetched from Esri's servers, so on a bad venue connection the map is simply
- * blank, which is awkward when the map is the lesson. A PMTiles archive is one
- * file holding an entire city's streets, served from the same machine as
- * everything else, so it keeps drawing with no connection at all.
- *
- * If no archive is installed the option does not appear and nothing else
- * changes, because nothing else depends on it.
- */
-const offlineBasemaps = [];
-
-async function addOfflineBasemaps() {
-  try {
-    const { basemaps } = await api('/api/basemaps');
-    if (!basemaps || !basemaps.length) return;
-    if (typeof protomapsL === 'undefined') return;
-
-    basemaps.forEach((b) => {
-      const layer = protomapsL.leafletLayer({
-        url: b.url,
-        theme: mapTheme(),
-        maxDataZoom: 15,
-      });
-      const label = basemaps.length === 1
-        ? `Street map, offline (${b.size_mb} MB)`
-        : `Offline: ${b.name.replace(/\.pmtiles$/, '')}`;
-      offlineBasemaps.push({ layer, label, url: b.url });
-      layerControl.addBaseLayer(layer, label);
-    });
-  } catch {
-    // No offline map available, or the server did not answer. The built-in
-    // basemaps still work; this is an addition, never a dependency.
-  }
-}
-
-/** Which protomaps theme suits the current skin. */
-function mapTheme() {
-  return document.documentElement.getAttribute('data-theme') === 'console'
-    ? 'black' : 'light';
-}
-
-/**
- * Redraw the offline basemap in the other skin's colours.
- *
- * The online tiles are photographs and pre-rendered images, so they look the
- * same either way. The offline map is drawn in the browser from vector data,
- * which means it can and should follow the skin — a white street map under the
- * console skin would be the one thing on screen that did not.
- */
-function restyleOfflineBasemaps() {
-  if (!offlineBasemaps.length || typeof protomapsL === 'undefined') return;
-  offlineBasemaps.forEach((entry) => {
-    const wasVisible = map.hasLayer(entry.layer);
-    layerControl.removeLayer(entry.layer);
-    if (wasVisible) map.removeLayer(entry.layer);
-    entry.layer = protomapsL.leafletLayer({
-      url: entry.url, theme: mapTheme(), maxDataZoom: 15,
-    });
-    layerControl.addBaseLayer(entry.layer, entry.label);
-    if (wasVisible) map.addLayer(entry.layer);
-  });
 }
 
 const ENV_STYLE = {
@@ -414,8 +346,6 @@ function applyTheme(name) {
   try { localStorage.setItem('dwell-theme', name); } catch (e) { /* private mode */ }
   $$('[data-theme-set]').forEach((b) =>
     b.setAttribute('aria-pressed', String(b.dataset.themeSet === name)));
-  // The one thing on the map that is drawn rather than fetched.
-  if (map) restyleOfflineBasemaps();
 }
 
 $$('[data-theme-set]').forEach((b) =>
@@ -1178,14 +1108,14 @@ async function renderAggregate() {
   if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.15));
 
   showLegend('Whole course, everybody', [
-    ['#ff6b6b', 'Busiest hexagons'],
+    ['#ff6b6b', 'Busiest cells'],
     ['#ffb454', 'Moderate'],
     ['#4da3ff', 'Quieter'],
-  ], `${d.cells_suppressed} hexagon(s) hidden by the k-anonymity threshold.`);
+  ], `${d.cells_suppressed} cell(s) hidden by the k-anonymity threshold.`);
 
   $('#aggregate-detail').innerHTML = `
     <div class="stats">
-      <div class="stat"><div class="n">${d.cells_shown}</div><div class="l">hexagons shown</div></div>
+      <div class="stat"><div class="n">${d.cells_shown}</div><div class="l">cells shown</div></div>
       <div class="stat"><div class="n">${d.cells_suppressed}</div><div class="l">hidden</div></div>
       <div class="stat"><div class="n">${d.total_participants}</div><div class="l">participants</div></div>
       <div class="stat"><div class="n">${(d.total_pings || 0).toLocaleString()}</div><div class="l">points</div></div>

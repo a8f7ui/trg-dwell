@@ -107,7 +107,7 @@ tools/          Sample-data generator — builds realistic synthetic participant
                 without any real phone or real person involved.
 data/sample/    Generated sample data (committed, safe, entirely invented).
 docs/           Hosting, distribution, store disclosures, SDK research,
-                facilitator's guide, offline maps.
+                facilitator's guide.
 backend/        The server that receives pings and serves the dashboard.
 dashboard/      The instructor dashboard.
 app/            The mobile app (iOS + Android, one codebase).
@@ -268,7 +268,7 @@ worth more than either alone.
   long they were observed there, and what a marketing system would conclude about
   them, including where it is unsure. Switch the day selector to *Whole course*
   to see the places they keep returning to.
-- **Whole course** — everybody at once as a hexagon grid, with the k-anonymity
+- **Whole course** — everybody at once as a grid of map cells, with the k-anonymity
   threshold on a slider. Dragging it to 1 in front of a class is the single most
   effective demonstration in the whole tool.
 - **What else was watching** — for each day, the cameras, plate readers, mapped
@@ -299,10 +299,8 @@ imagery and switch off automatically over the street map, which draws its own.
 Satellite shows what a place looks like; the street map shows what it *is*. Being
 able to flip mid-explanation is worth more than picking one.
 
-If venue wifi is unreliable, you can additionally install an **offline** copy of
-the street map so the dashboard stops depending on anyone else's servers at all —
-see [docs/offline-maps.md](docs/offline-maps.md). That is about resilience, not
-about getting streets: those are already there.
+Map tiles come from Esri, so a venue with no working connection will show a
+blank map. Everything in the sidebar still works.
 
 ## The app
 

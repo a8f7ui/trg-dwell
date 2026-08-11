@@ -265,7 +265,7 @@ def nearest_of_kind(pois: list[Poi], kind: str, lat: float, lon: float,
 #
 #   * the live map has everyone in one place during sessions, which is what an
 #     instructor will actually see when they ask the room to open the app;
-#   * the aggregate map gets one busy hexagon at the venue that comfortably
+#   * the aggregate map gets one busy cell at the venue that comfortably
 #     clears the k-anonymity threshold, while individual evening haunts fall
 #     below it and get suppressed — which is exactly the contrast that makes
 #     the k-anonymity lesson land;

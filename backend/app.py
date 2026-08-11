@@ -530,12 +530,7 @@ def aggregate():
         "SELECT COUNT(*) AS n FROM participants").fetchone()["n"]
     conn.close()
 
-    try:
-        result = analysis.hex_aggregate(rows, resolution=resolution, k=k)
-    except RuntimeError as exc:
-        # Missing h3. Reported as a readable message on the one screen that
-        # needs it, rather than a 500 with a stack trace in the server log.
-        return jsonify({"error": str(exc)}), 503
+    result = analysis.hex_aggregate(rows, resolution=resolution, k=k)
     result["total_pings"] = len(rows)
     result["total_participants"] = total_participants
     result["day"] = day
@@ -896,53 +891,6 @@ def audit_log():
 @app.get("/health")
 def health():
     return jsonify({"status": "ok"})
-
-
-# --------------------------------------------------------------------------
-# Offline basemap
-# --------------------------------------------------------------------------
-#
-# A PMTiles archive is a single file holding an entire street map for a chosen
-# area. Serving it from here means the dashboard can draw maps with no internet
-# at all, which matters in a room with bad wifi — the satellite imagery comes
-# from Esri's servers and simply will not load if the venue's connection is
-# poor.
-#
-# The file is not in the repository. It is large, it is specific to wherever a
-# course is being run, and it is downloaded separately (see docs/offline-maps.md).
-
-BASEMAP_DIR = config.BASE_DIR / "data" / "basemap"
-
-
-@app.get("/api/basemaps")
-def list_basemaps():
-    """Which offline maps are installed. Used by the dashboard to decide whether
-    to offer the option at all."""
-    if not BASEMAP_DIR.exists():
-        return jsonify({"basemaps": []})
-    files = sorted(p.name for p in BASEMAP_DIR.glob("*.pmtiles"))
-    return jsonify({
-        "basemaps": [
-            {"name": f, "url": f"/basemap/{f}",
-             "size_mb": round((BASEMAP_DIR / f).stat().st_size / 1_048_576, 1)}
-            for f in files
-        ]
-    })
-
-
-@app.get("/basemap/<path:filename>")
-def serve_basemap(filename: str):
-    """
-    Serve a PMTiles archive.
-
-    `conditional=True` is what makes this work: the format is read by asking for
-    small byte ranges of a large file rather than downloading the whole thing,
-    so the server must honour Range requests. Without it the browser would try
-    to pull the entire map before drawing anything.
-    """
-    if not filename.endswith(".pmtiles"):
-        return jsonify({"error": "Not found."}), 404
-    return send_from_directory(BASEMAP_DIR, filename, conditional=True)
 
 
 @app.get("/")

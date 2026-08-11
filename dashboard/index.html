@@ -122,14 +122,14 @@
       <!-- ---------- Aggregate controls ---------- -->
       <section class="panel" data-panel="aggregate" hidden>
         <h2>Whole course</h2>
-        <p class="hint">All participants combined, bucketed into hexagons.</p>
+        <p class="hint">All participants combined, bucketed into map cells.</p>
 
         <label class="field">
-          Hide hexagons with fewer than <output id="k-out">5</output> participants
+          Hide cells with fewer than <output id="k-out">5</output> participants
           <input type="range" id="k-slider" min="1" max="12" value="5">
         </label>
 
-        <label class="field">Hexagon size
+        <label class="field">Cell size
           <select id="resolution">
             <option value="8">Large (~460 m)</option>
             <option value="9" selected>Medium (~200 m)</option>
@@ -144,7 +144,7 @@
         <div id="aggregate-detail"></div>
 
         <div class="teaching-note">
-          <strong>Demo:</strong> drag the threshold to 1. Hexagons appear that
+          <strong>Demo:</strong> drag the threshold to 1. Cells appear that
           hold exactly one person.
         </div>
       </section>
@@ -218,8 +218,6 @@
 </div>
 
 <script src="vendor/leaflet.js"></script>
-<script src="vendor/pmtiles.js"></script>
-<script src="vendor/protomaps-leaflet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -1,7 +1,0 @@
-pmtiles (https://github.com/protomaps/PMTiles)
-Copyright Protomaps LLC
-Licensed under BSD-3-Clause.
-
-The published npm package does not include a licence file; the licence is
-declared as BSD-3-Clause in its package.json and the full text is published in
-the project's repository at https://github.com/protomaps/PMTiles/blob/main/LICENSE
