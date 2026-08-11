@@ -255,12 +255,34 @@ def withdraw():
 @app.post("/api/instructor/login")
 def instructor_login():
     body = request.get_json(silent=True) or {}
+    username = body.get("username", "")
+    ip = auth.client_ip()
     conn = get_conn()
-    ok = auth.check_instructor(conn, body.get("username", ""), body.get("password", ""))
+
+    # Refuse to even check the password once there have been too many recent
+    # failures. Without this, the login protecting participants' movement could
+    # be guessed at indefinitely.
+    wait = auth.login_blocked(conn, username, ip)
+    if wait:
+        db.audit(conn, username or "unknown", "login_blocked", f"from {ip}")
+        conn.close()
+        response = jsonify({
+            "error": f"Too many failed attempts. Try again in "
+                     f"{max(1, wait // 60)} minute(s).",
+        })
+        response.headers["Retry-After"] = str(wait)
+        return response, 429
+
+    ok = auth.check_instructor(conn, username, body.get("password", ""))
+    auth.record_login_attempt(conn, username, ip, ok)
+
     if ok:
-        session["instructor"] = body["username"]
-        db.audit(conn, body["username"], "instructor_login")
+        session["instructor"] = username
+        db.audit(conn, username, "instructor_login", f"from {ip}")
+    else:
+        db.audit(conn, username or "unknown", "instructor_login_failed", f"from {ip}")
     conn.close()
+
     if not ok:
         return jsonify({"error": "Incorrect username or password."}), 401
     return jsonify({"ok": True, "username": session["instructor"]})

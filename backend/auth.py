@@ -21,6 +21,7 @@ import hashlib
 import hmac
 import secrets
 import sqlite3
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 from flask import jsonify, request, session
@@ -110,6 +111,77 @@ def participant_from_request(conn: sqlite3.Connection) -> str | None:
 # --------------------------------------------------------------------------
 # Route decorators
 # --------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------
+# Slowing down password guessing
+# --------------------------------------------------------------------------
+#
+# scrypt already makes each guess cost something, but "something" is still
+# thousands of attempts an hour. This login opens a map of where participants
+# have been, so guessing has to be stopped rather than merely taxed.
+
+LOCKOUT_WINDOW_SECONDS = 15 * 60
+MAX_FAILURES_PER_USERNAME = 8
+MAX_FAILURES_PER_IP = 25
+
+
+def record_login_attempt(conn: sqlite3.Connection, username: str,
+                         ip: str, ok: bool) -> None:
+    conn.execute(
+        "INSERT INTO login_attempts (ts, username, ip, ok) VALUES (?, ?, ?, ?)",
+        (db.now_iso(), username, ip, 1 if ok else 0),
+    )
+    conn.commit()
+
+
+def login_blocked(conn: sqlite3.Connection, username: str, ip: str) -> int:
+    """
+    Return the number of seconds a caller must wait, or 0 if they may try.
+
+    Counts recent failures both for the username being targeted and for the
+    source address, so neither spraying one password across many usernames nor
+    hammering a single account gets very far.
+    """
+    since = (datetime.now(timezone.utc)
+             - timedelta(seconds=LOCKOUT_WINDOW_SECONDS)).isoformat()
+
+    by_user = conn.execute(
+        "SELECT COUNT(*) AS n FROM login_attempts "
+        "WHERE ok = 0 AND username = ? AND ts >= ?", (username, since)
+    ).fetchone()["n"]
+    by_ip = conn.execute(
+        "SELECT COUNT(*) AS n FROM login_attempts "
+        "WHERE ok = 0 AND ip = ? AND ts >= ?", (ip, since)
+    ).fetchone()["n"]
+
+    if by_user < MAX_FAILURES_PER_USERNAME and by_ip < MAX_FAILURES_PER_IP:
+        return 0
+
+    oldest = conn.execute(
+        "SELECT MIN(ts) AS t FROM login_attempts "
+        "WHERE ok = 0 AND (username = ? OR ip = ?) AND ts >= ?",
+        (username, ip, since)
+    ).fetchone()["t"]
+    if not oldest:
+        return 0
+    elapsed = (datetime.now(timezone.utc)
+               - datetime.fromisoformat(oldest)).total_seconds()
+    return max(1, int(LOCKOUT_WINDOW_SECONDS - elapsed))
+
+
+def client_ip() -> str:
+    """
+    The caller's address, trusting the proxy header only for its first entry.
+
+    Hosts terminate HTTPS in front of the app, so remote_addr would otherwise be
+    the proxy for every request and the per-address limit would lock out
+    everybody at once.
+    """
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.remote_addr or "unknown"
+
 
 def instructor_required(fn):
     @wraps(fn)

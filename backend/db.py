@@ -89,6 +89,19 @@ CREATE TABLE IF NOT EXISTS instructors (
     created_at    TEXT NOT NULL
 );
 
+-- Failed login attempts, used to slow down password guessing. Without this,
+-- somebody could try passwords against the instructor login as fast as the
+-- network allows, and that login opens a map of where participants have been.
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts       TEXT NOT NULL,
+    username TEXT,
+    ip       TEXT,
+    ok       INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ts ON login_attempts(ts);
+
 -- A record of consequential actions: withdrawals, wipes, logins. So that
 -- "we deleted the data" is a checkable claim rather than a promise.
 CREATE TABLE IF NOT EXISTS audit_log (

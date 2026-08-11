@@ -44,6 +44,29 @@ const fmtDateTime = (d) => d.toLocaleString([], tzOpts({
   weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
 }));
 
+/**
+ * A stable colour per participant.
+ *
+ * Assigned by position in the roster rather than by hashing the ID, because
+ * even spacing round the colour wheel is what makes twelve tracks tellable
+ * apart at a glance. Hashing gives you two near-identical blues sooner or
+ * later, and on a projector that is the difference between a legible map and a
+ * useless one.
+ */
+const participantColors = {};
+
+function assignColors(people) {
+  const n = Math.max(1, people.length);
+  people.forEach((p, i) => {
+    const hue = Math.round((i * 360) / n);
+    // Alternate lightness so neighbouring hues separate further.
+    const light = i % 2 ? 68 : 56;
+    participantColors[p.participant_id] = `hsl(${hue} 80% ${light}%)`;
+  });
+}
+
+const colorFor = (id) => participantColors[id] || '#4da3ff';
+
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -144,6 +167,7 @@ async function startApp(username) {
     api('/api/instructor/participants'),
   ]);
   participants = people;
+  assignColors(people);
   courseTz = mon.course_timezone || null;
 
   if (mon.first_ping && mon.last_ping) {
@@ -278,6 +302,16 @@ async function renderLive() {
     liveFitted = true;
   }
 
+  const seen = new Set(live.visible.map((p) => p.participant_id));
+  $('#roster').innerHTML = participants.map((p) => {
+    const on = seen.has(p.participant_id);
+    return `<div class="roster-row ${on ? 'on' : 'off'}">
+      <span class="swatch" style="background:${colorFor(p.participant_id)}"></span>
+      <span class="who">${escapeHtml(p.display_label)}</span>
+      <span class="state">${on ? 'tracking' : 'no signal'}</span>
+    </div>`;
+  }).join('');
+
   $('#monitoring').innerHTML = `
     <div class="stat"><div class="n">${live.visible_count}</div>
       <div class="l">visible now</div></div>
@@ -324,8 +358,10 @@ function drawLive() {
     L.circleMarker([c.lat, c.lon], {
       radius: n > 1 ? Math.min(22, 11 + n * 1.6) : 9,
       color: '#ffffff',
-      weight: 2,
-      fillColor: '#4da3ff',
+      weight: n > 1 ? 2 : 2.5,
+      // A single track keeps its own colour; a pile of people cannot, so it
+      // goes neutral and carries the count instead.
+      fillColor: n > 1 ? '#8fa6bd' : colorFor(c.members[0].participant_id),
       fillOpacity: opacity,
     }).bindPopup(
       n === 1
@@ -337,7 +373,8 @@ function drawLive() {
           `Accuracy ±${Math.round(c.members[0].accuracy_m)} m`
         : `<b>${n} participants here</b><br>` +
           c.members
-            .map((m) => `${escapeHtml(m.label)} — ${fmtTime(m.ts)}`)
+            .map((m) => `<span style="color:${colorFor(m.participant_id)}">` +
+                        `&#9679;</span> ${escapeHtml(m.label)} — ${fmtTime(m.ts)}`)
             .join('<br>')
     ).addTo(layers.live);
 
@@ -348,10 +385,11 @@ function drawLive() {
           ? `<div style="color:#04121f;font:800 12px system-ui;width:${
               Math.min(44, 22 + n * 3.2)}px;text-align:center;
               transform:translate(-50%,-8px);pointer-events:none">${n}</div>`
-          : `<div style="color:#fff;font:600 11px system-ui;
-              text-shadow:0 1px 3px #000;white-space:nowrap;
-              transform:translate(12px,-8px);pointer-events:none">${
-                escapeHtml(c.members[0].label)}</div>`,
+          : `<div style="color:${colorFor(c.members[0].participant_id)};
+              font:600 10px ui-monospace,monospace;letter-spacing:.04em;
+              text-shadow:0 1px 4px #000,0 0 2px #000;white-space:nowrap;
+              transform:translate(11px,-7px);pointer-events:none">${
+                escapeHtml(c.members[0].label).toUpperCase()}</div>`,
       }),
     }).addTo(layers.live);
   });
@@ -442,6 +480,7 @@ async function renderParticipantWeek(pid) {
 
 function drawTrail(segments, stops) {
   const pts = [];
+  const trailColor = colorFor($('#participant-select').value);
 
   // Each segment is a separate window when the app was open. They are drawn
   // as separate lines, never joined, because joining them would invent a route
@@ -449,7 +488,7 @@ function drawTrail(segments, stops) {
   segments.forEach((seg) => {
     const line = seg.map((p) => [p.lat, p.lon]);
     if (line.length > 1) {
-      L.polyline(line, { color: '#4da3ff', weight: 3, opacity: 0.75 })
+      L.polyline(line, { color: trailColor, weight: 3, opacity: 0.8 })
         .addTo(layers.participant);
     }
     line.forEach((p) => pts.push(p));
@@ -476,7 +515,7 @@ function drawTrail(segments, stops) {
   if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.2));
 
   showLegend('One participant, one day', [
-    ['#4da3ff', 'Movement'],
+    [trailColor, 'Movement'],
     ['#ffb454', 'Stop (circle size = observed dwell)'],
   ], 'Breaks in the line are gaps the phone did not report — usually the OS ' +
      'suspending the app or throttling while somebody sat still.');
