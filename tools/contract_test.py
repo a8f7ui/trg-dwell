@@ -94,8 +94,8 @@ check("register without consent is refused", status == 400, f"got {status}")
 now = datetime.now(timezone.utc)
 pings = [{
     "ts": (now - timedelta(minutes=i)).isoformat(),
-    "lat": 30.2672 + i * 0.0004,
-    "lon": -97.7431 + i * 0.0004,
+    "lat": 43.0389 + i * 0.0004,
+    "lon": -87.9065 + i * 0.0004,
     "accuracy_m": 12.5,
     "battery_pct": 74,
     "connection": "wifi",
@@ -114,7 +114,7 @@ check("upload with no token is refused", status == 401, f"got {status}")
 
 # Malformed points should be skipped, not fail the whole batch.
 status, up = call("POST", "/api/v1/pings", {"pings": [
-    {"ts": now.isoformat(), "lat": 30.0, "lon": -97.0},
+    {"ts": now.isoformat(), "lat": 43.0, "lon": -87.9},
     {"lat": "nonsense"},
 ]}, token=token)
 check("a malformed point is skipped, not fatal",

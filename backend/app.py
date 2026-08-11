@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 
 from flask import Flask, jsonify, request, send_from_directory, session
 
-from . import analysis, auth, config, db, environment
+from . import analysis, assessment, auth, config, context_feed, db, environment
 from .analysis import Point
 
 DASHBOARD_DIR = config.BASE_DIR / "dashboard"
@@ -95,15 +95,30 @@ def load_environment(conn) -> environment.FeatureIndex:
     return _env_index_cache
 
 
+CONTEXT_DIR = config.BASE_DIR / "data" / "context"
+_context_cache: list[dict] | None = None
+
+
+def load_context() -> list[dict]:
+    """Area context, read once. Prepared before a course, never fetched live."""
+    global _context_cache
+    if _context_cache is None:
+        _context_cache = context_feed.load_items(CONTEXT_DIR)
+    return _context_cache
+
+
 def analyse_day(points: list[Point], places_ref: list[dict],
-                env_index: environment.FeatureIndex | None = None) -> dict:
+                env_index: environment.FeatureIndex | None = None,
+                day: str | None = None) -> dict:
     """Run the full pipeline for one day and return everything the UI needs."""
     stops = analysis.detect_stops(points)
     analysis.attach_poi_context(stops, places_ref)
     clustered = analysis.cluster_places(stops)
-    assessment = analysis.infer_day(points, stops, clustered)
+    inferred = analysis.infer_day(points, stops, clustered)
     exposure = (environment.assess_exposure(points, stops, env_index)
                 if env_index else {"available": False})
+    context = (context_feed.match_to_day(stops, day, load_context())
+               if day else {"available": False})
 
     # Group the trail into the separate windows when the app was open, so the
     # map can draw them as distinct segments instead of joining them with a
@@ -124,8 +139,9 @@ def analyse_day(points: list[Point], places_ref: list[dict],
         "trail_segments": segments,
         "stops": [s.as_dict() for s in stops],
         "places": [p.as_dict() for p in clustered],
-        "assessment": assessment,
+        "assessment": inferred,
         "exposure": exposure,
+        "context": context,
     }
 
 
@@ -231,16 +247,24 @@ def my_reveal():
 
     places_ref = load_places(conn)
     env_index = load_environment(conn)
-    today = analyse_day(load_points(conn, participant_id, day), places_ref, env_index)
+    today = analyse_day(load_points(conn, participant_id, day), places_ref, env_index, day)
 
     prior = []
     for d in all_days:
         if d >= day:
             break
-        prior.append(analyse_day(load_points(conn, participant_id, d), places_ref, env_index))
+        prior.append(analyse_day(load_points(conn, participant_id, d), places_ref, env_index, d))
 
     day_index = all_days.index(day) if day in all_days else 0
     conn.close()
+
+    # Pattern-of-life and anomaly describe the participant's own behaviour, so
+    # they are safe to show them. Association analysis is deliberately absent:
+    # it would disclose other participants' movements to somebody who was never
+    # given the right to see them.
+    history = prior + [today]
+    for entry, d in zip(history, all_days[:len(history)]):
+        entry.setdefault("day", d)
 
     return jsonify({
         "participant_id": participant_id,
@@ -249,6 +273,8 @@ def my_reveal():
         "days_available": all_days,
         **today,
         "comparison": analysis.compare_with_prior(today, prior),
+        "pattern_of_life": assessment.assess_pattern_of_life(history),
+        "anomaly": assessment.assess_anomaly(today, prior),
         "agency_step": analysis.agency_step(day_index),
     })
 
@@ -354,8 +380,8 @@ def participant_day(participant_id: str, day: str):
     places_ref = load_places(conn)
     env_index = load_environment(conn)
     all_days = days_for(conn, participant_id)
-    today = analyse_day(load_points(conn, participant_id, day), places_ref, env_index)
-    prior = [analyse_day(load_points(conn, participant_id, d), places_ref, env_index)
+    today = analyse_day(load_points(conn, participant_id, day), places_ref, env_index, day)
+    prior = [analyse_day(load_points(conn, participant_id, d), places_ref, env_index, d)
              for d in all_days if d < day]
     day_index = all_days.index(day) if day in all_days else 0
     conn.close()
@@ -396,6 +422,24 @@ def participant_week(participant_id: str):
     week_places = analysis.cluster_places(all_stops)
     recurring = [p.as_dict() for p in week_places if len(p.days) >= 2]
     week_assessment = analysis.infer_day(all_points, all_stops, week_places)
+
+    pattern = assessment.assess_pattern_of_life(per_day)
+
+    # Association analysis is instructor-only and never reaches a participant's
+    # own reveal: it is other participants' movements by implication, and only
+    # instructors were disclosed as able to see those.
+    others = {
+        r["participant_id"]: load_points(conn, r["participant_id"])
+        for r in conn.execute(
+            "SELECT DISTINCT participant_id FROM pings WHERE participant_id != ?",
+            (participant_id,))
+    }
+    labels = {
+        r["participant_id"]: r["display_label"]
+        for r in conn.execute("SELECT participant_id, display_label FROM participants")
+    }
+    associations = assessment.assess_associations(
+        participant_id, all_points, others, labels)
     conn.close()
 
     return jsonify({
@@ -405,6 +449,8 @@ def participant_week(participant_id: str):
         "week_places": [p.as_dict() for p in week_places],
         "recurring_places": recurring,
         "week_assessment": week_assessment,
+        "pattern_of_life": pattern,
+        "associations": associations,
         "summary": (
             f"Across {len(all_days)} day(s), {len(week_places)} distinct places were "
             f"observed, {len(recurring)} of them on more than one day. Places somebody "
@@ -541,6 +587,158 @@ def monitoring():
         "k_anonymity_threshold": config.K_ANONYMITY_THRESHOLD,
         "retention_days": config.RETENTION_DAYS,
     })
+
+
+@app.get("/api/instructor/environment")
+@auth.instructor_required
+def instructor_environment():
+    """Observing infrastructure, for drawing as toggleable map overlays."""
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT feature_id, kind, lat, lon, name, source FROM environment_features"
+    ).fetchall()
+    conn.close()
+    features = [
+        environment.Feature(
+            feature_id=r["feature_id"], kind=r["kind"], lat=r["lat"], lon=r["lon"],
+            name=r["name"] or "", source=r["source"] or "").as_dict()
+        for r in rows
+    ]
+    by_kind: dict[str, int] = {}
+    for f in features:
+        by_kind[f["kind"]] = by_kind.get(f["kind"], 0) + 1
+    return jsonify({
+        "features": features,
+        "counts": by_kind,
+        "kinds": {k: {"label": v["label"], "observes": v["observes"],
+                      "operator": v["operator"], "range_m": v["range_m"]}
+                  for k, v in environment.FEATURE_KINDS.items()},
+    })
+
+
+@app.post("/api/instructor/environment/import")
+@auth.instructor_required
+def import_environment():
+    """
+    Add observing infrastructure from an uploaded file.
+
+    Accepts a WiGLE-style wardrive CSV export, or the project's own JSON. This
+    is how a course brings in Wi-Fi and Bluetooth observations without the
+    server ever querying an outside service — the instructor obtains the extract
+    themselves and uploads it, so no participant coordinate ever leaves here.
+    """
+    body = request.get_json(silent=True) or {}
+    raw = body.get("content", "")
+    label = (body.get("source") or "uploaded").strip()[:40]
+    replace = bool(body.get("replace_source"))
+
+    if not raw or len(raw) > 6_000_000:
+        return jsonify({"error": "Send a non-empty file smaller than 6 MB."}), 400
+
+    features = _parse_environment_upload(raw, label)
+    if not features:
+        return jsonify({
+            "error": "No usable rows found. Expected a WiGLE CSV export with "
+                     "latitude/longitude columns, or this project's JSON format.",
+        }), 400
+
+    conn = get_conn()
+    if replace:
+        conn.execute("DELETE FROM environment_features WHERE source = ?", (label,))
+    conn.executemany(
+        "INSERT OR REPLACE INTO environment_features "
+        "(feature_id, kind, lat, lon, name, source) VALUES (?,?,?,?,?,?)",
+        [(f["feature_id"], f["kind"], f["lat"], f["lon"], f["name"], f["source"])
+         for f in features])
+    conn.commit()
+    db.audit(conn, session["instructor"], "environment_imported",
+             f"{len(features)} features from '{label}'")
+    conn.close()
+
+    global _env_index_cache
+    _env_index_cache = None      # rebuilt on next use
+
+    kinds: dict[str, int] = {}
+    for f in features:
+        kinds[f["kind"]] = kinds.get(f["kind"], 0) + 1
+    return jsonify({"imported": len(features), "kinds": kinds, "source": label}), 201
+
+
+def _parse_environment_upload(raw: str, label: str) -> list[dict]:
+    """
+    Read either this project's JSON or a WiGLE CSV export.
+
+    WiGLE's export begins with a version banner line, then a header row. Columns
+    vary between versions, so latitude and longitude are located by name rather
+    than by position.
+    """
+    import csv as _csv
+    import io
+    import json as _json
+
+    text = raw.strip()
+    features: list[dict] = []
+
+    if text.startswith("["):
+        try:
+            for i, item in enumerate(_json.loads(text), start=1):
+                lat, lon = float(item["lat"]), float(item["lon"])
+                features.append({
+                    "feature_id": item.get("feature_id") or f"{label}_{i:06d}",
+                    "kind": item.get("kind", "wifi"),
+                    "lat": round(lat, 6), "lon": round(lon, 6),
+                    "name": str(item.get("name", ""))[:120],
+                    "source": label,
+                })
+        except (ValueError, KeyError, TypeError):
+            return []
+        return features
+
+    lines = text.splitlines()
+    # Skip WiGLE's "WigleWifi-1.6,appRelease=..." preamble if present.
+    start = 1 if lines and lines[0].lower().startswith("wiglewifi") else 0
+    reader = _csv.DictReader(io.StringIO("\n".join(lines[start:])))
+    if not reader.fieldnames:
+        return []
+
+    lower = {name.lower().strip(): name for name in reader.fieldnames}
+
+    def pick(*candidates):
+        for c in candidates:
+            if c in lower:
+                return lower[c]
+        return None
+
+    lat_col = pick("currentlatitude", "latitude", "lat", "trilat")
+    lon_col = pick("currentlongitude", "longitude", "lon", "lng", "trilong")
+    name_col = pick("ssid", "name", "label")
+    type_col = pick("type")
+    if not lat_col or not lon_col:
+        return []
+
+    for i, row in enumerate(reader, start=1):
+        try:
+            lat, lon = float(row[lat_col]), float(row[lon_col])
+        except (TypeError, ValueError):
+            continue
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180) or (lat == 0 and lon == 0):
+            continue
+        rec_type = (row.get(type_col) or "").strip().upper() if type_col else ""
+        kind = "wifi" if rec_type in ("", "WIFI") else (
+            "wifi" if rec_type.startswith("BT") or rec_type.startswith("BLE") else "wifi")
+        features.append({
+            "feature_id": f"{label}_{i:06d}",
+            "kind": kind,
+            "lat": round(lat, 6),
+            "lon": round(lon, 6),
+            # Network names are shown to instructors only, and a wardrive
+            # capture is a record of somebody's router rather than of a person.
+            "name": (row.get(name_col) or "")[:120] if name_col else "",
+            "source": label,
+        })
+        if len(features) > 60_000:
+            break
+    return features
 
 
 @app.post("/api/instructor/wipe")

@@ -81,7 +81,7 @@ toll points and transit gates. Contributed by volunteers, describes street
 furniture, needs no account:
 
 ```bash
-python3 tools/fetch_osm_environment.py --around 30.2672,-97.7431 --radius 5000
+python3 tools/fetch_osm_environment.py --around 43.0389,-87.9065 --radius 6000
 python -m backend.load_sample
 ```
 
@@ -108,6 +108,42 @@ could have had it, and the promise we made to you cost us it.* Very few products
 can say that.
 
 ---
+
+## The assessment layer
+
+Beyond corroboration, the analysis now asks the questions a security service
+asks rather than the ones an advertiser asks. All of it from movement and public
+information about places; none of it requiring anybody's name.
+
+**Pattern of life** — which places recur, at what hour, and how tightly. A place
+visited at 09:06 ± 6 minutes on five of six days is not a habit, it is a
+schedule. The tool says so plainly: *somebody wanting to find this person would
+not need to follow them; they would need only to be there and wait.*
+
+**Association** — who was repeatedly in the same place at the same minute.
+Moments when four or more participants were together are discarded as crowd
+rather than company, since everyone shares a venue; what remains is time spent
+together away from the group. Nobody collected a contact list. The network falls
+out of two sets of coordinates and two clocks.
+
+**Anomaly** — what today did that the baseline did not. Monitoring systems are
+not interested in the routine; they are interested in the day it breaks.
+
+**Area context** — public, dated, located items such as local news and event
+listings, matched to stops by place and time. This is the step where a trail
+stops being coordinates and becomes an account of somebody's day.
+
+Two constraints, both load-bearing:
+
+- **Association analysis is instructor-only.** It is never returned to a
+  participant's own reveal, because telling somebody "you spent three hours near
+  Participant 07" discloses another participant's movements to them. Instructors
+  were disclosed as able to see everyone. Participants were not.
+- **Context is about places and events, never people.** Nothing searches for
+  posts by or about a participant, and nothing matches anybody to a social media
+  account. Person-targeted collection is precisely what a real service adds
+  next, and the honest way to teach that is to describe the step and decline to
+  take it.
 
 ## Teaching it
 

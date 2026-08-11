@@ -79,11 +79,11 @@ python3 tools/check_basemap.py
 It reads the file's own header and tells you the area and zoom range it holds:
 
 ```
-austin.pmtiles
+milwaukee.pmtiles
   size          : 84.2 MB
   contains      : vector (MVT), 184,320 tiles
   covers        : 21 km x 20 km
-  bounding box  : 30.1800,-97.8500 to 30.3600,-97.6300
+  bounding box  : 42.9500,-88.0200 to 43.1300,-87.8300
   zoom range    : 0–15 (the whole world down to streets and buildings)
 ```
 
@@ -91,7 +91,7 @@ To confirm a specific place is inside it — your venue, say — pass its
 coordinates:
 
 ```bash
-python3 tools/check_basemap.py --at 30.2672 -97.7431
+python3 tools/check_basemap.py --at 43.0389 -87.9065
 ```
 
 This is worth doing. Drawing the box slightly wrong is easy, and the failure

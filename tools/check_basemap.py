@@ -8,7 +8,7 @@ staying in. This reads the file's own header and tells you, in plain terms, the
 area and zoom range it holds, so you find out now rather than in the classroom.
 
     python3 tools/check_basemap.py
-    python3 tools/check_basemap.py data/basemap/austin.pmtiles
+    python3 tools/check_basemap.py data/basemap/milwaukee.pmtiles
 
 With no argument it checks every map installed in data/basemap/.
 

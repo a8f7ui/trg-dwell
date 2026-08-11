@@ -6,8 +6,8 @@ Downloads the publicly mapped cameras, plate readers and similar for a bounding
 box, and writes them in the format the backend loads. Uses the Overpass API,
 which is free and needs no account.
 
-    python3 tools/fetch_osm_environment.py --bbox 30.18,-97.85,30.36,-97.63
-    python3 tools/fetch_osm_environment.py --around 30.2672,-97.7431 --radius 5000
+    python3 tools/fetch_osm_environment.py --bbox 42.95,-88.02,43.13,-87.83
+    python3 tools/fetch_osm_environment.py --around 43.0389,-87.9065 --radius 6000
 
 Then load it:
 
@@ -27,6 +27,18 @@ a third party, and this app promises participants that their data goes to the
 course server and nowhere else. Breaking that promise to make a lesson about
 broken promises would be a poor trade. If you want Wi-Fi in the picture, obtain a
 static extract for your area ahead of time and convert it offline.
+
+Flock Safety cameras and similar ALPR installations
+---------------------------------------------------
+DeFlock (deflock.me) crowdsources the locations of Flock Safety and other
+automatic plate readers, and contributes them back to OpenStreetMap tagged
+`man_made=surveillance` + `surveillance:type=ALPR`. This script picks those up
+already — so for most US cities, including Milwaukee, running it gets you the
+DeFlock-sourced readers without a separate step.
+
+If DeFlock has coverage that has not yet reached OpenStreetMap, export it from
+their site and load it through the dashboard's import control, or convert it to
+this script's JSON output format.
 
 Coverage is patchy and always an undercount. OpenStreetMap has excellent camera
 coverage in some cities and almost none in others, and no public dataset records
@@ -54,8 +66,11 @@ QUERY_TEMPLATE = """
 (
   node["man_made"="surveillance"]({bbox});
   way["man_made"="surveillance"]({bbox});
+  node["surveillance:type"="ALPR"]({bbox});
+  node["surveillance:type"="ANPR"]({bbox});
   node["highway"="speed_camera"]({bbox});
   node["barrier"="toll_booth"]({bbox});
+  node["amenity"="toll_booth"]({bbox});
   node["public_transport"="stop_position"]["network"]({bbox});
 );
 out center tags;

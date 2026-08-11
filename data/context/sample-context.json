@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Three-day technology conference opens downtown",
+    "date": "2026-09-16",
+    "time": "09:00",
+    "lat": 43.04546,
+    "lon": -87.914774,
+    "place": "Tallow Conference Centre",
+    "kind": "event",
+    "source": "SAMPLE ENTRY \u2014 not real reporting",
+    "url": ""
+  },
+  {
+    "title": "Street festival closes road outside Verdigris Bar",
+    "date": "2026-09-16",
+    "time": "18:30",
+    "lat": 43.049205,
+    "lon": -87.891801,
+    "place": "Verdigris Bar",
+    "kind": "event",
+    "source": "SAMPLE ENTRY \u2014 not real reporting",
+    "url": ""
+  },
+  {
+    "title": "Public demonstration announced at Alder Commons",
+    "date": "2026-09-17",
+    "time": "12:00",
+    "lat": 43.041306,
+    "lon": -87.90076,
+    "place": "Alder Commons",
+    "kind": "protest",
+    "source": "SAMPLE ENTRY \u2014 not real reporting",
+    "url": ""
+  },
+  {
+    "title": "Severe weather warning issued for the county",
+    "date": "2026-09-17",
+    "kind": "weather",
+    "source": "SAMPLE ENTRY \u2014 not real reporting",
+    "url": ""
+  }
+]

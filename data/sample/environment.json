@@ -2,1912 +2,1912 @@
   {
     "feature_id": "env_0001",
     "kind": "camera",
-    "lat": 30.265599,
-    "lon": -97.745855,
+    "lat": 43.037299,
+    "lon": -87.909756,
     "name": "near Cedar Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0002",
     "kind": "camera",
-    "lat": 30.265754,
-    "lon": -97.735335,
+    "lat": 43.037454,
+    "lon": -87.897324,
     "name": "near Copper Offices",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0003",
     "kind": "camera",
-    "lat": 30.274988,
-    "lon": -97.750585,
+    "lat": 43.046688,
+    "lon": -87.915345,
     "name": "near Sundial Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0004",
     "kind": "camera",
-    "lat": 30.267401,
-    "lon": -97.73576,
+    "lat": 43.039101,
+    "lon": -87.897827,
     "name": "near Quarry Inn",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0005",
     "kind": "camera",
-    "lat": 30.273503,
-    "lon": -97.748585,
+    "lat": 43.045203,
+    "lon": -87.912982,
     "name": "near Old Mill Exhibition Hall",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0006",
     "kind": "camera",
-    "lat": 30.271317,
-    "lon": -97.747804,
+    "lat": 43.043017,
+    "lon": -87.91206,
     "name": "near Larkspur Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0007",
     "kind": "camera",
-    "lat": 30.265298,
-    "lon": -97.754093,
+    "lat": 43.036998,
+    "lon": -87.919491,
     "name": "near Verdigris Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0008",
     "kind": "camera",
-    "lat": 30.277879,
-    "lon": -97.750595,
+    "lat": 43.049579,
+    "lon": -87.915357,
     "name": "near Marble Tower",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0009",
     "kind": "camera",
-    "lat": 30.275078,
-    "lon": -97.747187,
+    "lat": 43.046778,
+    "lon": -87.91133,
     "name": "near Verdigris Station",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0010",
     "kind": "camera",
-    "lat": 30.259796,
-    "lon": -97.74461,
+    "lat": 43.031496,
+    "lon": -87.908283,
     "name": "near Alder Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0011",
     "kind": "camera",
-    "lat": 30.271188,
-    "lon": -97.739573,
+    "lat": 43.042888,
+    "lon": -87.902331,
     "name": "near Northgate Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0012",
     "kind": "camera",
-    "lat": 30.27778,
-    "lon": -97.734376,
+    "lat": 43.04948,
+    "lon": -87.896191,
     "name": "near Windrow Social Club",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0013",
     "kind": "camera",
-    "lat": 30.278023,
-    "lon": -97.750156,
+    "lat": 43.049723,
+    "lon": -87.914838,
     "name": "near Marble Tower",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0014",
     "kind": "camera",
-    "lat": 30.267921,
-    "lon": -97.751183,
+    "lat": 43.039621,
+    "lon": -87.916052,
     "name": "near Alder Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0015",
     "kind": "camera",
-    "lat": 30.265967,
-    "lon": -97.735362,
+    "lat": 43.037667,
+    "lon": -87.897357,
     "name": "near Copper Offices",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0016",
     "kind": "camera",
-    "lat": 30.273355,
-    "lon": -97.727719,
+    "lat": 43.045055,
+    "lon": -87.888324,
     "name": "near Sable Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0017",
     "kind": "camera",
-    "lat": 30.257839,
-    "lon": -97.733525,
+    "lat": 43.029539,
+    "lon": -87.895185,
     "name": "near Halfpenny Transit Centre",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0018",
     "kind": "camera",
-    "lat": 30.277496,
-    "lon": -97.731068,
+    "lat": 43.049196,
+    "lon": -87.892282,
     "name": "near Verdigris Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0019",
     "kind": "camera",
-    "lat": 30.273547,
-    "lon": -97.727015,
+    "lat": 43.045247,
+    "lon": -87.887493,
     "name": "near Sable Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0020",
     "kind": "camera",
-    "lat": 30.274191,
-    "lon": -97.748379,
+    "lat": 43.045891,
+    "lon": -87.912739,
     "name": "near Old Mill Exhibition Hall",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0021",
     "kind": "camera",
-    "lat": 30.269125,
-    "lon": -97.754627,
+    "lat": 43.040825,
+    "lon": -87.920121,
     "name": "near Tallow Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0022",
     "kind": "camera",
-    "lat": 30.271488,
-    "lon": -97.748292,
+    "lat": 43.043188,
+    "lon": -87.912636,
     "name": "near Larkspur Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0023",
     "kind": "camera",
-    "lat": 30.271868,
-    "lon": -97.747877,
+    "lat": 43.043568,
+    "lon": -87.912145,
     "name": "near Larkspur Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0024",
     "kind": "camera",
-    "lat": 30.255106,
-    "lon": -97.750869,
+    "lat": 43.026806,
+    "lon": -87.915681,
     "name": "near Northgate Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0025",
     "kind": "camera",
-    "lat": 30.257305,
-    "lon": -97.750986,
+    "lat": 43.029005,
+    "lon": -87.91582,
     "name": "near Northgate Station",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0026",
     "kind": "camera",
-    "lat": 30.255883,
-    "lon": -97.760483,
+    "lat": 43.027583,
+    "lon": -87.927041,
     "name": "near Cedar Market",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0027",
     "kind": "camera",
-    "lat": 30.275294,
-    "lon": -97.729354,
+    "lat": 43.046994,
+    "lon": -87.890256,
     "name": "near Copper Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0028",
     "kind": "camera",
-    "lat": 30.261701,
-    "lon": -97.740802,
+    "lat": 43.033401,
+    "lon": -87.903784,
     "name": "near Bellweather Provisions",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0029",
     "kind": "camera",
-    "lat": 30.261207,
-    "lon": -97.741493,
+    "lat": 43.032907,
+    "lon": -87.904601,
     "name": "near Bellweather Provisions",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0030",
     "kind": "camera",
-    "lat": 30.255934,
-    "lon": -97.753784,
+    "lat": 43.027634,
+    "lon": -87.919126,
     "name": "near Bellweather Alehouse",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0031",
     "kind": "camera",
-    "lat": 30.256088,
-    "lon": -97.760481,
+    "lat": 43.027788,
+    "lon": -87.927039,
     "name": "near Cedar Market",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0032",
     "kind": "camera",
-    "lat": 30.277717,
-    "lon": -97.75826,
+    "lat": 43.049417,
+    "lon": -87.924414,
     "name": "near Foxglove Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0033",
     "kind": "camera",
-    "lat": 30.25829,
-    "lon": -97.729265,
+    "lat": 43.02999,
+    "lon": -87.890152,
     "name": "near Windrow Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0034",
     "kind": "camera",
-    "lat": 30.274935,
-    "lon": -97.751103,
+    "lat": 43.046635,
+    "lon": -87.915958,
     "name": "near Sundial Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0035",
     "kind": "camera",
-    "lat": 30.257532,
-    "lon": -97.735017,
+    "lat": 43.029232,
+    "lon": -87.896949,
     "name": "near Copper Provisions",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0036",
     "kind": "camera",
-    "lat": 30.258051,
-    "lon": -97.729436,
+    "lat": 43.029751,
+    "lon": -87.890354,
     "name": "near Windrow Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0037",
     "kind": "camera",
-    "lat": 30.270661,
-    "lon": -97.755557,
+    "lat": 43.042361,
+    "lon": -87.92122,
     "name": "near Old Mill Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0038",
     "kind": "camera",
-    "lat": 30.26748,
-    "lon": -97.735822,
+    "lat": 43.03918,
+    "lon": -87.8979,
     "name": "near Quarry Inn",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0039",
     "kind": "camera",
-    "lat": 30.261014,
-    "lon": -97.731619,
+    "lat": 43.032714,
+    "lon": -87.892933,
     "name": "near Ironwood Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0040",
     "kind": "camera",
-    "lat": 30.260862,
-    "lon": -97.727767,
+    "lat": 43.032562,
+    "lon": -87.888382,
     "name": "near Verdigris Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0041",
     "kind": "camera",
-    "lat": 30.275415,
-    "lon": -97.729391,
+    "lat": 43.047115,
+    "lon": -87.8903,
     "name": "near Copper Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0042",
     "kind": "camera",
-    "lat": 30.278357,
-    "lon": -97.757884,
+    "lat": 43.050057,
+    "lon": -87.923969,
     "name": "near Foxglove Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0043",
     "kind": "camera",
-    "lat": 30.271443,
-    "lon": -97.748107,
+    "lat": 43.043143,
+    "lon": -87.912417,
     "name": "near Larkspur Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0044",
     "kind": "camera",
-    "lat": 30.265528,
-    "lon": -97.746763,
+    "lat": 43.037228,
+    "lon": -87.910829,
     "name": "near Cedar Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0045",
     "kind": "camera",
-    "lat": 30.277948,
-    "lon": -97.749798,
+    "lat": 43.049648,
+    "lon": -87.914415,
     "name": "near Marble Tower",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0046",
     "kind": "camera",
-    "lat": 30.257585,
-    "lon": -97.73344,
+    "lat": 43.029285,
+    "lon": -87.895084,
     "name": "near Halfpenny Transit Centre",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0047",
     "kind": "camera",
-    "lat": 30.271529,
-    "lon": -97.748314,
+    "lat": 43.043229,
+    "lon": -87.912662,
     "name": "near Larkspur Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0048",
     "kind": "camera",
-    "lat": 30.269002,
-    "lon": -97.754061,
+    "lat": 43.040702,
+    "lon": -87.919452,
     "name": "near Tallow Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0049",
     "kind": "camera",
-    "lat": 30.273106,
-    "lon": -97.751276,
+    "lat": 43.044806,
+    "lon": -87.916161,
     "name": "near Northgate Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0050",
     "kind": "camera",
-    "lat": 30.273905,
-    "lon": -97.748423,
+    "lat": 43.045605,
+    "lon": -87.91279,
     "name": "near Old Mill Exhibition Hall",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0051",
     "kind": "camera",
-    "lat": 30.26427,
-    "lon": -97.739826,
+    "lat": 43.03597,
+    "lon": -87.902631,
     "name": "near Kestrel Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0052",
     "kind": "camera",
-    "lat": 30.273614,
-    "lon": -97.749963,
+    "lat": 43.045314,
+    "lon": -87.91461,
     "name": "near Tallow Conference Centre",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0053",
     "kind": "camera",
-    "lat": 30.273414,
-    "lon": -97.750269,
+    "lat": 43.045114,
+    "lon": -87.914972,
     "name": "near Tallow Conference Centre",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0054",
     "kind": "camera",
-    "lat": 30.266081,
-    "lon": -97.757913,
+    "lat": 43.037781,
+    "lon": -87.924005,
     "name": "near Sundial Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0055",
     "kind": "camera",
-    "lat": 30.269616,
-    "lon": -97.733578,
+    "lat": 43.041316,
+    "lon": -87.895249,
     "name": "near Riverside House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0056",
     "kind": "alpr",
-    "lat": 30.277885,
-    "lon": -97.74978,
+    "lat": 43.049585,
+    "lon": -87.914393,
     "name": "near Marble Tower",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0057",
     "kind": "alpr",
-    "lat": 30.264611,
-    "lon": -97.739497,
+    "lat": 43.036311,
+    "lon": -87.902242,
     "name": "near Kestrel Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0058",
     "kind": "alpr",
-    "lat": 30.25949,
-    "lon": -97.740168,
+    "lat": 43.03119,
+    "lon": -87.903035,
     "name": "near Northgate Offices",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0059",
     "kind": "alpr",
-    "lat": 30.275017,
-    "lon": -97.747398,
+    "lat": 43.046717,
+    "lon": -87.91158,
     "name": "near Verdigris Station",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0060",
     "kind": "alpr",
-    "lat": 30.269285,
-    "lon": -97.755675,
+    "lat": 43.040985,
+    "lon": -87.92136,
     "name": "near Ironwood Tower",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0061",
     "kind": "alpr",
-    "lat": 30.261691,
-    "lon": -97.760203,
+    "lat": 43.033391,
+    "lon": -87.926711,
     "name": "near Northgate Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0062",
     "kind": "alpr",
-    "lat": 30.265932,
-    "lon": -97.735755,
+    "lat": 43.037632,
+    "lon": -87.897821,
     "name": "near Copper Offices",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0063",
     "kind": "alpr",
-    "lat": 30.274595,
-    "lon": -97.750462,
+    "lat": 43.046295,
+    "lon": -87.9152,
     "name": "near Sundial Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0064",
     "kind": "alpr",
-    "lat": 30.278114,
-    "lon": -97.757673,
+    "lat": 43.049814,
+    "lon": -87.92372,
     "name": "near Foxglove Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0065",
     "kind": "alpr",
-    "lat": 30.257386,
-    "lon": -97.750996,
+    "lat": 43.029086,
+    "lon": -87.915831,
     "name": "near Northgate Station",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0066",
     "kind": "alpr",
-    "lat": 30.260681,
-    "lon": -97.727923,
+    "lat": 43.032381,
+    "lon": -87.888566,
     "name": "near Verdigris Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0067",
     "kind": "alpr",
-    "lat": 30.266179,
-    "lon": -97.732486,
+    "lat": 43.037879,
+    "lon": -87.893958,
     "name": "near Union Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0068",
     "kind": "alpr",
-    "lat": 30.264042,
-    "lon": -97.739942,
+    "lat": 43.035742,
+    "lon": -87.902768,
     "name": "near Kestrel Works",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0069",
     "kind": "alpr",
-    "lat": 30.269003,
-    "lon": -97.755971,
+    "lat": 43.040703,
+    "lon": -87.921709,
     "name": "near Ironwood Tower",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0070",
     "kind": "wifi",
-    "lat": 30.283911,
-    "lon": -97.745768,
+    "lat": 43.055611,
+    "lon": -87.909654,
     "name": "near Ironwood Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0071",
     "kind": "wifi",
-    "lat": 30.265313,
-    "lon": -97.728071,
+    "lat": 43.037013,
+    "lon": -87.888741,
     "name": "near Lantern Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0072",
     "kind": "wifi",
-    "lat": 30.284918,
-    "lon": -97.746361,
+    "lat": 43.056618,
+    "lon": -87.910354,
     "name": "near Marble Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0073",
     "kind": "wifi",
-    "lat": 30.267316,
-    "lon": -97.73625,
+    "lat": 43.039016,
+    "lon": -87.898406,
     "name": "near Quarry Inn",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0074",
     "kind": "wifi",
-    "lat": 30.266679,
-    "lon": -97.736998,
+    "lat": 43.038379,
+    "lon": -87.899289,
     "name": "near Sable Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0075",
     "kind": "wifi",
-    "lat": 30.271745,
-    "lon": -97.752119,
+    "lat": 43.043445,
+    "lon": -87.917158,
     "name": "near Marble Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0076",
     "kind": "wifi",
-    "lat": 30.254861,
-    "lon": -97.750909,
+    "lat": 43.026561,
+    "lon": -87.915728,
     "name": "near Northgate Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0077",
     "kind": "wifi",
-    "lat": 30.266642,
-    "lon": -97.736936,
+    "lat": 43.038342,
+    "lon": -87.899216,
     "name": "near Sable Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0078",
     "kind": "wifi",
-    "lat": 30.273077,
-    "lon": -97.732982,
+    "lat": 43.044777,
+    "lon": -87.894544,
     "name": "near Alder Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0079",
     "kind": "wifi",
-    "lat": 30.260605,
-    "lon": -97.727748,
+    "lat": 43.032305,
+    "lon": -87.888359,
     "name": "near Verdigris Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0080",
     "kind": "wifi",
-    "lat": 30.2653,
-    "lon": -97.75415,
+    "lat": 43.037,
+    "lon": -87.919558,
     "name": "near Verdigris Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0081",
     "kind": "wifi",
-    "lat": 30.266038,
-    "lon": -97.758036,
+    "lat": 43.037738,
+    "lon": -87.92415,
     "name": "near Sundial Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0082",
     "kind": "wifi",
-    "lat": 30.284124,
-    "lon": -97.744833,
+    "lat": 43.055824,
+    "lon": -87.908548,
     "name": "near Mercer Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0083",
     "kind": "wifi",
-    "lat": 30.254535,
-    "lon": -97.737185,
+    "lat": 43.026235,
+    "lon": -87.89951,
     "name": "near Bellweather Coworking",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0084",
     "kind": "wifi",
-    "lat": 30.266853,
-    "lon": -97.736952,
+    "lat": 43.038553,
+    "lon": -87.899235,
     "name": "near Sable Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0085",
     "kind": "wifi",
-    "lat": 30.26474,
-    "lon": -97.760138,
+    "lat": 43.03644,
+    "lon": -87.926633,
     "name": "near Copper Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0086",
     "kind": "wifi",
-    "lat": 30.270734,
-    "lon": -97.755846,
+    "lat": 43.042434,
+    "lon": -87.921562,
     "name": "near Old Mill Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0087",
     "kind": "wifi",
-    "lat": 30.258093,
-    "lon": -97.740991,
+    "lat": 43.029793,
+    "lon": -87.904008,
     "name": "near Mercer Espresso Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0088",
     "kind": "wifi",
-    "lat": 30.259129,
-    "lon": -97.73308,
+    "lat": 43.030829,
+    "lon": -87.894659,
     "name": "near Kestrel Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0089",
     "kind": "wifi",
-    "lat": 30.26074,
-    "lon": -97.731173,
+    "lat": 43.03244,
+    "lon": -87.892406,
     "name": "near Ironwood Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0090",
     "kind": "wifi",
-    "lat": 30.267352,
-    "lon": -97.735768,
+    "lat": 43.039052,
+    "lon": -87.897836,
     "name": "near Quarry Inn",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0091",
     "kind": "wifi",
-    "lat": 30.260026,
-    "lon": -97.756024,
+    "lat": 43.031726,
+    "lon": -87.921772,
     "name": "near Foxglove Social Club",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0092",
     "kind": "wifi",
-    "lat": 30.269977,
-    "lon": -97.760817,
+    "lat": 43.041677,
+    "lon": -87.927435,
     "name": "near Pike Archive",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0093",
     "kind": "wifi",
-    "lat": 30.269162,
-    "lon": -97.754073,
+    "lat": 43.040862,
+    "lon": -87.919466,
     "name": "near Tallow Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0094",
     "kind": "wifi",
-    "lat": 30.255032,
-    "lon": -97.75042,
+    "lat": 43.026732,
+    "lon": -87.915151,
     "name": "near Northgate Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0095",
     "kind": "wifi",
-    "lat": 30.284704,
-    "lon": -97.746413,
+    "lat": 43.056404,
+    "lon": -87.910415,
     "name": "near Marble Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0096",
     "kind": "wifi",
-    "lat": 30.260849,
-    "lon": -97.728241,
+    "lat": 43.032549,
+    "lon": -87.888942,
     "name": "near Verdigris Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0097",
     "kind": "wifi",
-    "lat": 30.273067,
-    "lon": -97.727336,
+    "lat": 43.044767,
+    "lon": -87.887872,
     "name": "near Sable Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0098",
     "kind": "wifi",
-    "lat": 30.272386,
-    "lon": -97.751433,
+    "lat": 43.044086,
+    "lon": -87.916347,
     "name": "near Marble Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0099",
     "kind": "wifi",
-    "lat": 30.274355,
-    "lon": -97.741571,
+    "lat": 43.046055,
+    "lon": -87.904693,
     "name": "near Foxglove Roasters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0100",
     "kind": "wifi",
-    "lat": 30.274249,
-    "lon": -97.74194,
+    "lat": 43.045949,
+    "lon": -87.905129,
     "name": "near Foxglove Roasters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0101",
     "kind": "wifi",
-    "lat": 30.265873,
-    "lon": -97.757735,
+    "lat": 43.037573,
+    "lon": -87.923795,
     "name": "near Sundial Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0102",
     "kind": "wifi",
-    "lat": 30.253999,
-    "lon": -97.746997,
+    "lat": 43.025699,
+    "lon": -87.911105,
     "name": "near Old Mill Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0103",
     "kind": "wifi",
-    "lat": 30.263597,
-    "lon": -97.725351,
+    "lat": 43.035297,
+    "lon": -87.885526,
     "name": "near Foxglove Espresso Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0104",
     "kind": "wifi",
-    "lat": 30.270728,
-    "lon": -97.75602,
+    "lat": 43.042428,
+    "lon": -87.921767,
     "name": "near Old Mill Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0105",
     "kind": "wifi",
-    "lat": 30.283914,
-    "lon": -97.746207,
+    "lat": 43.055614,
+    "lon": -87.910172,
     "name": "near Ironwood Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0106",
     "kind": "wifi",
-    "lat": 30.273368,
-    "lon": -97.733433,
+    "lat": 43.045068,
+    "lon": -87.895077,
     "name": "near Alder Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0107",
     "kind": "wifi",
-    "lat": 30.269152,
-    "lon": -97.754682,
+    "lat": 43.040852,
+    "lon": -87.920186,
     "name": "near Tallow Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0108",
     "kind": "wifi",
-    "lat": 30.269962,
-    "lon": -97.76071,
+    "lat": 43.041662,
+    "lon": -87.927309,
     "name": "near Pike Archive",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0109",
     "kind": "wifi",
-    "lat": 30.274754,
-    "lon": -97.750671,
+    "lat": 43.046454,
+    "lon": -87.915447,
     "name": "near Sundial Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0110",
     "kind": "wifi",
-    "lat": 30.258103,
-    "lon": -97.729244,
+    "lat": 43.029803,
+    "lon": -87.890127,
     "name": "near Windrow Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0111",
     "kind": "wifi",
-    "lat": 30.273522,
-    "lon": -97.751158,
+    "lat": 43.045222,
+    "lon": -87.916022,
     "name": "near Northgate Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0112",
     "kind": "wifi",
-    "lat": 30.252591,
-    "lon": -97.74768,
+    "lat": 43.024291,
+    "lon": -87.911912,
     "name": "near Tallow Library",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0113",
     "kind": "wifi",
-    "lat": 30.269086,
-    "lon": -97.754318,
+    "lat": 43.040786,
+    "lon": -87.919756,
     "name": "near Tallow Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0114",
     "kind": "wifi",
-    "lat": 30.277269,
-    "lon": -97.730386,
+    "lat": 43.048969,
+    "lon": -87.891476,
     "name": "near Verdigris Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0115",
     "kind": "wifi",
-    "lat": 30.251615,
-    "lon": -97.726373,
+    "lat": 43.023315,
+    "lon": -87.886735,
     "name": "near Pike Hall",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0116",
     "kind": "wifi",
-    "lat": 30.283513,
-    "lon": -97.746324,
+    "lat": 43.055213,
+    "lon": -87.91031,
     "name": "near Ironwood Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0117",
     "kind": "wifi",
-    "lat": 30.265949,
-    "lon": -97.752281,
+    "lat": 43.037649,
+    "lon": -87.917349,
     "name": "near Halfpenny House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0118",
     "kind": "wifi",
-    "lat": 30.252095,
-    "lon": -97.748054,
+    "lat": 43.023795,
+    "lon": -87.912354,
     "name": "near Tallow Library",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0119",
     "kind": "wifi",
-    "lat": 30.265172,
-    "lon": -97.744957,
+    "lat": 43.036872,
+    "lon": -87.908693,
     "name": "near Alder Coworking",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0120",
     "kind": "wifi",
-    "lat": 30.258201,
-    "lon": -97.729548,
+    "lat": 43.029901,
+    "lon": -87.890487,
     "name": "near Windrow Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0121",
     "kind": "wifi",
-    "lat": 30.267387,
-    "lon": -97.735775,
+    "lat": 43.039087,
+    "lon": -87.897844,
     "name": "near Quarry Inn",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0122",
     "kind": "wifi",
-    "lat": 30.270512,
-    "lon": -97.761254,
+    "lat": 43.042212,
+    "lon": -87.927952,
     "name": "near Pike Archive",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0123",
     "kind": "wifi",
-    "lat": 30.269866,
-    "lon": -97.741382,
+    "lat": 43.041566,
+    "lon": -87.90447,
     "name": "near Riverside Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0124",
     "kind": "wifi",
-    "lat": 30.267413,
-    "lon": -97.735267,
+    "lat": 43.039113,
+    "lon": -87.897244,
     "name": "near Quarry Inn",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0125",
     "kind": "wifi",
-    "lat": 30.269095,
-    "lon": -97.754593,
+    "lat": 43.040795,
+    "lon": -87.92008,
     "name": "near Tallow Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0126",
     "kind": "wifi",
-    "lat": 30.260017,
-    "lon": -97.756024,
+    "lat": 43.031717,
+    "lon": -87.921772,
     "name": "near Foxglove Social Club",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0127",
     "kind": "wifi",
-    "lat": 30.253673,
-    "lon": -97.746862,
+    "lat": 43.025373,
+    "lon": -87.910946,
     "name": "near Old Mill Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0128",
     "kind": "wifi",
-    "lat": 30.257754,
-    "lon": -97.741021,
+    "lat": 43.029454,
+    "lon": -87.904043,
     "name": "near Mercer Espresso Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0129",
     "kind": "wifi",
-    "lat": 30.26533,
-    "lon": -97.754173,
+    "lat": 43.03703,
+    "lon": -87.919586,
     "name": "near Verdigris Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0130",
     "kind": "wifi",
-    "lat": 30.256682,
-    "lon": -97.742444,
+    "lat": 43.028382,
+    "lon": -87.905724,
     "name": "near Marble Studios",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0131",
     "kind": "wifi",
-    "lat": 30.273084,
-    "lon": -97.732786,
+    "lat": 43.044784,
+    "lon": -87.894312,
     "name": "near Alder Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0132",
     "kind": "wifi",
-    "lat": 30.27854,
-    "lon": -97.72878,
+    "lat": 43.05024,
+    "lon": -87.889579,
     "name": "near Kestrel Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0133",
     "kind": "wifi",
-    "lat": 30.266861,
-    "lon": -97.737792,
+    "lat": 43.038561,
+    "lon": -87.900227,
     "name": "near Mercer Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0134",
     "kind": "wifi",
-    "lat": 30.252158,
-    "lon": -97.747946,
+    "lat": 43.023858,
+    "lon": -87.912226,
     "name": "near Tallow Library",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0135",
     "kind": "wifi",
-    "lat": 30.266142,
-    "lon": -97.737107,
+    "lat": 43.037842,
+    "lon": -87.899418,
     "name": "near Cedar Canteen",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0136",
     "kind": "wifi",
-    "lat": 30.278186,
-    "lon": -97.728557,
+    "lat": 43.049886,
+    "lon": -87.889315,
     "name": "near Kestrel Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0137",
     "kind": "wifi",
-    "lat": 30.274331,
-    "lon": -97.741678,
+    "lat": 43.046031,
+    "lon": -87.904819,
     "name": "near Foxglove Roasters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0138",
     "kind": "wifi",
-    "lat": 30.273766,
-    "lon": -97.727326,
+    "lat": 43.045466,
+    "lon": -87.88786,
     "name": "near Sable Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0139",
     "kind": "wifi",
-    "lat": 30.259151,
-    "lon": -97.728584,
+    "lat": 43.030851,
+    "lon": -87.889346,
     "name": "near Windrow Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0140",
     "kind": "wifi",
-    "lat": 30.278333,
-    "lon": -97.729454,
+    "lat": 43.050033,
+    "lon": -87.890376,
     "name": "near Kestrel Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0141",
     "kind": "wifi",
-    "lat": 30.258421,
-    "lon": -97.733595,
+    "lat": 43.030121,
+    "lon": -87.895268,
     "name": "near Larkspur Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0142",
     "kind": "wifi",
-    "lat": 30.26895,
-    "lon": -97.754404,
+    "lat": 43.04065,
+    "lon": -87.919857,
     "name": "near Tallow Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0143",
     "kind": "wifi",
-    "lat": 30.273582,
-    "lon": -97.750796,
+    "lat": 43.045282,
+    "lon": -87.915594,
     "name": "near Northgate Hotel",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0144",
     "kind": "wifi",
-    "lat": 30.283816,
-    "lon": -97.74624,
+    "lat": 43.055516,
+    "lon": -87.910211,
     "name": "near Ironwood Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0145",
     "kind": "wifi",
-    "lat": 30.265117,
-    "lon": -97.754269,
+    "lat": 43.036817,
+    "lon": -87.919699,
     "name": "near Verdigris Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0146",
     "kind": "wifi",
-    "lat": 30.260452,
-    "lon": -97.727463,
+    "lat": 43.032152,
+    "lon": -87.888023,
     "name": "near Verdigris Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0147",
     "kind": "wifi",
-    "lat": 30.267911,
-    "lon": -97.751031,
+    "lat": 43.039611,
+    "lon": -87.915872,
     "name": "near Alder Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0148",
     "kind": "wifi",
-    "lat": 30.284528,
-    "lon": -97.746462,
+    "lat": 43.056228,
+    "lon": -87.910473,
     "name": "near Marble Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0149",
     "kind": "wifi",
-    "lat": 30.266869,
-    "lon": -97.737961,
+    "lat": 43.038569,
+    "lon": -87.900426,
     "name": "near Mercer Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0150",
     "kind": "wifi",
-    "lat": 30.253642,
-    "lon": -97.747239,
+    "lat": 43.025342,
+    "lon": -87.911392,
     "name": "near Old Mill Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0151",
     "kind": "wifi",
-    "lat": 30.265538,
-    "lon": -97.727959,
+    "lat": 43.037238,
+    "lon": -87.888608,
     "name": "near Lantern Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0152",
     "kind": "wifi",
-    "lat": 30.273647,
-    "lon": -97.746649,
+    "lat": 43.045347,
+    "lon": -87.910695,
     "name": "near Ironwood Canteen",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0153",
     "kind": "wifi",
-    "lat": 30.256092,
-    "lon": -97.753668,
+    "lat": 43.027792,
+    "lon": -87.918988,
     "name": "near Bellweather Alehouse",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0154",
     "kind": "wifi",
-    "lat": 30.266765,
-    "lon": -97.736893,
+    "lat": 43.038465,
+    "lon": -87.899165,
     "name": "near Sable Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0155",
     "kind": "wifi",
-    "lat": 30.273475,
-    "lon": -97.732731,
+    "lat": 43.045175,
+    "lon": -87.894247,
     "name": "near Alder Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0156",
     "kind": "wifi",
-    "lat": 30.259372,
-    "lon": -97.728393,
+    "lat": 43.031072,
+    "lon": -87.889121,
     "name": "near Windrow Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0157",
     "kind": "wifi",
-    "lat": 30.260571,
-    "lon": -97.755751,
+    "lat": 43.032271,
+    "lon": -87.921449,
     "name": "near Foxglove Social Club",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0158",
     "kind": "wifi",
-    "lat": 30.255837,
-    "lon": -97.737237,
+    "lat": 43.027537,
+    "lon": -87.899572,
     "name": "near Mercer Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0159",
     "kind": "wifi",
-    "lat": 30.262115,
-    "lon": -97.728218,
+    "lat": 43.033815,
+    "lon": -87.888913,
     "name": "near Lantern Reading Room",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0160",
     "kind": "payment",
-    "lat": 30.256142,
-    "lon": -97.760663,
+    "lat": 43.027842,
+    "lon": -87.927254,
     "name": "near Cedar Market",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0161",
     "kind": "payment",
-    "lat": 30.255953,
-    "lon": -97.737103,
+    "lat": 43.027653,
+    "lon": -87.899413,
     "name": "near Mercer Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0162",
     "kind": "payment",
-    "lat": 30.279396,
-    "lon": -97.748738,
+    "lat": 43.051096,
+    "lon": -87.913163,
     "name": "near Union Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0163",
     "kind": "payment",
-    "lat": 30.269996,
-    "lon": -97.741053,
+    "lat": 43.041696,
+    "lon": -87.90408,
     "name": "near Riverside Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0164",
     "kind": "payment",
-    "lat": 30.284804,
-    "lon": -97.746248,
+    "lat": 43.056504,
+    "lon": -87.91022,
     "name": "near Marble Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0165",
     "kind": "payment",
-    "lat": 30.267711,
-    "lon": -97.750834,
+    "lat": 43.039411,
+    "lon": -87.915639,
     "name": "near Alder Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0166",
     "kind": "payment",
-    "lat": 30.255049,
-    "lon": -97.750973,
+    "lat": 43.026749,
+    "lon": -87.915804,
     "name": "near Northgate Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0167",
     "kind": "payment",
-    "lat": 30.278481,
-    "lon": -97.728967,
+    "lat": 43.050181,
+    "lon": -87.8898,
     "name": "near Kestrel Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0168",
     "kind": "payment",
-    "lat": 30.27048,
-    "lon": -97.755628,
+    "lat": 43.04218,
+    "lon": -87.921304,
     "name": "near Old Mill Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0169",
     "kind": "payment",
-    "lat": 30.272051,
-    "lon": -97.751792,
+    "lat": 43.043751,
+    "lon": -87.916771,
     "name": "near Marble Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0170",
     "kind": "payment",
-    "lat": 30.272055,
-    "lon": -97.751798,
+    "lat": 43.043755,
+    "lon": -87.916779,
     "name": "near Marble Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0171",
     "kind": "payment",
-    "lat": 30.275603,
-    "lon": -97.729801,
+    "lat": 43.047303,
+    "lon": -87.890784,
     "name": "near Copper Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0172",
     "kind": "payment",
-    "lat": 30.257972,
-    "lon": -97.741149,
+    "lat": 43.029672,
+    "lon": -87.904195,
     "name": "near Mercer Espresso Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0173",
     "kind": "payment",
-    "lat": 30.266869,
-    "lon": -97.738023,
+    "lat": 43.038569,
+    "lon": -87.9005,
     "name": "near Mercer Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0174",
     "kind": "payment",
-    "lat": 30.275967,
-    "lon": -97.746457,
+    "lat": 43.047667,
+    "lon": -87.910467,
     "name": "near Union Kitchen",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0175",
     "kind": "payment",
-    "lat": 30.258199,
-    "lon": -97.729417,
+    "lat": 43.029899,
+    "lon": -87.890331,
     "name": "near Windrow Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0176",
     "kind": "payment",
-    "lat": 30.265216,
-    "lon": -97.754119,
+    "lat": 43.036916,
+    "lon": -87.919521,
     "name": "near Verdigris Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0177",
     "kind": "payment",
-    "lat": 30.274875,
-    "lon": -97.750714,
+    "lat": 43.046575,
+    "lon": -87.915498,
     "name": "near Sundial Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0178",
     "kind": "payment",
-    "lat": 30.277072,
-    "lon": -97.725793,
+    "lat": 43.048772,
+    "lon": -87.886049,
     "name": "near Bellweather Market",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0179",
     "kind": "payment",
-    "lat": 30.260769,
-    "lon": -97.731264,
+    "lat": 43.032469,
+    "lon": -87.892515,
     "name": "near Ironwood Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0180",
     "kind": "payment",
-    "lat": 30.262151,
-    "lon": -97.755307,
+    "lat": 43.033851,
+    "lon": -87.920924,
     "name": "near Copper Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0181",
     "kind": "payment",
-    "lat": 30.267589,
-    "lon": -97.750797,
+    "lat": 43.039289,
+    "lon": -87.915595,
     "name": "near Alder Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0182",
     "kind": "payment",
-    "lat": 30.264518,
-    "lon": -97.760265,
+    "lat": 43.036218,
+    "lon": -87.926783,
     "name": "near Copper Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0183",
     "kind": "payment",
-    "lat": 30.2759,
-    "lon": -97.746434,
+    "lat": 43.0476,
+    "lon": -87.91044,
     "name": "near Union Kitchen",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0184",
     "kind": "payment",
-    "lat": 30.273347,
-    "lon": -97.72738,
+    "lat": 43.045047,
+    "lon": -87.887924,
     "name": "near Sable Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0185",
     "kind": "payment",
-    "lat": 30.270532,
-    "lon": -97.755776,
+    "lat": 43.042232,
+    "lon": -87.921479,
     "name": "near Old Mill Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0186",
     "kind": "payment",
-    "lat": 30.265176,
-    "lon": -97.754255,
+    "lat": 43.036876,
+    "lon": -87.919682,
     "name": "near Verdigris Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0187",
     "kind": "payment",
-    "lat": 30.27805,
-    "lon": -97.734391,
+    "lat": 43.04975,
+    "lon": -87.896209,
     "name": "near Windrow Social Club",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0188",
     "kind": "payment",
-    "lat": 30.265876,
-    "lon": -97.737122,
+    "lat": 43.037576,
+    "lon": -87.899435,
     "name": "near Cedar Canteen",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0189",
     "kind": "payment",
-    "lat": 30.258592,
-    "lon": -97.733375,
+    "lat": 43.030292,
+    "lon": -87.895008,
     "name": "near Larkspur Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0190",
     "kind": "payment",
-    "lat": 30.277517,
-    "lon": -97.730678,
+    "lat": 43.049217,
+    "lon": -87.891821,
     "name": "near Verdigris Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0191",
     "kind": "payment",
-    "lat": 30.275499,
-    "lon": -97.729641,
+    "lat": 43.047199,
+    "lon": -87.890595,
     "name": "near Copper Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0192",
     "kind": "payment",
-    "lat": 30.256045,
-    "lon": -97.736929,
+    "lat": 43.027745,
+    "lon": -87.899208,
     "name": "near Mercer Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0193",
     "kind": "payment",
-    "lat": 30.259979,
-    "lon": -97.744654,
+    "lat": 43.031679,
+    "lon": -87.908335,
     "name": "near Alder Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0194",
     "kind": "payment",
-    "lat": 30.279436,
-    "lon": -97.74875,
+    "lat": 43.051136,
+    "lon": -87.913177,
     "name": "near Union Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0195",
     "kind": "payment",
-    "lat": 30.265619,
-    "lon": -97.728304,
+    "lat": 43.037319,
+    "lon": -87.889016,
     "name": "near Lantern Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0196",
     "kind": "payment",
-    "lat": 30.266767,
-    "lon": -97.738196,
+    "lat": 43.038467,
+    "lon": -87.900704,
     "name": "near Mercer Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0197",
     "kind": "payment",
-    "lat": 30.261619,
-    "lon": -97.741319,
+    "lat": 43.033319,
+    "lon": -87.904396,
     "name": "near Bellweather Provisions",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0198",
     "kind": "payment",
-    "lat": 30.283822,
-    "lon": -97.746166,
+    "lat": 43.055522,
+    "lon": -87.910124,
     "name": "near Ironwood Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0199",
     "kind": "payment",
-    "lat": 30.26161,
-    "lon": -97.741254,
+    "lat": 43.03331,
+    "lon": -87.904319,
     "name": "near Bellweather Provisions",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0200",
     "kind": "payment",
-    "lat": 30.260874,
-    "lon": -97.7312,
+    "lat": 43.032574,
+    "lon": -87.892438,
     "name": "near Ironwood Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0201",
     "kind": "payment",
-    "lat": 30.27046,
-    "lon": -97.755643,
+    "lat": 43.04216,
+    "lon": -87.921321,
     "name": "near Old Mill Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0202",
     "kind": "payment",
-    "lat": 30.276006,
-    "lon": -97.746445,
+    "lat": 43.047706,
+    "lon": -87.910453,
     "name": "near Union Kitchen",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0203",
     "kind": "payment",
-    "lat": 30.263536,
-    "lon": -97.725332,
+    "lat": 43.035236,
+    "lon": -87.885505,
     "name": "near Foxglove Espresso Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0204",
     "kind": "payment",
-    "lat": 30.259893,
-    "lon": -97.744581,
+    "lat": 43.031593,
+    "lon": -87.90825,
     "name": "near Alder Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0205",
     "kind": "payment",
-    "lat": 30.260493,
-    "lon": -97.727847,
+    "lat": 43.032193,
+    "lon": -87.888476,
     "name": "near Verdigris Mercantile",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0206",
     "kind": "payment",
-    "lat": 30.259353,
-    "lon": -97.728635,
+    "lat": 43.031053,
+    "lon": -87.889407,
     "name": "near Windrow Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0207",
     "kind": "payment",
-    "lat": 30.265805,
-    "lon": -97.758027,
+    "lat": 43.037505,
+    "lon": -87.924139,
     "name": "near Sundial Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0208",
     "kind": "payment",
-    "lat": 30.274517,
-    "lon": -97.741549,
+    "lat": 43.046217,
+    "lon": -87.904667,
     "name": "near Foxglove Roasters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0209",
     "kind": "payment",
-    "lat": 30.274839,
-    "lon": -97.750755,
+    "lat": 43.046539,
+    "lon": -87.915546,
     "name": "near Sundial Outfitters",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0210",
     "kind": "payment",
-    "lat": 30.262176,
-    "lon": -97.755367,
+    "lat": 43.033876,
+    "lon": -87.920996,
     "name": "near Copper Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0211",
     "kind": "payment",
-    "lat": 30.280807,
-    "lon": -97.733623,
+    "lat": 43.052507,
+    "lon": -87.895301,
     "name": "near Union Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0212",
     "kind": "payment",
-    "lat": 30.260409,
-    "lon": -97.75587,
+    "lat": 43.032109,
+    "lon": -87.92159,
     "name": "near Foxglove Social Club",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0213",
     "kind": "payment",
-    "lat": 30.284803,
-    "lon": -97.746229,
+    "lat": 43.056503,
+    "lon": -87.910198,
     "name": "near Marble Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0214",
     "kind": "payment",
-    "lat": 30.284868,
-    "lon": -97.746247,
+    "lat": 43.056568,
+    "lon": -87.910219,
     "name": "near Marble Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0215",
     "kind": "payment",
-    "lat": 30.278465,
-    "lon": -97.729024,
+    "lat": 43.050165,
+    "lon": -87.889867,
     "name": "near Kestrel Coffee",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0216",
     "kind": "payment",
-    "lat": 30.269972,
-    "lon": -97.741181,
+    "lat": 43.041672,
+    "lon": -87.904231,
     "name": "near Riverside Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0217",
     "kind": "payment",
-    "lat": 30.265601,
-    "lon": -97.728286,
+    "lat": 43.037301,
+    "lon": -87.888994,
     "name": "near Lantern Diner",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0218",
     "kind": "payment",
-    "lat": 30.270385,
-    "lon": -97.755684,
+    "lat": 43.042085,
+    "lon": -87.921371,
     "name": "near Old Mill Supply Co.",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0219",
     "kind": "payment",
-    "lat": 30.278206,
-    "lon": -97.734467,
+    "lat": 43.049906,
+    "lon": -87.896299,
     "name": "near Windrow Social Club",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0220",
     "kind": "payment",
-    "lat": 30.259448,
-    "lon": -97.729863,
+    "lat": 43.031148,
+    "lon": -87.890859,
     "name": "near Larkspur Grocers",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0221",
     "kind": "payment",
-    "lat": 30.273346,
-    "lon": -97.727445,
+    "lat": 43.045046,
+    "lon": -87.888,
     "name": "near Sable Goods",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0222",
     "kind": "payment",
-    "lat": 30.266922,
-    "lon": -97.734074,
+    "lat": 43.038622,
+    "lon": -87.895833,
     "name": "near Mercer Tavern",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0223",
     "kind": "payment",
-    "lat": 30.277146,
-    "lon": -97.725711,
+    "lat": 43.048846,
+    "lon": -87.885952,
     "name": "near Bellweather Market",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0224",
     "kind": "payment",
-    "lat": 30.266799,
-    "lon": -97.738098,
+    "lat": 43.038499,
+    "lon": -87.900588,
     "name": "near Mercer Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0225",
     "kind": "payment",
-    "lat": 30.262712,
-    "lon": -97.75378,
+    "lat": 43.034412,
+    "lon": -87.91912,
     "name": "near Copper Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0226",
     "kind": "payment",
-    "lat": 30.2581,
-    "lon": -97.74119,
+    "lat": 43.0298,
+    "lon": -87.904243,
     "name": "near Mercer Espresso Bar",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0227",
     "kind": "payment",
-    "lat": 30.255927,
-    "lon": -97.737034,
+    "lat": 43.027627,
+    "lon": -87.899332,
     "name": "near Mercer Table",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0228",
     "kind": "payment",
-    "lat": 30.266806,
-    "lon": -97.738199,
+    "lat": 43.038506,
+    "lon": -87.900707,
     "name": "near Mercer Coffee House",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0229",
     "kind": "payment",
-    "lat": 30.266884,
-    "lon": -97.737092,
+    "lat": 43.038584,
+    "lon": -87.8994,
     "name": "near Sable Grill",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0230",
     "kind": "transit",
-    "lat": 30.257336,
-    "lon": -97.7505,
+    "lat": 43.029036,
+    "lon": -87.915245,
     "name": "near Northgate Station",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0231",
     "kind": "transit",
-    "lat": 30.266627,
-    "lon": -97.732293,
+    "lat": 43.038327,
+    "lon": -87.893729,
     "name": "near Union Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0232",
     "kind": "transit",
-    "lat": 30.261657,
-    "lon": -97.760711,
+    "lat": 43.033357,
+    "lon": -87.927311,
     "name": "near Northgate Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0233",
     "kind": "transit",
-    "lat": 30.274616,
-    "lon": -97.747201,
+    "lat": 43.046316,
+    "lon": -87.911346,
     "name": "near Verdigris Station",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0234",
     "kind": "transit",
-    "lat": 30.266303,
-    "lon": -97.732708,
+    "lat": 43.038003,
+    "lon": -87.89422,
     "name": "near Union Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0235",
     "kind": "transit",
-    "lat": 30.277855,
-    "lon": -97.758029,
+    "lat": 43.049555,
+    "lon": -87.924141,
     "name": "near Foxglove Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0236",
     "kind": "transit",
-    "lat": 30.274233,
-    "lon": -97.747712,
+    "lat": 43.045933,
+    "lon": -87.911951,
     "name": "near Verdigris Station",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0237",
     "kind": "transit",
-    "lat": 30.261649,
-    "lon": -97.760845,
+    "lat": 43.033349,
+    "lon": -87.92747,
     "name": "near Northgate Platform",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0238",
     "kind": "transit",
-    "lat": 30.257326,
-    "lon": -97.733449,
+    "lat": 43.029026,
+    "lon": -87.895096,
     "name": "near Halfpenny Transit Centre",
     "source": "synthetic"
   },
   {
     "feature_id": "env_0239",
     "kind": "transit",
-    "lat": 30.277746,
-    "lon": -97.758135,
+    "lat": 43.049446,
+    "lon": -87.924266,
     "name": "near Foxglove Platform",
     "source": "synthetic"
   }

@@ -79,7 +79,7 @@ const layers = {};      // one layer group per view
 
 function initMap() {
   map = L.map('map', { zoomControl: true, preferCanvas: true })
-         .setView([30.2672, -97.7431], 14);
+         .setView([43.0389, -87.9065], 14);   // downtown Milwaukee
 
   // Esri World Imagery: free to use with attribution, and — unlike Google's
   // tiles — needs no API key, no billing account and no per-load charge.
@@ -105,6 +105,7 @@ function initMap() {
   ).addTo(map);
 
   addOfflineBasemaps();
+  addEnvironmentOverlays();
 
   ['live', 'participant', 'aggregate'].forEach((v) => {
     layers[v] = L.layerGroup().addTo(map);
@@ -148,6 +149,55 @@ async function addOfflineBasemaps() {
   } catch {
     // No offline map available, or the server did not answer. The online
     // basemaps still work; this is an addition, never a dependency.
+  }
+}
+
+const ENV_STYLE = {
+  camera:  { color: '#ff5f56', label: 'CCTV cameras' },
+  alpr:    { color: '#ffb454', label: 'Plate readers' },
+  wifi:    { color: '#3ddc84', label: 'Wi-Fi / wardrive' },
+  payment: { color: '#c084fc', label: 'Card terminals' },
+  transit: { color: '#4da3ff', label: 'Transit readers' },
+};
+
+/**
+ * Observing infrastructure, as overlays that can be switched on and off.
+ *
+ * Kept out of the way deliberately: all off by default, so the map stays about
+ * the participant until an instructor chooses to show what else was there. The
+ * moment to turn these on is day four, not day one.
+ */
+async function addEnvironmentOverlays() {
+  try {
+    const data = await api('/api/instructor/environment');
+    if (!data.features || !data.features.length) return;
+
+    const byKind = {};
+    data.features.forEach((f) => {
+      (byKind[f.kind] = byKind[f.kind] || []).push(f);
+    });
+
+    Object.entries(byKind).forEach(([kind, features]) => {
+      const style = ENV_STYLE[kind] || { color: '#8fa6bd', label: kind };
+      const group = L.layerGroup();
+      features.forEach((f) => {
+        L.circleMarker([f.lat, f.lon], {
+          radius: 3.5,
+          color: style.color,
+          weight: 1,
+          fillColor: style.color,
+          fillOpacity: 0.75,
+        }).bindPopup(
+          `<b>${escapeHtml(f.label)}</b><br>` +
+          (f.name ? `${escapeHtml(f.name)}<br>` : '') +
+          `Range assumed ~${f.range_m} m<br>` +
+          `<i>source: ${escapeHtml(f.source || 'unknown')}</i>`
+        ).addTo(group);
+      });
+      layerControl.addOverlay(group, `${style.label} (${features.length})`);
+    });
+  } catch {
+    // Not logged in yet, or no infrastructure loaded. Nothing to add.
   }
 }
 
@@ -510,7 +560,65 @@ async function renderParticipantWeek(pid) {
           </div>`).join('')
         : '<p class="empty">No place was seen on more than one day.</p>'
     }</div>
-    ${renderCaveats(a.caveats)}`;
+    ${renderCaveats(a.caveats)}
+    ${renderPatternOfLife(w.pattern_of_life)}
+    ${renderAssociations(w.associations)}`;
+}
+
+/**
+ * The questions an intelligence or security service asks, as opposed to the
+ * ones an advertiser asks. None of this requires knowing who somebody is —
+ * which is exactly what makes it worth showing.
+ */
+function renderPatternOfLife(pol) {
+  if (!pol || !pol.available) return '';
+  return `
+    <h3>Pattern of life</h3>
+    <div class="card">
+      <h4>Predictability</h4>
+      <div class="verdict">${escapeHtml(pol.predictability_word)}
+        <span class="confidence">${Math.round(pol.predictability * 100)}%</span></div>
+      <p class="basis">${escapeHtml(pol.narrative)}</p>
+    </div>
+    ${pol.anchors && pol.anchors.length ? `
+      <div class="card">
+        <h4>Recurring places</h4>
+        ${pol.anchors.map((a) => `
+          <div class="place">
+            <div><div>${escapeHtml(a.place)}</div>
+              <div class="kind">${a.days_seen} of ${pol.days_observed} days${
+                a.overnight_anchor ? ' · overnight anchor'
+                : a.typical_time ? ' · usually ' + escapeHtml(a.typical_time) : ''}${
+                a.predictable ? ' · predictable' : ''}</div></div>
+            <div class="dwell">${a.predictable ? '\u25cf' : ''}</div>
+          </div>`).join('')}
+      </div>` : ''}`;
+}
+
+function renderAssociations(assoc) {
+  if (!assoc || !assoc.available) return '';
+  const rows = assoc.notable && assoc.notable.length ? assoc.notable : assoc.associations;
+  if (!rows || !rows.length) {
+    return `<h3>Association</h3>
+      <div class="card"><p class="basis">${escapeHtml(assoc.narrative)}</p></div>`;
+  }
+  return `
+    <h3>Association</h3>
+    <div class="card">
+      ${rows.map((r) => `
+        <div class="place">
+          <div><div><span class="swatch" style="display:inline-block;width:9px;
+            height:9px;border-radius:50%;margin-right:6px;
+            background:${colorFor(r.participant_id)}"></span>${escapeHtml(r.label)}</div>
+            <div class="kind">${escapeHtml(r.strength)} · ${r.days_together} days</div></div>
+          <div class="dwell">${r.shared_minutes} min</div>
+        </div>`).join('')}
+      <p class="basis">${escapeHtml(assoc.narrative)}</p>
+    </div>
+    <div class="caveats">
+      <h4>Why this is not proof</h4>
+      <ul><li>${escapeHtml(assoc.caveat)}</li></ul>
+    </div>`;
 }
 
 function drawTrail(segments, stops) {
@@ -642,6 +750,41 @@ function renderExposure(ex) {
     </div>` : ''}`;
 }
 
+/**
+ * What was happening nearby, from public reporting.
+ *
+ * Presented as possible explanations, never as findings. Being two hundred
+ * metres from a protest is not attending it, and the difference between an
+ * analyst and a careless one is entirely in that distinction.
+ */
+function renderContext(ctx) {
+  if (!ctx || !ctx.available) return '';
+  const rows = ctx.matches || [];
+  const wide = ctx.city_wide || [];
+  if (!rows.length && !wide.length) return '';
+  return `
+    <h3>What was happening nearby</h3>
+    <div class="card">
+      ${rows.map((m) => `
+        <div class="place">
+          <div><div>${escapeHtml(m.title)}</div>
+            <div class="kind">${escapeHtml(m.kind)} · ${m.distance_m} m from
+              ${escapeHtml(m.stop_place || 'a stop')}${
+              m.source ? ' · ' + escapeHtml(m.source) : ''}</div></div>
+        </div>`).join('')}
+      ${wide.map((m) => `
+        <div class="place">
+          <div><div>${escapeHtml(m.title)}</div>
+            <div class="kind">${escapeHtml(m.kind)} · city-wide</div></div>
+        </div>`).join('')}
+      <p class="basis">${escapeHtml(ctx.narrative)}</p>
+    </div>
+    ${ctx.caveat ? `<div class="caveats">
+      <h4>Leads, not findings</h4>
+      <ul><li>${escapeHtml(ctx.caveat)}</li></ul>
+    </div>` : ''}`;
+}
+
 function renderCaveats(caveats) {
   if (!caveats || !caveats.length) return '';
   return `<div class="caveats">
@@ -698,6 +841,7 @@ function renderAssessment(d) {
     </div>` : ''}
 
     ${renderExposure(d.exposure)}
+    ${renderContext(d.context)}
 
     ${renderCaveats(a.caveats)}
 
@@ -779,6 +923,43 @@ async function renderAdmin() {
     `${escapeHtml(r.action)}${r.detail ? ' · ' + escapeHtml(r.detail) : ''}</div>`).join('')
     || '<p class="empty">Nothing recorded yet.</p>';
 }
+
+/**
+ * Import wardrive or infrastructure data.
+ *
+ * The file is read in the browser and posted to our own server. It is never
+ * sent to WiGLE or anywhere else — the whole reason this is an upload rather
+ * than a lookup is that querying an outside service would mean sending
+ * participants' locations to it, which the consent screen rules out.
+ */
+$('#import-btn').addEventListener('click', async () => {
+  const out = $('#import-result');
+  const input = $('#import-file');
+  const file = input.files && input.files[0];
+  if (!file) {
+    out.textContent = 'Choose a file first.';
+    out.hidden = false;
+    return;
+  }
+  out.textContent = `Reading ${file.name}…`;
+  out.hidden = false;
+  try {
+    const content = await file.text();
+    const label = ($('#import-label').value || file.name.replace(/\.[^.]+$/, ''))
+      .trim().slice(0, 40);
+    const r = await api('/api/instructor/environment/import', {
+      method: 'POST',
+      body: JSON.stringify({ content, source: label }),
+    });
+    const kinds = Object.entries(r.kinds || {})
+      .map(([k, n]) => `${n} ${k}`).join(', ');
+    out.textContent = `Imported ${r.imported} features (${kinds}). ` +
+                      `Reload to see the new layer.`;
+    input.value = '';
+  } catch (ex) {
+    out.textContent = ex.message;
+  }
+});
 
 $('#wipe-btn').addEventListener('click', async () => {
   const confirmText = $('#wipe-confirm').value;

@@ -186,7 +186,16 @@ hosting this, make a real account with `python manage.py add-instructor <name>`.
 - **What else was watching** — for each day, the cameras, plate readers, mapped
   Wi-Fi and card terminals the route passed, and which stops several independent
   sources could confirm. A phone ping alone is deniable; four sources agreeing
-  are not. See [docs/environment-layers.md](docs/environment-layers.md).
+  are not. Toggle each source on and off as a map overlay.
+- **Pattern of life, association and anomaly** — the questions a security service
+  asks rather than the ones an advertiser asks: how predictable somebody is, who
+  keeps turning up beside them, and what today did that the baseline did not.
+  Association analysis is instructor-only and never shown to participants.
+- **Area context** — public news and event listings matched to stops by place and
+  time, offered as leads rather than findings.
+
+  See [docs/environment-layers.md](docs/environment-layers.md). The default
+  location is Milwaukee, Wisconsin.
 - **Data & teardown** — what is stored, the audit log, and the wipe-everything
   control.
 

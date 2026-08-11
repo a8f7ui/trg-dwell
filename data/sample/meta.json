@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-11T01:23:59.149167+00:00",
+  "generated_at": "2026-08-11T01:33:39.584806+00:00",
   "seed": 20260810,
   "collection_mode": "background",
   "days": 5,
@@ -8,14 +8,14 @@
   "ping_count": 38452,
   "session_count": 276,
   "center": {
-    "lat": 30.2672,
-    "lon": -97.7431
+    "lat": 43.0389,
+    "lon": -87.9065
   },
   "course_venue": {
     "poi_id": "poi_052",
     "name": "Tallow Conference Centre",
-    "lat": 30.27376,
-    "lon": -97.750102
+    "lat": 43.04546,
+    "lon": -87.914774
   },
   "timezone": "America/Chicago",
   "utc_offset_hours": -5.0,

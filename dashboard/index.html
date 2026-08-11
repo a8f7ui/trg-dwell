@@ -144,6 +144,23 @@
         <button id="wipe-btn" class="danger">Wipe everything</button>
         <p id="wipe-result" class="result" hidden></p>
 
+        <h3>Map layers</h3>
+        <p class="hint">
+          Add wardrive or infrastructure data to overlay on the map. Processed
+          here — nothing is sent to any outside service.
+        </p>
+        <label class="field">Label for this source
+          <input type="text" id="import-label" placeholder="wardrive-milwaukee">
+        </label>
+        <input type="file" id="import-file" accept=".csv,.json,.txt"
+               style="width:100%;font-size:12px;color:#7f93a6;margin:6px 0">
+        <button id="import-btn" class="buttonQuiet"
+                style="width:100%;padding:9px;background:#161f29;color:#dce8f2;
+                       border:1px solid #2f4457;border-radius:2px;cursor:pointer;
+                       font-family:ui-monospace,monospace;font-size:11px;
+                       text-transform:uppercase;letter-spacing:.1em">Import</button>
+        <p id="import-result" class="result" hidden></p>
+
         <h3>Audit log</h3>
         <div id="audit" class="audit"></div>
       </section>

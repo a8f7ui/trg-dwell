@@ -841,9 +841,11 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=20260810)
     ap.add_argument("--start-date", default="2026-09-14",
                     help="Course start date, YYYY-MM-DD (a Monday by default).")
-    ap.add_argument("--center-lat", type=float, default=30.2672,
-                    help="City centre latitude (default: a US downtown).")
-    ap.add_argument("--center-lon", type=float, default=-97.7431)
+    # Defaults to downtown Milwaukee, Wisconsin, where the course runs. Pass
+    # --center-lat/--center-lon to generate a sample set somewhere else.
+    ap.add_argument("--center-lat", type=float, default=43.0389,
+                    help="City centre latitude (default: downtown Milwaukee).")
+    ap.add_argument("--center-lon", type=float, default=-87.9065)
     ap.add_argument("--timezone-name", default="America/Chicago")
     ap.add_argument("--utc-offset", type=float, default=-5.0,
                     help="Hours from UTC for the course location.")
