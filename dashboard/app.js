@@ -22,11 +22,27 @@ async function api(path, options) {
   return res.json();
 }
 
-const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-const fmtDate = (iso) => new Date(iso).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-const fmtDateTime = (d) => d.toLocaleString([], {
+/**
+ * Every time on this dashboard is shown in the timezone the course is running
+ * in, not the one this computer is set to.
+ *
+ * Without this, an instructor whose laptop is on UTC — or who has flown in from
+ * elsewhere — would see every time shifted by hours and tell the room somebody
+ * went for dinner at one in the morning. Set from the server; falls back to the
+ * local zone if it has not loaded yet.
+ */
+let courseTz = null;
+
+const tzOpts = (extra) => Object.assign(
+  courseTz ? { timeZone: courseTz } : {}, extra);
+
+const fmtTime = (iso) => new Date(iso)
+  .toLocaleTimeString([], tzOpts({ hour: '2-digit', minute: '2-digit' }));
+const fmtDate = (iso) => new Date(iso)
+  .toLocaleDateString([], tzOpts({ weekday: 'short', month: 'short', day: 'numeric' }));
+const fmtDateTime = (d) => d.toLocaleString([], tzOpts({
   weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-});
+}));
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -67,6 +83,13 @@ function initMap() {
 
   ['live', 'participant', 'aggregate'].forEach((v) => {
     layers[v] = L.layerGroup().addTo(map);
+  });
+
+  // Whether two dots overlap depends on the zoom level, so the live view has to
+  // be regrouped whenever the map moves. Redraw from data already held rather
+  // than refetching.
+  map.on('zoomend', () => {
+    if (currentView === 'live') drawLive();
   });
 }
 
@@ -121,6 +144,7 @@ async function startApp(username) {
     api('/api/instructor/participants'),
   ]);
   participants = people;
+  courseTz = mon.course_timezone || null;
 
   if (mon.first_ping && mon.last_ping) {
     courseStart = new Date(mon.first_ping);
@@ -152,12 +176,18 @@ async function startApp(username) {
 
 // ---------------------------------------------------------------- views
 
+let currentView = 'live';
+
 async function showView(name) {
+  currentView = name;
   $$('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
   $$('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== name; });
   Object.keys(layers).forEach(clearLayer);
   $('#map-legend').hidden = true;
   stopPlayback();
+  // Re-frame the map when arriving at the live view, but not on every tick
+  // afterwards, or playback would keep yanking it back.
+  if (name === 'live') liveFitted = false;
 
   if (name === 'live') await renderLive();
   if (name === 'participant') await renderParticipant();
@@ -191,8 +221,13 @@ function updateClockReadout() {
   $('#clock-readout').textContent = courseStart ? fmtDateTime(clockTime()) : '—';
 }
 
-$('#clock').addEventListener('input', () => { updateClockReadout(); renderLive(); });
-$('#live-window').addEventListener('change', renderLive);
+$('#clock').addEventListener('input', () => {
+  liveFitted = false;
+  updateClockReadout();
+  renderLive();
+});
+$('#live-window').addEventListener('change', () => { liveFitted = false; renderLive(); });
+$('#recentre').addEventListener('click', () => { liveFitted = false; renderLive(); });
 
 $('#play').addEventListener('click', () => {
   if (playTimer) { stopPlayback(); } else { startPlayback(); }
@@ -218,6 +253,9 @@ function stopPlayback() {
   $('#play').textContent = '▶ Play';
 }
 
+let lastLive = null;        // kept so the map can redraw on zoom without refetching
+let liveFitted = false;     // only auto-fit once, or playback fights the user
+
 async function renderLive() {
   if (!courseStart) {
     $('#monitoring').innerHTML = '<p class="empty">No data loaded yet.</p>';
@@ -231,35 +269,13 @@ async function renderLive() {
     api(`/api/instructor/monitoring?at=${encodeURIComponent(at)}&window=${windowS}`),
   ]);
 
-  clearLayer('live');
-  live.visible.forEach((p) => {
-    // Fade the dot as the reading gets older, so "last seen 12 minutes ago"
-    // is visible at a glance rather than hidden in a popup.
-    const age = p.age_seconds / Number(windowS);
-    L.circleMarker([p.lat, p.lon], {
-      radius: 9,
-      color: '#ffffff', weight: 2,
-      fillColor: '#4da3ff',
-      fillOpacity: Math.max(0.25, 1 - age),
-    }).bindPopup(
-      `<b>${escapeHtml(p.label)}</b><br>Last seen ${fmtTime(p.ts)}` +
-      ` (${Math.round(p.age_seconds / 60)} min ago)<br>` +
-      `Battery ${p.battery_pct}% · ${escapeHtml(p.connection || 'unknown')}<br>` +
-      `Accuracy ±${Math.round(p.accuracy_m)} m`
-    ).addTo(layers.live);
+  lastLive = { live, windowS: Number(windowS) };
+  drawLive();
 
-    L.marker([p.lat, p.lon], {
-      icon: L.divIcon({
-        className: '', html: `<div style="color:#fff;font:600 11px system-ui;
-          text-shadow:0 1px 3px #000;white-space:nowrap;transform:translate(12px,-8px)">
-          ${escapeHtml(p.label)}</div>`,
-      }),
-    }).addTo(layers.live);
-  });
-
-  if (live.visible.length && !map._userMoved) {
+  if (live.visible.length && !liveFitted) {
     map.fitBounds(L.latLngBounds(live.visible.map((p) => [p.lat, p.lon])).pad(0.4),
       { maxZoom: 16 });
+    liveFitted = true;
   }
 
   $('#monitoring').innerHTML = `
@@ -271,6 +287,74 @@ async function renderLive() {
       <div class="l">points stored</div></div>
     <div class="stat"><div class="n">${mon.pings_per_second}</div>
       <div class="l">points / second</div></div>`;
+}
+
+/**
+ * Draw the dots.
+ *
+ * Participants standing in the same place — which, during a course session, is
+ * most of them — land on exactly the same pixel. Drawn naively, eight people at
+ * the venue look like one, and the map contradicts the "12 visible" counter
+ * beside it. So anyone within a few pixels of each other is drawn as a single
+ * marker carrying the count, and the individual names move into its popup.
+ */
+function drawLive() {
+  if (!lastLive) return;
+  const { live, windowS } = lastLive;
+  clearLayer('live');
+
+  const clusters = [];
+  live.visible.forEach((p) => {
+    const pt = map.latLngToContainerPoint([p.lat, p.lon]);
+    const near = clusters.find((c) => pt.distanceTo(c.pt) < 26);
+    if (near) {
+      near.members.push(p);
+    } else {
+      clusters.push({ pt, lat: p.lat, lon: p.lon, members: [p] });
+    }
+  });
+
+  clusters.forEach((c) => {
+    const n = c.members.length;
+    // Fade with the age of the freshest reading, so "seen 12 minutes ago" is
+    // visible at a glance rather than hidden in a popup.
+    const freshest = Math.min(...c.members.map((m) => m.age_seconds));
+    const opacity = Math.max(0.3, 1 - freshest / windowS);
+
+    L.circleMarker([c.lat, c.lon], {
+      radius: n > 1 ? Math.min(22, 11 + n * 1.6) : 9,
+      color: '#ffffff',
+      weight: 2,
+      fillColor: '#4da3ff',
+      fillOpacity: opacity,
+    }).bindPopup(
+      n === 1
+        ? `<b>${escapeHtml(c.members[0].label)}</b><br>` +
+          `Last seen ${fmtTime(c.members[0].ts)} ` +
+          `(${Math.round(c.members[0].age_seconds / 60)} min ago)<br>` +
+          `Battery ${c.members[0].battery_pct}% · ` +
+          `${escapeHtml(c.members[0].connection || 'unknown')}<br>` +
+          `Accuracy ±${Math.round(c.members[0].accuracy_m)} m`
+        : `<b>${n} participants here</b><br>` +
+          c.members
+            .map((m) => `${escapeHtml(m.label)} — ${fmtTime(m.ts)}`)
+            .join('<br>')
+    ).addTo(layers.live);
+
+    L.marker([c.lat, c.lon], {
+      icon: L.divIcon({
+        className: '',
+        html: n > 1
+          ? `<div style="color:#04121f;font:800 12px system-ui;width:${
+              Math.min(44, 22 + n * 3.2)}px;text-align:center;
+              transform:translate(-50%,-8px);pointer-events:none">${n}</div>`
+          : `<div style="color:#fff;font:600 11px system-ui;
+              text-shadow:0 1px 3px #000;white-space:nowrap;
+              transform:translate(12px,-8px);pointer-events:none">${
+                escapeHtml(c.members[0].label)}</div>`,
+      }),
+    }).addTo(layers.live);
+  });
 }
 
 // ---------------------------------------------------------------- participant

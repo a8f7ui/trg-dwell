@@ -460,10 +460,21 @@ def monitoring():
 
     span_days = conn.execute(
         "SELECT COUNT(DISTINCT substr(ts,1,10)) AS n FROM pings").fetchone()["n"]
+
+    # The timezone the course is actually running in, taken as the one most
+    # participants' phones report. The dashboard formats every time in this zone
+    # rather than in whatever zone the instructor's laptop happens to be set to —
+    # otherwise a machine left on UTC would tell the room somebody went to dinner
+    # at one in the morning.
+    tz_row = conn.execute(
+        "SELECT timezone, COUNT(*) AS n FROM participants "
+        "WHERE timezone IS NOT NULL AND timezone != '' "
+        "GROUP BY timezone ORDER BY n DESC LIMIT 1").fetchone()
     conn.close()
 
     return jsonify({
         "at": at.isoformat(),
+        "course_timezone": tz_row["timezone"] if tz_row else None,
         "window_seconds": window,
         "participants_registered": participants,
         "participants_with_data": totals["people"] or 0,
