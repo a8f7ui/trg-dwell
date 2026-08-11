@@ -563,6 +563,29 @@ button.danger {
   font: 800 12px system-ui; color: var(--pin-cluster-ink);
 }
 
+/* Basemap and overlay switcher. Left permanently open, so it has to look like
+ * part of the dashboard rather than a stock Leaflet control sitting on top of
+ * it. Satellite and Street map are both built in; the offline archive adds a
+ * third entry here when one is installed. */
+.leaflet-control-layers {
+  background: var(--legend-bg) !important;
+  color: var(--ink);
+  border: 1px solid var(--line-bright) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+  padding: 4px 2px;
+}
+.leaflet-control-layers-expanded { padding: 10px 13px 10px 11px; }
+.leaflet-control-layers-list { font-size: 12.5px; }
+.leaflet-control-layers label { display: block; margin: 3px 0; cursor: pointer; }
+.leaflet-control-layers-separator {
+  border-top: 1px solid var(--line) !important; margin: 8px 0 !important;
+}
+.leaflet-control-layers input { accent-color: var(--accent); margin-right: 5px; }
+.leaflet-control-layers-toggle {
+  border-radius: var(--radius) !important;
+}
+
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
   background: var(--panel); color: var(--ink);
   border-radius: var(--radius); border: 1px solid var(--line-bright);

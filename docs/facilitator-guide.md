@@ -58,8 +58,10 @@ unremarkable is what makes it a real option.
 - [ ] Dashboard logged in on the projector machine, with the demo participant
       view already open.
 - [ ] Know how many participants installed. Chase the stragglers.
-- [ ] If the venue's wifi is doubtful, install an offline map
-      (`docs/offline-maps.md`) and check it covers the venue and the hotels.
+- [ ] If the venue's wifi is doubtful, install an *offline* copy of the street
+      map (`docs/offline-maps.md`) and check it covers the venue and the hotels.
+      Satellite and street basemaps are built in either way — this is only about
+      surviving a bad connection.
 
 **Have the sample data ready as a fallback.** If the server misbehaves, or too
 few people installed, every teaching point below works against the synthetic
@@ -98,6 +100,24 @@ mid-sentence without changing anything else.
 
 Use whichever suits the day otherwise. Field is easier to read from the back of
 a lit room; Console suits Day 4, when the subject is who buys this.
+
+### The two basemaps
+
+Separately from the skins, the map itself switches between **Satellite** and
+**Street map** in the panel at its top right, which is open by default. Both are
+built in — nothing to install, and they work on a fresh clone.
+
+Use both, and switch deliberately:
+
+- **Satellite** for the first reveal. Rooftops and car parks make it feel like
+  a photograph of a real afternoon, and people locate themselves faster on it.
+- **Street map** the moment somebody asks *"where is that?"* Named roads and
+  labelled buildings turn a dot into an address people recognise, and it is
+  clearer on a projector in a lit room.
+
+A useful move when a trail looks abstract: switch to streets, let somebody read
+the road names aloud, then switch back. The dots did not change. What changed is
+that the room can now say where they were.
 
 ---
 

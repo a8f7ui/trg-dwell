@@ -217,12 +217,19 @@ worth more than either alone.
 - **Data & teardown** — what is stored, the audit log, and the wipe-everything
   control.
 
-The satellite imagery comes from Esri, which is free and needs no API key, no
-billing account and no per-view charge. Google's tiles would require all three.
+**Satellite and street maps are both built in**, in the layer switcher at the top
+right of the map — one click between them, nothing to install. Both come from
+Esri, which is free and needs no API key, no billing account and no per-view
+charge; Google's tiles would require all three. Place-name labels ride over the
+imagery and switch off automatically over the street map, which draws its own.
 
-If venue wifi is unreliable, you can install an **offline street map** so the
-dashboard stops depending on anyone else's servers for tiles — see
-[docs/offline-maps.md](docs/offline-maps.md). Optional, and about 15 minutes.
+Satellite shows what a place looks like; the street map shows what it *is*. Being
+able to flip mid-explanation is worth more than picking one.
+
+If venue wifi is unreliable, you can additionally install an **offline** copy of
+the street map so the dashboard stops depending on anyone else's servers at all —
+see [docs/offline-maps.md](docs/offline-maps.md). That is about resilience, not
+about getting streets: those are already there.
 
 ## The app
 

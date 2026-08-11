@@ -3,21 +3,46 @@
 How to make the dashboard draw maps without depending on an internet map
 service. Takes about 15 minutes, costs nothing.
 
-**Optional.** The dashboard works fine without this. Skip it unless the point
-below applies to you.
+**Optional, and it is not how you get street maps.** Read the next section
+before deciding whether you need this at all.
 
 ---
 
-## What this is for, and what it will not fix
+## You already have street maps
 
-By default the dashboard draws satellite imagery from Esri's servers and street
-maps from OpenStreetMap's. Both are free and need no account, but both are
-somebody else's servers on the public internet. If a venue's wifi is slow,
-filtered, or blocks unfamiliar domains, the map area goes blank — awkward, since
-the map is the lesson.
+**Satellite** and **Street map** are both built into the dashboard. They sit in
+the layer switcher at the top right of the map, which is open by default, and
+you flip between them with one click. Nothing to install, nothing to download,
+no account, no API key. That is true of a fresh clone on a laptop and of a
+hosted server alike.
+
+Both come from Esri, which serves them free with attribution. Place-name labels
+are drawn over the satellite imagery and switched off automatically over the
+street map, which draws its own.
+
+Use whichever suits the moment. Satellite shows what a place looks like; the
+street map shows what it *is*. A participant's evening reads very differently
+over a photograph of rooftops than over named roads and labelled buildings, and
+being able to switch mid-explanation is worth more than picking one.
+
+---
+
+## What *this page* is for, and what it will not fix
+
+This page is about **independence from the internet**, not about streets.
+
+Both built-in basemaps are fetched from Esri's servers. If a venue's wifi is
+slow, filtered, or blocks unfamiliar domains, the map area goes blank — awkward,
+since the map is the lesson.
 
 An **offline map** is a single file containing an entire area's streets. You put
-it on the server, and the dashboard draws from it directly.
+it on the server, and the dashboard draws from it directly — it appears in the
+same layer switcher as a third choice, *Street map, offline*, alongside the two
+that are always there.
+
+It is not in the repository, because it is large and specific to wherever a
+course is being run. That is the only reason. Everything needed to *use* one is
+already built in and vendored, including the renderer.
 
 **Be clear about what this does and does not solve:**
 
@@ -36,6 +61,11 @@ caching their tiles, and open satellite data such as Sentinel-2 is far too
 coarse to show a building. So the offline option shows streets, blocks and place
 names. For teaching a movement trail, that is usually clearer than imagery
 anyway.
+
+Unlike the two online basemaps, the offline map is **drawn in the browser from
+vector data** rather than fetched as pictures. That means it follows the
+dashboard's appearance: pale under the Field skin, dark under Console, switching
+with everything else.
 
 ---
 

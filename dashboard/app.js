@@ -81,28 +81,58 @@ function initMap() {
   map = L.map('map', { zoomControl: true, preferCanvas: true })
          .setView([43.0389, -87.9065], 14);   // downtown Milwaukee
 
-  // Esri World Imagery: free to use with attribution, and — unlike Google's
-  // tiles — needs no API key, no billing account and no per-load charge.
+  // Two basemaps, both built in and both always available. Neither is an
+  // optional extra: satellite shows what a place looks like, streets show what
+  // it *is*, and different teaching moments want different ones. Somebody's
+  // evening reads very differently over a photograph of rooftops than it does
+  // over named roads and labelled buildings.
+  //
+  // Both come from Esri, which serves them free with attribution and — unlike
+  // Google's tiles — needs no API key, no billing account and no per-load
+  // charge. Using one provider for both also means the street map does not
+  // lean on OpenStreetMap's donated tile servers, whose usage policy asks
+  // applications not to.
   baseSatellite = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     { maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' });
 
   // Place and road names, drawn over the imagery so the map stays readable.
+  // Redundant over the street map, which draws its own — see the handler below.
   labelLayer = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
     { maxZoom: 19, opacity: 0.9 });
 
-  baseStreet = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
+  baseStreet = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    { maxZoom: 19,
+      attribution: 'Esri, HERE, Garmin, &copy; OpenStreetMap contributors' });
 
   baseSatellite.addTo(map);
   labelLayer.addTo(map);
 
+  // Left open rather than hidden behind a hover icon. An instructor should be
+  // able to switch basemaps in front of a class without hunting for a control,
+  // and the room should see that it was one click.
   layerControl = L.control.layers(
     { 'Satellite': baseSatellite, 'Street map': baseStreet },
     { 'Place names': labelLayer },
-    { position: 'topright' }
+    { position: 'topright', collapsed: false }
   ).addTo(map);
+
+  // The street map draws its own labels, so the overlay would double every name
+  // on screen. Follow the basemap rather than making somebody notice.
+  //
+  // Deferred by a tick on purpose: this event fires from inside the layer
+  // control's own click handler, which afterwards re-applies every overlay
+  // whose box is still ticked. Removing the layer synchronously would be undone
+  // a moment later, silently.
+  map.on('baselayerchange', (e) => {
+    const wantLabels = e.layer === baseSatellite;
+    setTimeout(() => {
+      if (wantLabels) map.addLayer(labelLayer);
+      else map.removeLayer(labelLayer);
+    }, 0);
+  });
 
   addOfflineBasemaps();
   addEnvironmentOverlays();
@@ -120,15 +150,20 @@ function initMap() {
 }
 
 /**
- * Offer any offline map the server has, as an extra basemap choice.
+ * Offer any offline map the server has, as a further basemap choice.
  *
- * Satellite imagery comes from Esri's servers, so on a bad venue connection the
- * map is simply blank — which is awkward when the map is the lesson. A PMTiles
- * archive is one file holding an entire city's streets, served from the same
- * machine as everything else, so it keeps working with no internet at all.
+ * This is not how you get streets — the street map above is built in and always
+ * there. This is about *independence from the internet*. Both Esri basemaps are
+ * fetched from Esri's servers, so on a bad venue connection the map is simply
+ * blank, which is awkward when the map is the lesson. A PMTiles archive is one
+ * file holding an entire city's streets, served from the same machine as
+ * everything else, so it keeps drawing with no connection at all.
  *
- * If no archive is installed the option does not appear, and nothing changes.
+ * If no archive is installed the option does not appear and nothing else
+ * changes, because nothing else depends on it.
  */
+const offlineBasemaps = [];
+
 async function addOfflineBasemaps() {
   try {
     const { basemaps } = await api('/api/basemaps');
@@ -138,18 +173,47 @@ async function addOfflineBasemaps() {
     basemaps.forEach((b) => {
       const layer = protomapsL.leafletLayer({
         url: b.url,
-        theme: 'black',          // matches the console styling
+        theme: mapTheme(),
         maxDataZoom: 15,
       });
       const label = basemaps.length === 1
-        ? `Offline map (${b.size_mb} MB)`
+        ? `Street map, offline (${b.size_mb} MB)`
         : `Offline: ${b.name.replace(/\.pmtiles$/, '')}`;
+      offlineBasemaps.push({ layer, label, url: b.url });
       layerControl.addBaseLayer(layer, label);
     });
   } catch {
-    // No offline map available, or the server did not answer. The online
+    // No offline map available, or the server did not answer. The built-in
     // basemaps still work; this is an addition, never a dependency.
   }
+}
+
+/** Which protomaps theme suits the current skin. */
+function mapTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'console'
+    ? 'black' : 'light';
+}
+
+/**
+ * Redraw the offline basemap in the other skin's colours.
+ *
+ * The online tiles are photographs and pre-rendered images, so they look the
+ * same either way. The offline map is drawn in the browser from vector data,
+ * which means it can and should follow the skin — a white street map under the
+ * console skin would be the one thing on screen that did not.
+ */
+function restyleOfflineBasemaps() {
+  if (!offlineBasemaps.length || typeof protomapsL === 'undefined') return;
+  offlineBasemaps.forEach((entry) => {
+    const wasVisible = map.hasLayer(entry.layer);
+    layerControl.removeLayer(entry.layer);
+    if (wasVisible) map.removeLayer(entry.layer);
+    entry.layer = protomapsL.leafletLayer({
+      url: entry.url, theme: mapTheme(), maxDataZoom: 15,
+    });
+    layerControl.addBaseLayer(entry.layer, entry.label);
+    if (wasVisible) map.addLayer(entry.layer);
+  });
 }
 
 const ENV_STYLE = {
@@ -326,6 +390,8 @@ function applyTheme(name) {
   try { localStorage.setItem('dwell-theme', name); } catch (e) { /* private mode */ }
   $$('[data-theme-set]').forEach((b) =>
     b.setAttribute('aria-pressed', String(b.dataset.themeSet === name)));
+  // The one thing on the map that is drawn rather than fetched.
+  if (map) restyleOfflineBasemaps();
 }
 
 $$('[data-theme-set]').forEach((b) =>
