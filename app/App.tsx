@@ -1,5 +1,5 @@
 /**
- * What Your Phone Knows — a privacy-education app for classroom use.
+ * Dwell: Privacy Lab — a privacy-education app for classroom use.
  *
  * The whole app is here and in `src/`. There is no analytics package, no crash
  * reporter and no advertising library anywhere in it, which would be an

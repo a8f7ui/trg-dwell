@@ -17,12 +17,12 @@ import * as SecureStore from 'expo-secure-store';
 
 import { DEFAULT_SERVER_URL, MAX_QUEUE_LENGTH } from './config';
 
-const TOKEN_KEY = 'wypk_token';
-const PARTICIPANT_KEY = 'wypk_participant_id';
-const CONSENT_KEY = 'wypk_consent';
-const QUEUE_KEY = 'wypk_queue';
-const SERVER_KEY = 'wypk_server';
-const PAUSED_KEY = 'wypk_paused';
+const TOKEN_KEY = 'dwell_token';
+const PARTICIPANT_KEY = 'dwell_participant_id';
+const CONSENT_KEY = 'dwell_consent';
+const QUEUE_KEY = 'dwell_queue';
+const SERVER_KEY = 'dwell_server';
+const PAUSED_KEY = 'dwell_paused';
 
 export type ConsentRecord = {
   version: string;

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "What Your Phone Knows",
-    "slug": "what-your-phone-knows",
+    "name": "Dwell: Privacy Lab",
+    "slug": "dwell-privacy-lab",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "wypk",
+    "scheme": "dwell",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#10151c",
     "newArchEnabled": true,
@@ -16,16 +16,20 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.whatyourphoneknows.course",
+      "bundleIdentifier": "org.trg.dwell",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This course app records where you go so it can show you, each evening, what an app can work out about you. You can stop it at any time and delete everything it has collected.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This course app keeps recording your location even when it is closed. That is the point of the exercise: it demonstrates what ordinary apps can learn while you are not looking at them. Your course instructors can see this data, including your live position. You can stop collection and delete everything at any time, from the app's main screen.",
-        "UIBackgroundModes": ["location", "fetch"],
-        "ITSAppUsesNonExemptEncryption": false
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ],
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "Dwell"
       }
     },
     "android": {
-      "package": "org.whatyourphoneknows.course",
+      "package": "org.trg.dwell",
       "adaptiveIcon": {
         "backgroundColor": "#10151c",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -62,6 +66,7 @@
         }
       ],
       "expo-secure-store"
-    ]
+    ],
+    "description": "An open-source privacy-education tool. Shows course participants what an ordinary app can learn about them from their own phone."
   }
 }

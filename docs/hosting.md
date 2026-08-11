@@ -84,25 +84,25 @@ none of these will bite.
    address with your own if it differs.
 
 ```bash
-git clone https://github.com/a8f7ui/m260921.git
-cd m260921
+git clone https://github.com/a8f7ui/trg-dwell.git
+cd trg-dwell
 ```
 
 3. Now create an isolated Python environment and install what the server needs:
 
 ```bash
-mkvirtualenv --python=/usr/bin/python3.11 wypk
+mkvirtualenv --python=/usr/bin/python3.11 dwell
 pip install -r requirements.txt
 ```
 
 This takes a couple of minutes. Lines scrolling past are normal. When it
-finishes you should see your prompt again with `(wypk)` at the start.
+finishes you should see your prompt again with `(dwell)` at the start.
 
 4. Make a folder for the database, kept **outside** the code folder so that
    updating the code can never disturb participant data:
 
 ```bash
-mkdir -p ~/wypk-data
+mkdir -p ~/dwell-data
 ```
 
 ---
@@ -121,12 +121,12 @@ You are now on the configuration page for your web app. Three things to set:
 
 **Source code** — set to:
 ```
-/home/YOURNAME/m260921
+/home/YOURNAME/trg-dwell
 ```
 
 **Virtualenv** — set to:
 ```
-/home/YOURNAME/.virtualenvs/wypk
+/home/YOURNAME/.virtualenvs/dwell
 ```
 
 **WSGI configuration file** — click the link (it looks like
@@ -137,17 +137,17 @@ everything in it** and paste this, replacing `YOURNAME` in all three places:
 import os
 import sys
 
-path = '/home/YOURNAME/m260921'
+path = '/home/YOURNAME/trg-dwell'
 if path not in sys.path:
     sys.path.insert(0, path)
 
 # Where the database lives. Deliberately outside the code folder, so that
 # updating the code cannot touch participant data.
-os.environ['WYPK_DB'] = '/home/YOURNAME/wypk-data/course.db'
+os.environ['DWELL_DB'] = '/home/YOURNAME/dwell-data/course.db'
 
 # The public address. Telling the server this is what makes it mark login
 # cookies as HTTPS-only.
-os.environ['WYPK_PUBLIC_URL'] = 'https://YOURNAME.pythonanywhere.com'
+os.environ['DWELL_PUBLIC_URL'] = 'https://YOURNAME.pythonanywhere.com'
 
 from wsgi import application  # noqa
 ```
@@ -182,9 +182,9 @@ being wrong.
 Back in a **Bash** console:
 
 ```bash
-cd ~/m260921
-workon wypk
-export WYPK_DB=/home/YOURNAME/wypk-data/course.db
+cd ~/trg-dwell
+workon dwell
+export DWELL_DB=/home/YOURNAME/dwell-data/course.db
 python manage.py add-instructor yourname
 ```
 
@@ -270,9 +270,9 @@ the live server. Expect `31 passed, 0 failed`.
 
 - **Watch the disk.** The **Files** tab shows usage. A week with 30 participants
   is a few megabytes against 512 MB.
-- **Updating the code**: in a Bash console, `cd ~/m260921 && git pull`, then
+- **Updating the code**: in a Bash console, `cd ~/trg-dwell && git pull`, then
   **Reload** on the Web tab. Participant data is untouched, because it lives in
-  `~/wypk-data`.
+  `~/dwell-data`.
 - **If something breaks mid-course**, the **Error log** on the Web tab is the
   first place to look. Phones queue their points locally and retry, so a server
   outage of an hour or two loses nothing.
@@ -287,7 +287,7 @@ This matters. You told participants their data would be deleted at the end.
    `DELETE ALL DATA`, confirm.
 2. Then remove the database file itself, in a Bash console:
    ```bash
-   rm ~/wypk-data/course.db
+   rm ~/dwell-data/course.db
    ```
 3. On the **Web** tab, **Delete** the web app if you do not intend to run the
    course again.

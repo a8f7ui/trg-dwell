@@ -168,7 +168,7 @@ def cmd_check_production(_args: list[str]) -> None:
         good.append(f"Instructor accounts exist ({', '.join(names)}) and none is the demo.")
 
     # 2. Is the session secret a real one?
-    if os.getenv("WYPK_SECRET_KEY"):
+    if os.getenv("DWELL_SECRET_KEY"):
         good.append("Session secret is set from the environment.")
     else:
         key_file = Path(config.DB_PATH).parent / "secret_key"
@@ -185,13 +185,13 @@ def cmd_check_production(_args: list[str]) -> None:
                     f"login cookies will be marked HTTPS-only.")
     elif config.PUBLIC_URL:
         problems.append(
-            f"WYPK_PUBLIC_URL is '{config.PUBLIC_URL}', which is not HTTPS.\n"
+            f"DWELL_PUBLIC_URL is '{config.PUBLIC_URL}', which is not HTTPS.\n"
             "     Participant tokens and instructor passwords would cross the "
             "network in the clear.\n"
             "     Fix: use the https:// address your host gave you.")
     else:
         warnings.append(
-            "WYPK_PUBLIC_URL is not set. Set it to your server's https:// address "
+            "DWELL_PUBLIC_URL is not set. Set it to your server's https:// address "
             "so login cookies are marked HTTPS-only.")
 
     # 4. Is there sample data sitting in what is meant to be a real course?

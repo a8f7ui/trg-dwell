@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sample-data generator for "What Your Phone Knows".
+Sample-data generator for "Dwell: Privacy Lab".
 
 Purpose
 -------
@@ -764,7 +764,7 @@ python3 tools/generate_sample_data.py --seed {result['meta']['seed']} \\
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Generate synthetic participant data for What Your Phone Knows.")
+        description="Generate synthetic participant data for Dwell: Privacy Lab.")
     ap.add_argument("--participants", type=int, default=12)
     ap.add_argument("--days", type=int, default=5)
     ap.add_argument("--seed", type=int, default=20260810)

@@ -1,5 +1,5 @@
 """
-Configuration for the What Your Phone Knows backend.
+Configuration for the Dwell: Privacy Lab backend.
 
 Every value that affects privacy is here, in one place, with a plain-language
 comment. That is deliberate: a reviewer, an instructor or a suspicious
@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SQLite: a single file. No database server to run, and wiping the course data
 # at the end is a matter of deleting rows (or the file).
-DB_PATH = Path(os.getenv("WYPK_DB", BASE_DIR / "data" / "local" / "course.db"))
+DB_PATH = Path(os.getenv("DWELL_DB", BASE_DIR / "data" / "local" / "course.db"))
 
 # --------------------------------------------------------------------------
 # Privacy settings
@@ -34,17 +34,17 @@ DB_PATH = Path(os.getenv("WYPK_DB", BASE_DIR / "data" / "local" / "course.db"))
 # quietly identifying an individual — if only one person ever went somewhere,
 # showing that place on an aggregate map tells you exactly where that one
 # person was.
-K_ANONYMITY_THRESHOLD = int(os.getenv("WYPK_K", "5"))
+K_ANONYMITY_THRESHOLD = int(os.getenv("DWELL_K", "5"))
 
 # Size of the aggregate map hexagons (H3 resolution).
 # 9 is roughly a 200 m hexagon — small enough to show real patterns, large
 # enough that a hexagon is not a single building.
-H3_RESOLUTION = int(os.getenv("WYPK_H3_RES", "9"))
+H3_RESOLUTION = int(os.getenv("DWELL_H3_RES", "9"))
 
 # How long participant data is kept. The course runs, then everything goes.
 # This is a backstop; instructors also have an explicit "wipe everything"
 # control, which is the intended way to tear down.
-RETENTION_DAYS = int(os.getenv("WYPK_RETENTION_DAYS", "14"))
+RETENTION_DAYS = int(os.getenv("DWELL_RETENTION_DAYS", "14"))
 
 # The app never stores a participant's name, email or phone number. This
 # constant exists to be grepped for by anyone checking that claim.
@@ -63,10 +63,10 @@ STORES_DIRECT_IDENTIFIERS = False
 
 # Points staying within this many metres of each other count as "not moving".
 # Roughly matches phone GPS accuracy in a built-up area.
-STOP_ROAM_RADIUS_M = float(os.getenv("WYPK_STOP_RADIUS", "60"))
+STOP_ROAM_RADIUS_M = float(os.getenv("DWELL_STOP_RADIUS", "60"))
 
 # A stationary run must last at least this long to count as a stop.
-STOP_MIN_DWELL_S = float(os.getenv("WYPK_STOP_MIN_DWELL", "90"))
+STOP_MIN_DWELL_S = float(os.getenv("DWELL_STOP_MIN_DWELL", "90"))
 
 # If two consecutive points are further apart in time than this, they are not
 # treated as part of the same stop, and we do not invent a dwell across the gap.
@@ -76,18 +76,18 @@ STOP_MIN_DWELL_S = float(os.getenv("WYPK_STOP_MIN_DWELL", "90"))
 # battery, so quarter-hour gaps between points are normal and do NOT mean the
 # person went anywhere. Two points 20 m apart either side of a 15-minute silence
 # are good evidence of staying put. Beyond half an hour we stop assuming.
-STOP_MAX_GAP_S = float(os.getenv("WYPK_STOP_MAX_GAP", "1800"))
+STOP_MAX_GAP_S = float(os.getenv("DWELL_STOP_MAX_GAP", "1800"))
 
 # Stops closer together than this across the week are treated as the same place.
 # Kept tight: in a dense city centre a generous radius quietly merges the cafe,
 # the shop next door and the office above them into one invented "place".
-PLACE_CLUSTER_RADIUS_M = float(os.getenv("WYPK_PLACE_RADIUS", "50"))
+PLACE_CLUSTER_RADIUS_M = float(os.getenv("DWELL_PLACE_RADIUS", "50"))
 
 # A stop is matched to a nearby place of interest within this distance. Beyond
 # it we say we don't know, rather than guessing. Phone GPS in a built-up area is
 # good to roughly 10-25 m, so this allows for that error without reaching so far
 # that it starts picking up whatever happens to be across the street.
-POI_MATCH_RADIUS_M = float(os.getenv("WYPK_POI_RADIUS", "45"))
+POI_MATCH_RADIUS_M = float(os.getenv("DWELL_POI_RADIUS", "45"))
 
 # --------------------------------------------------------------------------
 # Instructor dashboard
@@ -96,7 +96,7 @@ POI_MATCH_RADIUS_M = float(os.getenv("WYPK_POI_RADIUS", "45"))
 # The public address this server is reachable at, e.g.
 # "https://yourname.pythonanywhere.com". Used to decide whether login cookies
 # should be marked HTTPS-only. Leave unset for local development.
-PUBLIC_URL = os.getenv("WYPK_PUBLIC_URL", "")
+PUBLIC_URL = os.getenv("DWELL_PUBLIC_URL", "")
 
 # Login cookies are marked "secure" — meaning the browser will only ever send
 # them over HTTPS — as soon as this server knows it is being served over HTTPS.
@@ -115,10 +115,10 @@ def get_secret_key() -> str:
     Rather than ask a non-technical person to generate and configure one — a
     step that is easy to skip, and silently dangerous when skipped — this
     generates a random key on first run and stores it beside the database with
-    owner-only permissions. Setting WYPK_SECRET_KEY overrides it, which is what
+    owner-only permissions. Setting DWELL_SECRET_KEY overrides it, which is what
     you want on a host with a proper secrets mechanism.
     """
-    from_env = os.getenv("WYPK_SECRET_KEY")
+    from_env = os.getenv("DWELL_SECRET_KEY")
     if from_env:
         return from_env
 
@@ -144,4 +144,4 @@ SECRET_KEY = get_secret_key()
 
 # A participant counts as "currently visible" on the live map if we have heard
 # from them within this many seconds.
-LIVE_WINDOW_S = int(os.getenv("WYPK_LIVE_WINDOW", "300"))
+LIVE_WINDOW_S = int(os.getenv("DWELL_LIVE_WINDOW", "300"))
