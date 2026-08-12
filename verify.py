@@ -361,6 +361,46 @@ def check_javascript() -> None:
     check("app.js parses", result.returncode == 0, (result.stderr or "").strip())
 
 
+def check_phone_app() -> None:
+    """
+    The phone app's types, and the arithmetic behind the evening notification.
+
+    Not the app on a phone — nothing here can tell you that. This is the part
+    that can be checked without one: that the TypeScript is consistent, and
+    that the evening reveal is scheduled for the right evening with the right
+    words on it.
+    """
+    group("Phone app")
+    node = shutil.which("node")
+    tsc = HERE / "app" / "node_modules" / ".bin" / (
+        "tsc.cmd" if os.name == "nt" else "tsc")
+    if not node or not tsc.exists():
+        skipped.append(
+            "Phone app checks — Node or the app's packages are not installed "
+            "(run: npm install, in the app folder)")
+        return
+
+    result = subprocess.run([str(tsc), "--noEmit"], capture_output=True,
+                            text=True, cwd=HERE / "app")
+    check("the phone app's TypeScript is consistent", result.returncode == 0,
+          (result.stdout or result.stderr or "").strip()[:500])
+
+    result = subprocess.run(
+        [node, str(HERE / "tools" / "reveal_schedule_test.mjs")],
+        capture_output=True, text=True, cwd=HERE)
+    for line in (result.stdout or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PASS  "):
+            passed.append(stripped[6:])
+        elif stripped.startswith("FAIL  "):
+            failed.append((stripped[6:], "tools/reveal_schedule_test.mjs"))
+        elif stripped.startswith("----  "):
+            skipped.append(stripped[6:])
+    check("the evening-notification checks ran",
+          "PASS" in (result.stdout or ""),
+          (result.stderr or result.stdout or "").strip()[:400])
+
+
 def _installed_browsers() -> list[Path]:
     """
     Any Chromium actually present, whichever build number it happens to be.
@@ -617,6 +657,7 @@ def main() -> int:
         check_privacy_rules(client)
         check_local_days(client)
         check_javascript()
+        check_phone_app()
         if production:
             check_production_safety(python)
 

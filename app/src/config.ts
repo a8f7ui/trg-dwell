@@ -48,6 +48,12 @@ export const MAX_QUEUE_LENGTH = 5_000;
 /** The identifier the background task is registered under. */
 export const LOCATION_TASK = 'dwell-background-location';
 
-/** When the evening reveal notification fires, in local time. */
-export const REVEAL_HOUR = 20;
-export const REVEAL_MINUTE = 30;
+/**
+ * When the evening reveal notification fires, in local time.
+ *
+ * The value lives in `reveal-schedule.ts` alongside the arithmetic that uses
+ * it, so that module has no dependencies and can be tested on its own. It is
+ * re-exported here because this is the file somebody reads to find out what the
+ * app does, and a setting that is not in it may as well not be documented.
+ */
+export { REVEAL_HOUR, REVEAL_MINUTE } from './reveal-schedule';

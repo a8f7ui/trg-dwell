@@ -9,11 +9,35 @@
  * This restraint is itself part of the teaching. The teaching flow points at it
  * and asks why other apps are happy to put your name, your address or your
  * account balance on your lock screen.
+ *
+ * One notification per course day, not one repeating one
+ * -----------------------------------------------------
+ * The teasers escalate: day 1 says a picture is being built, day 5 says there
+ * is a week of movements. That escalation is the point of them — it is how the
+ * app demonstrates accumulation to somebody only half paying attention.
+ *
+ * A single daily-repeating notification cannot escalate. It carries whichever
+ * teaser it was created with, forever, so a participant who set the app up on
+ * Monday was told "Day 1: I have started building a picture of you" every
+ * evening for the rest of the week, while the app quietly knew far more each
+ * night than the night before. The one part of the week designed to make
+ * accumulation visible was the part that hid it.
+ *
+ * So each evening is scheduled separately, as its own dated notification. That
+ * means the right teaser arrives on the right evening even if the participant
+ * never opens the app again after the first day — which is exactly the
+ * participant this is meant to reach — and the notifications stop when the
+ * course does.
+ *
+ * The arithmetic lives in `reveal-schedule.ts` so it can be tested without a
+ * phone. This file is only the part that talks to the operating system.
  */
 
 import * as Notifications from 'expo-notifications';
 
-import { REVEAL_HOUR, REVEAL_MINUTE } from './config';
+import { remainingReveals, teaserFor } from './reveal-schedule';
+
+export { COURSE_DAYS, remainingReveals, revealTime, teaserFor } from './reveal-schedule';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -23,18 +47,6 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
-/** Teasers, chosen by how far into the course we are. None names a place. */
-const TEASERS = [
-  'Day 1: I have started building a picture of you. Tap to see what I have so far.',
-  'Day 2: based on where you have been, I am starting to guess your routine. Tap to see.',
-  'Day 3: based on where you have been today, I could infer where you have been ' +
-    'staying, your daily routine, and what you seem to be doing. Tap to see what an ' +
-    'app would know about you.',
-  'Day 4: today mostly confirmed what I already suspected. Tap to see how confident ' +
-    'I have become.',
-  'Day 5: I have a week of your movements now. Tap to see the whole picture at once.',
-];
 
 export async function requestPermission(): Promise<boolean> {
   const { status } = await Notifications.requestPermissionsAsync();
@@ -47,24 +59,42 @@ export async function hasPermission(): Promise<boolean> {
 }
 
 /**
- * Schedule the evening reveal. Repeats daily, so it survives the app being
- * closed for the rest of the course.
+ * Schedule every remaining evening of the course.
+ *
+ * Safe to call more than once: it clears what was already scheduled first, so
+ * re-running it on each app start leaves exactly one notification per evening
+ * rather than a growing pile of duplicates.
+ *
+ * Returns how many were scheduled, so the status screen can show a number
+ * rather than assert that notifications are working.
  */
-export async function scheduleDailyReveal(dayNumber: number): Promise<void> {
+export async function scheduleCourseReveals(
+  startedAt: Date,
+  now: Date = new Date(),
+): Promise<number> {
   await Notifications.cancelAllScheduledNotificationsAsync();
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Your daily summary is ready',
-      body: TEASERS[Math.min(Math.max(dayNumber - 1, 0), TEASERS.length - 1)],
-      // No place names, no coordinates, no inferences. On purpose.
-      data: { screen: 'reveal' },
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour: REVEAL_HOUR,
-      minute: REVEAL_MINUTE,
-    },
-  });
+  const upcoming = remainingReveals(startedAt, now);
+  for (const { dayNumber, at } of upcoming) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Your daily summary is ready',
+        body: teaserFor(dayNumber),
+        // No place names, no coordinates, no inferences. On purpose.
+        data: { screen: 'reveal', dayNumber },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: at,
+      },
+    });
+  }
+  return upcoming.length;
+}
+
+/** How many evening notifications are currently waiting to fire. */
+export async function scheduledCount(): Promise<number> {
+  const pending = await Notifications.getAllScheduledNotificationsAsync();
+  return pending.length;
 }
 
 export async function cancelAll(): Promise<void> {
@@ -76,8 +106,8 @@ export async function sendPreviewNow(dayNumber: number): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Your daily summary is ready',
-      body: TEASERS[Math.min(Math.max(dayNumber - 1, 0), TEASERS.length - 1)],
-      data: { screen: 'reveal' },
+      body: teaserFor(dayNumber),
+      data: { screen: 'reveal', dayNumber },
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,

@@ -96,6 +96,16 @@ export default function App() {
       const pid = await getParticipantId();
       setConsent(existing);
       setParticipantId(pid);
+      // Re-schedule the remaining evenings on every start. Scheduled
+      // notifications do not survive a reinstall, a restore to a new handset,
+      // or some manufacturers' battery settings, and a participant who lost
+      // them would simply never hear from the app again — silently, which is
+      // the worst way for the centrepiece of the week to fail.
+      if (existing && pid && (await notifications.hasPermission())) {
+        await notifications
+          .scheduleCourseReveals(new Date(existing.agreedAt))
+          .catch(() => {});
+      }
       await refreshStatus();
       setScreen(existing && pid ? 'home' : 'consent');
     })();
@@ -151,7 +161,12 @@ export default function App() {
     await collection.startCollection();
     await collection.recordForegroundFix().catch(() => {});
     if (await notifications.hasPermission()) {
-      await notifications.scheduleDailyReveal(1);
+      // The whole course, one notification per evening, counted from the day
+      // this participant agreed. Not a single repeating one: that would tell
+      // them "Day 1: I have started building a picture of you" every night of
+      // the week, while the picture quietly grew.
+      const startedAt = consent ? new Date(consent.agreedAt) : new Date();
+      await notifications.scheduleCourseReveals(startedAt).catch(() => {});
     }
     await refreshStatus();
     setScreen('home');
