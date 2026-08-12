@@ -23,6 +23,7 @@ const CONSENT_KEY = 'dwell_consent';
 const QUEUE_KEY = 'dwell_queue';
 const SERVER_KEY = 'dwell_server';
 const PAUSED_KEY = 'dwell_paused';
+const ACTIVITY_KEY = 'dwell_activity';
 
 export type ConsentRecord = {
   version: string;
@@ -121,6 +122,53 @@ export async function dropFromQueue(count: number) {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue.slice(count)));
 }
 
+// ---------------------------------------------------------------- activity
+
+/**
+ * A few timestamps describing what this app has been doing.
+ *
+ * Kept because the most common real failure is silent: permission looks
+ * granted, the app looks fine, and nothing has been collected since Tuesday.
+ * Without a record of when things last happened there is no way for anybody —
+ * participant or instructor — to notice that, and the first sign would be an
+ * empty map on the evening it mattered.
+ *
+ * No coordinates. Times and counts only.
+ */
+export type Activity = {
+  lastFixAt: string | null;
+  lastFixMode: 'background' | 'foreground' | null;
+  lastUploadAt: string | null;
+  lastUploadAttemptAt: string | null;
+  lastUploadError: string | null;
+  uploadedCount: number;
+};
+
+const EMPTY_ACTIVITY: Activity = {
+  lastFixAt: null,
+  lastFixMode: null,
+  lastUploadAt: null,
+  lastUploadAttemptAt: null,
+  lastUploadError: null,
+  uploadedCount: 0,
+};
+
+export async function getActivity(): Promise<Activity> {
+  const raw = await AsyncStorage.getItem(ACTIVITY_KEY);
+  if (!raw) return { ...EMPTY_ACTIVITY };
+  try {
+    return { ...EMPTY_ACTIVITY, ...(JSON.parse(raw) as Partial<Activity>) };
+  } catch {
+    return { ...EMPTY_ACTIVITY };
+  }
+}
+
+export async function recordActivity(patch: Partial<Activity>) {
+  const current = await getActivity();
+  await AsyncStorage.setItem(ACTIVITY_KEY,
+                             JSON.stringify({ ...current, ...patch }));
+}
+
 // ---------------------------------------------------------------- teardown
 
 /**
@@ -137,5 +185,6 @@ export async function wipeLocal() {
     CONSENT_KEY,
     QUEUE_KEY,
     PAUSED_KEY,
+    ACTIVITY_KEY,
   ]);
 }

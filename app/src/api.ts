@@ -1,12 +1,13 @@
 /**
  * Everything this app sends to, or asks of, the server.
  *
- * There are exactly four calls. If you are auditing this app, this file tells
+ * There are exactly five calls. If you are auditing this app, this file tells
  * you the complete set of things that ever leave the phone.
  *
  *   register()  — announces consent, receives an anonymous ID and a token
  *   upload()    — sends queued location points
  *   reveal()    — asks for this participant's own daily summary
+ *   status()    — asks how much of this device's data actually arrived
  *   withdraw()  — asks the server to delete everything about this participant
  *
  * Nothing else is transmitted. There is no analytics SDK in this app, no crash
@@ -77,6 +78,27 @@ export async function upload(pings: QueuedPing[]): Promise<{ accepted: number }>
 
 export async function reveal(day?: string): Promise<any> {
   return request(`/api/v1/me/reveal${day ? `?day=${encodeURIComponent(day)}` : ''}`);
+}
+
+export type ServerStatus = {
+  participant_id: string;
+  display_label: string;
+  points_received: number;
+  last_received_at: string | null;
+  last_point_at: string | null;
+  days_with_data: string[];
+  course_timezone: string;
+  server_time: string;
+};
+
+/**
+ * How much of this device's data the server actually has.
+ *
+ * The phone can say what it collected and what it believes it sent; only the
+ * server can say what arrived. Contains counts and times, never coordinates.
+ */
+export async function status(): Promise<ServerStatus> {
+  return request('/api/v1/me/status');
 }
 
 export async function withdraw(): Promise<{

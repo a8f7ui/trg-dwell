@@ -284,6 +284,49 @@ def upload_pings():
     return jsonify({"accepted": len(rows), "rejected": len(points) - len(rows)}), 201
 
 
+@app.get("/api/v1/me/status")
+def my_status():
+    """
+    What the server knows it has received from this device.
+
+    The other half of the phone's own status screen. The phone can say when it
+    last took a fix and when it last thought an upload succeeded; only the
+    server can say what actually arrived, and the gap between those two is
+    where a silently broken installation lives.
+
+    Deliberately contains no coordinates. It answers "how much, and when",
+    never "where" — an operator standing over somebody's shoulder helping them
+    troubleshoot should not thereby be shown their movements.
+    """
+    conn = get_conn()
+    participant_id = auth.participant_from_request(conn)
+    if not participant_id:
+        conn.close()
+        return jsonify({"error": "Unknown or missing device token."}), 401
+
+    row = conn.execute(
+        "SELECT COUNT(*) AS points, MAX(received_at) AS last_received, "
+        "MAX(ts) AS last_point "
+        "FROM pings WHERE participant_id = ?", (participant_id,)).fetchone()
+    label = conn.execute(
+        "SELECT display_label FROM participants WHERE participant_id = ?",
+        (participant_id,)).fetchone()
+    days = days_for(conn, participant_id)
+    tz_name = course_timezone(conn)
+    conn.close()
+
+    return jsonify({
+        "participant_id": participant_id,
+        "display_label": label["display_label"] if label else "",
+        "points_received": row["points"] or 0,
+        "last_received_at": row["last_received"],
+        "last_point_at": row["last_point"],
+        "days_with_data": days,
+        "course_timezone": tz_name,
+        "server_time": db.now_iso(),
+    })
+
+
 @app.get("/api/v1/me/reveal")
 def my_reveal():
     """The daily reveal, for the phone that owns the token and nobody else."""

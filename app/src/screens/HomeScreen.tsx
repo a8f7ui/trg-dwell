@@ -31,6 +31,7 @@ type Props = {
   onOpenIllustrated: () => void;
   onOpenTeaching: () => void;
   onOpenSettings: () => void;
+  onOpenStatus: () => void;
   onTogglePause: () => void;
   onRefresh: () => void;
 };
@@ -42,6 +43,7 @@ export default function HomeScreen({
   onOpenIllustrated,
   onOpenTeaching,
   onOpenSettings,
+  onOpenStatus,
   onTogglePause,
   onRefresh,
 }: Props) {
@@ -146,6 +148,10 @@ export default function HomeScreen({
           <Text style={s.buttonQuietText}>
             {status.paused ? 'Resume collection' : 'Pause collection'}
           </Text>
+        </Pressable>
+
+        <Pressable style={s.buttonQuiet} onPress={onOpenStatus}>
+          <Text style={s.buttonQuietText}>Is this working?</Text>
         </Pressable>
 
         <Pressable style={s.buttonQuiet} onPress={onOpenSettings}>

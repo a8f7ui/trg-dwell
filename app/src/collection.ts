@@ -35,10 +35,12 @@ import * as api from './api';
 import {
   dropFromQueue,
   enqueue,
+  getActivity,
   getQueue,
   getToken,
   isPaused,
   QueuedPing,
+  recordActivity,
 } from './storage';
 
 // --------------------------------------------------------------------------
@@ -90,6 +92,12 @@ export async function recordFixes(
   }));
 
   await enqueue(pings);
+  // Recorded so the status screen can say when this last happened. It is the
+  // difference between "collection is on" — which is only a setting — and
+  // "collection is working", which is what anybody actually wants to know.
+  const newest = pings.reduce<string | null>(
+    (latest, p) => (!latest || p.ts > latest ? p.ts : latest), null);
+  if (newest) await recordActivity({ lastFixAt: newest, lastFixMode: mode });
 }
 
 /**
@@ -101,6 +109,9 @@ export async function flushQueue(): Promise<number> {
   if (!(await getToken())) return 0;
 
   let sent = 0;
+  let failure: string | null = null;
+  const attemptedAt = new Date().toISOString();
+
   // Bounded rather than `while (true)`: if the server is accepting but the
   // queue is enormous, we would rather return and try again than block.
   for (let round = 0; round < 20; round += 1) {
@@ -112,11 +123,22 @@ export async function flushQueue(): Promise<number> {
       await api.upload(batch);
       await dropFromQueue(batch.length);
       sent += batch.length;
-    } catch {
-      // Offline, or the server is down. Keep the points and try later.
+    } catch (err) {
+      // Offline, or the server is down. Keep the points and try later — but
+      // remember why, because "nothing is arriving" and "nothing is being
+      // collected" look identical from the dashboard and need opposite fixes.
+      failure = err instanceof Error ? err.message : String(err);
       break;
     }
   }
+
+  const previous = await getActivity();
+  await recordActivity({
+    lastUploadAttemptAt: attemptedAt,
+    lastUploadAt: sent > 0 ? new Date().toISOString() : previous.lastUploadAt,
+    lastUploadError: failure,
+    uploadedCount: previous.uploadedCount + sent,
+  });
   return sent;
 }
 

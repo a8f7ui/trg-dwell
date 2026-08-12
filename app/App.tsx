@@ -37,6 +37,7 @@ import IllustratedScreen from './src/screens/IllustratedScreen';
 import PermissionWalkthrough from './src/screens/PermissionWalkthrough';
 import RevealScreen from './src/screens/RevealScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import StatusScreen from './src/screens/StatusScreen';
 import TeachingScreen from './src/screens/TeachingScreen';
 
 type Screen =
@@ -48,7 +49,8 @@ type Screen =
   | 'reveal'
   | 'illustrated'
   | 'teaching'
-  | 'settings';
+  | 'settings'
+  | 'status';
 
 const facts = getDeviceFacts();
 
@@ -279,6 +281,15 @@ export default function App() {
     );
   }
 
+  if (screen === 'status') {
+    return (
+      <>
+        <StatusBar barStyle="light-content" />
+        <StatusScreen onBack={() => setScreen('home')} />
+      </>
+    );
+  }
+
   if (screen === 'settings') {
     return (
       <>
@@ -303,6 +314,7 @@ export default function App() {
         onOpenIllustrated={() => setScreen('illustrated')}
         onOpenTeaching={() => setScreen('teaching')}
         onOpenSettings={() => setScreen('settings')}
+        onOpenStatus={() => setScreen('status')}
         onTogglePause={handleTogglePause}
         onRefresh={refreshStatus}
       />

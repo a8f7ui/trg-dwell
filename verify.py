@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import secrets
 import shutil
 import socket
@@ -334,6 +335,39 @@ def check_local_days(client: Client) -> None:
                  f"got HTTP {status}: {ack}"):
         return
 
+    # The status endpoint, which the phone's "Is this working?" screen asks.
+    # Checked here because it is the only way an operator can tell the
+    # difference between a phone that is not collecting and a phone whose data
+    # is not arriving, and those need opposite fixes.
+    status, remote = client.get("/api/v1/me/status", token=token)
+    if check("the server can say what it has received from a device",
+             status == 200 and isinstance(remote, dict), f"got HTTP {status}"):
+        check("it reports the right number of points",
+              remote.get("points_received") == len(uploaded),
+              f"it says {remote.get('points_received')} of {len(uploaded)}")
+        check("it reports when it last heard from the device",
+              bool(remote.get("last_received_at")))
+        check("it reports the days in the course's own timezone",
+              remote.get("days_with_data") == ["2026-09-15"],
+              f"it says {remote.get('days_with_data')}")
+        # An operator reads this screen over a participant's shoulder.
+        #
+        # Timestamps are removed before looking, because a time carrying
+        # microseconds — 22.123456 — is the same shape as a coordinate and
+        # would fail this for no reason. Times are meant to be here; positions
+        # are not.
+        body = re.sub(r"\d{4}-\d{2}-\d{2}T[\d:.]+(?:[+-]\d{2}:\d{2}|Z)?", "",
+                      json.dumps(remote))
+        check("the device status contains no coordinates",
+              not re.search(r"-?\d{1,3}\.\d{4,}", body),
+              f"something shaped like a coordinate is in: {body[:200]}")
+        check("the device status contains no place names",
+              "stops" not in remote and "places" not in remote)
+
+    status, _ = client.get("/api/v1/me/status")
+    check("the device status is refused without a token", status == 401,
+          f"got HTTP {status}")
+
     status, reveal = client.get("/api/v1/me/reveal", token=token)
     if not check("the reveal loads", status == 200 and isinstance(reveal, dict),
                  f"got HTTP {status}"):
@@ -449,20 +483,22 @@ def check_phone_app() -> None:
     check("the phone app's TypeScript is consistent", result.returncode == 0,
           (result.stdout or result.stderr or "").strip()[:500])
 
-    result = subprocess.run(
-        [node, str(HERE / "tools" / "reveal_schedule_test.mjs")],
-        capture_output=True, text=True, cwd=HERE)
-    for line in (result.stdout or "").splitlines():
-        stripped = line.strip()
-        if stripped.startswith("PASS  "):
-            passed.append(stripped[6:])
-        elif stripped.startswith("FAIL  "):
-            failed.append((stripped[6:], "tools/reveal_schedule_test.mjs"))
-        elif stripped.startswith("----  "):
-            skipped.append(stripped[6:])
-    check("the evening-notification checks ran",
-          "PASS" in (result.stdout or ""),
-          (result.stderr or result.stdout or "").strip()[:400])
+    for script, label in [
+        ("reveal_schedule_test.mjs", "evening-notification"),
+        ("status_report_test.mjs", "status-screen"),
+    ]:
+        result = subprocess.run([node, str(HERE / "tools" / script)],
+                                capture_output=True, text=True, cwd=HERE)
+        for line in (result.stdout or "").splitlines():
+            stripped = line.strip()
+            if stripped.startswith("PASS  "):
+                passed.append(stripped[6:])
+            elif stripped.startswith("FAIL  "):
+                failed.append((stripped[6:], f"tools/{script}"))
+            elif stripped.startswith("----  "):
+                skipped.append(stripped[6:])
+        check(f"the {label} checks ran", "PASS" in (result.stdout or ""),
+              (result.stderr or result.stdout or "").strip()[:400])
 
 
 def _installed_browsers() -> list[Path]:
