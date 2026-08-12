@@ -377,6 +377,21 @@ def check_phone_app() -> None:
     words on it.
     """
     group("Phone app")
+
+    # What reaches the build, and what must never. Needs no Node, so it runs
+    # before the checks that do.
+    result = subprocess.run(
+        [sys.executable, str(HERE / "tools" / "build_upload_test.py")],
+        capture_output=True, text=True, cwd=HERE)
+    for line in (result.stdout or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PASS  "):
+            passed.append(stripped[6:])
+        elif stripped.startswith("FAIL  "):
+            failed.append((stripped[6:], "tools/build_upload_test.py"))
+    check("the build-upload checks ran", "PASS" in (result.stdout or ""),
+          (result.stderr or result.stdout or "").strip()[:400])
+
     node = shutil.which("node")
     tsc = HERE / "app" / "node_modules" / ".bin" / (
         "tsc.cmd" if os.name == "nt" else "tsc")

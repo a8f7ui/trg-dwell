@@ -124,6 +124,25 @@ def cmd_app(_args: list[str]) -> int:
     say()
     say("Saved. Nothing in the app's code needs changing.")
     say()
+
+    # The address is written into the app when it is built, not when it runs,
+    # so it has to survive the trip to the build service. It does that because
+    # of `.easignore`; without it the address is treated as a private file and
+    # left behind, and the app comes back saying it has not been set up.
+    if not (HERE / ".easignore").exists():
+        say("WARNING: the file `.easignore` is missing from this folder. Without")
+        say("it, the address above will not reach the build service, and the")
+        say("app that comes back will not know where to send anything.")
+        say()
+
+    project_id = expo_project_id()
+    if project_id:
+        say(f"This project is already linked to Expo (id ending {project_id[-6:]}).")
+    else:
+        say("This project is not linked to an Expo account yet. That link is the")
+        say("one step that needs a person — it means signing in — and it is the")
+        say("first of the commands in the file below.")
+    say()
     rule()
     title("What only a person can do")
     say("Building an app that installs on real phones needs accounts that")
@@ -377,6 +396,23 @@ ONE THING TO DIARISE
   reminder in your calendar to sign in and click "Run until 3 months from
   today" on the "Web" tab.
 """.strip() + "\n")
+
+
+def expo_project_id() -> str:
+    """
+    The Expo project this is linked to, or "" if it has not been linked yet.
+
+    `eas build` refuses to start without one, and the link is created by
+    `eas init`, which needs somebody to be signed in to an Expo account. That
+    cannot be done here or invented, so the honest thing is to detect it and
+    say which state you are in.
+    """
+    try:
+        config = json.loads((HERE / "app" / "app.json").read_text())
+    except (OSError, ValueError):
+        return ""
+    extra = config.get("expo", {}).get("extra", {})
+    return str(extra.get("eas", {}).get("projectId") or "")
 
 
 def write_phone_steps(address: str) -> None:
