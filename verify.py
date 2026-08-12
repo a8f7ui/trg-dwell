@@ -367,6 +367,49 @@ def check_javascript() -> None:
     check("app.js parses", result.returncode == 0, (result.stderr or "").strip())
 
 
+def check_https() -> None:
+    """
+    The same software, over a real TLS connection.
+
+    Its own server on its own certificate, because the questions that matter —
+    is the sign-in cookie marked Secure, does the phone's API work over TLS —
+    cannot be answered by reading configuration.
+    """
+    group("Over HTTPS")
+    result = subprocess.run(
+        [sys.executable, str(HERE / "tools" / "https_test.py")],
+        capture_output=True, text=True, cwd=HERE)
+    for line in (result.stdout or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PASS  "):
+            passed.append(stripped[6:])
+        elif stripped.startswith("FAIL  "):
+            failed.append((stripped[6:], "tools/https_test.py"))
+        elif stripped.startswith("----  "):
+            skipped.append(stripped[6:])
+    if "Skipped:" in (result.stdout or ""):
+        skipped.append("HTTPS checks — openssl is not installed")
+        return
+    check("the HTTPS checks ran", "PASS" in (result.stdout or ""),
+          (result.stderr or result.stdout or "").strip()[:400])
+
+
+def check_data_safety() -> None:
+    """The things that must not happen to a course that is under way."""
+    group("Safe for a course already running")
+    result = subprocess.run(
+        [sys.executable, str(HERE / "tools" / "data_safety_test.py")],
+        capture_output=True, text=True, cwd=HERE)
+    for line in (result.stdout or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PASS  "):
+            passed.append(stripped[6:])
+        elif stripped.startswith("FAIL  "):
+            failed.append((stripped[6:], "tools/data_safety_test.py"))
+    check("the data-safety checks ran", "PASS" in (result.stdout or ""),
+          (result.stderr or result.stdout or "").strip()[:400])
+
+
 def check_phone_app() -> None:
     """
     The phone app's types, and the arithmetic behind the evening notification.
@@ -684,6 +727,8 @@ def main() -> int:
         check_local_days(client)
         check_javascript()
         check_phone_app()
+        check_https()
+        check_data_safety()
         if production:
             check_production_safety(python)
 

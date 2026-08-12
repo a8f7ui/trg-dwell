@@ -161,122 +161,46 @@ def cmd_audit(_args: list[str]) -> None:
         pass
 
 
-def cmd_check_production(_args: list[str]) -> None:
+def cmd_check_production(args: list[str]) -> None:
     """
     Check the things that are dangerous to get wrong on a public server.
 
     Written to be run by somebody who is not a developer, so every failure says
-    what to do about it rather than only what is wrong.
+    what to do about it rather than only what is wrong. The checks themselves
+    live in backend/readiness.py, so this command, `dwell ready` and the tests
+    cannot drift into disagreeing about what "ready" means.
     """
-    from backend import load_sample
+    from backend import readiness
 
-    problems: list[str] = []
-    warnings: list[str] = []
-    good: list[str] = []
+    # Reaching over the network is skipped when there is nothing to reach, so
+    # this stays usable before the server is hosted.
+    reach = "--offline" not in args
+    base = ""
+    for arg in args:
+        if arg.startswith("--url="):
+            base = arg[6:]
 
-    conn = db.connect()
-    db.init_db(conn)
+    results = readiness.run_all(base_url=base, reach_server=reach)
 
-    # 1. Is there a real instructor account, and is the demo one gone?
-    rows = conn.execute("SELECT username FROM instructors").fetchall()
-    names = [r["username"] for r in rows]
-    demo_user = load_sample.PUBLISHED_DEMO_LOGIN[0]
-    if not names:
-        problems.append(
-            "There are no instructor accounts, so nobody can log in.\n"
-            "     Fix: .venv/bin/python manage.py add-instructor <your-name>")
-    if demo_user in names:
-        if auth.check_instructor(conn, demo_user,
-                                 load_sample.PUBLISHED_DEMO_LOGIN[1]):
-            problems.append(
-                f"The demo account '{demo_user}' still exists WITH ITS PUBLISHED\n"
-                f"     PASSWORD. Anyone who has read this project on GitHub can log in\n"
-                f"     and watch your participants.\n"
-                f"     Fix: .venv/bin/python manage.py remove-instructor {demo_user}")
-        else:
-            warnings.append(
-                f"An account named '{demo_user}' exists. Its password has been "
-                f"changed, so this is not urgent, but a distinctive name is better.")
-    if names and demo_user not in names:
-        good.append(f"Instructor accounts exist ({', '.join(names)}) and none is the demo.")
-
-    # 2. Is the session secret a real one?
-    if os.getenv("DWELL_SECRET_KEY"):
-        good.append("Session secret is set from the environment.")
-    else:
-        key_file = Path(config.DB_PATH).parent / "secret_key"
-        if key_file.exists():
-            good.append(f"Session secret was generated and stored at {key_file}.")
-        else:
-            warnings.append(
-                "No session secret yet. One will be generated automatically the "
-                "first time the server starts.")
-
-    # 3. HTTPS
-    if config.PUBLIC_URL.startswith("https://"):
-        good.append(f"Public address is HTTPS ({config.PUBLIC_URL}); "
-                    f"login cookies will be marked HTTPS-only.")
-    elif config.PUBLIC_URL:
-        problems.append(
-            f"DWELL_PUBLIC_URL is '{config.PUBLIC_URL}', which is not HTTPS.\n"
-            "     Participant tokens and instructor passwords would cross the "
-            "network in the clear.\n"
-            "     Fix: use the https:// address your host gave you.")
-    else:
-        warnings.append(
-            "DWELL_PUBLIC_URL is not set. Set it to your server's https:// address "
-            "so login cookies are marked HTTPS-only.")
-
-    # 4. Is there sample data sitting in what is meant to be a real course?
-    sample = conn.execute(
-        "SELECT COUNT(*) AS n FROM participants WHERE consent_version = 'sample-data-v1'"
-    ).fetchone()["n"]
-    if sample:
-        warnings.append(
-            f"{sample} synthetic sample participants are still loaded. Real "
-            f"participants would be mixed in with invented ones.\n"
-            f"     Fix: .venv/bin/python manage.py wipe")
-    else:
-        good.append("No synthetic sample data is loaded.")
-
-    # 5. Is the course anchored where it is actually being taught?
-    loc = course.get_location(conn)
-    if loc["is_default"]:
-        warnings.append(
-            "The course location is still the built-in default "
-            "(Milwaukee, Wisconsin).\n"
-            "     If that is where you are teaching, ignore this. If not, the "
-            "dashboard will\n"
-            "     open on the wrong city and every time will be shown in the "
-            "wrong zone.\n"
-            "     Fix: .venv/bin/python manage.py set-location \"Your City, State\" "
-            "--timezone America/...")
-    else:
-        good.append(f"Course location is set to {loc['name']} "
-                    f"({loc['timezone']}).")
-
-    # 6. Can the database actually be written to?
-    try:
-        conn.execute("CREATE TABLE IF NOT EXISTS _writecheck (x INTEGER)")
-        conn.execute("DROP TABLE _writecheck")
-        conn.commit()
-        good.append(f"Database is writable at {config.DB_PATH}.")
-    except Exception as exc:
-        problems.append(f"The database cannot be written to: {exc}")
-
-    conn.close()
-
-    for line in good:
-        print(f"  OK       {line}")
-    for line in warnings:
-        print(f"  WARNING  {line}")
-    for line in problems:
-        print(f"  PROBLEM  {line}")
+    for r in results:
+        if r.verdict == readiness.OK:
+            print(f"  OK       {r.condition}: {r.detail}")
+    for r in results:
+        if r.verdict == readiness.WARNING:
+            print(f"  WARNING  {r.condition}: {r.detail}")
+            if r.fix:
+                print(f"           Fix: {r.fix}")
+    for r in results:
+        if r.verdict == readiness.BLOCKER:
+            print(f"  PROBLEM  {r.condition}: {r.detail}")
+            if r.fix:
+                print(f"           Fix: {r.fix}")
 
     print()
-    if problems:
-        print(f"{len(problems)} problem(s) must be fixed before real participants "
-              f"use this server.")
+    blocking = [r for r in results if r.blocking]
+    if blocking:
+        print(f"{len(blocking)} problem(s) must be fixed before real "
+              f"participants use this server.")
         raise SystemExit(1)
     print("No blocking problems found.")
 

@@ -41,8 +41,40 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DATA = HERE / "data" / "local"
-SETTINGS = DATA / "course.json"
+
+
+def _data_dir() -> Path:
+    """
+    Where this installation actually keeps its data.
+
+    Read from the same configuration the server uses rather than assumed to be
+    data/local. A host that puts the database somewhere persistent — which the
+    readiness check tells people to do — would otherwise get a report about an
+    empty folder, saying everything was missing, which is worse than no report.
+
+    Falls back to the default if the backend cannot be imported, because this
+    command has to work when nothing else does; that is its whole purpose.
+    """
+    try:
+        from backend import config
+        return Path(config.DB_PATH).parent
+    except Exception:                               # noqa: BLE001
+        return Path(os.getenv("DWELL_DB", HERE / "data" / "local" / "course.db")).parent
+
+
+DATA = _data_dir()
+
+
+def _db_path() -> Path:
+    try:
+        from backend import config
+        return Path(config.DB_PATH)
+    except Exception:                               # noqa: BLE001
+        return Path(os.getenv("DWELL_DB", DATA / "course.db"))
+
+
+DB_PATH = _db_path()
+SETTINGS = Path(os.getenv("DWELL_SETTINGS", DATA / "course.json"))
 LOG = DATA / "setup-log.txt"
 REPORT = HERE / "support-report.txt"
 
@@ -152,7 +184,7 @@ def collect() -> str:
         ("practice data", HERE / "data" / "sample" / "pings.csv"),
         ("course settings", SETTINGS),
         ("security key", DATA / "secret_key"),
-        ("database", DATA / "course.db"),
+        ("database", DB_PATH),
     ]:
         if path.exists():
             size = path.stat().st_size
@@ -183,7 +215,7 @@ def collect() -> str:
     section(out, "Database contents (counts only)")
     try:
         import sqlite3
-        db_path = DATA / "course.db"
+        db_path = DB_PATH
         if not db_path.exists():
             out.append("  No database yet.")
         else:
