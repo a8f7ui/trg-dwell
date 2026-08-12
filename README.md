@@ -165,11 +165,18 @@ run as something to try a week early rather than the morning of:
 ### Before a real course
 
 1. `.venv/bin/python manage.py set-location "Your City, State" --timezone …`
-2. `.venv/bin/python manage.py check-production` — it catches a practice
-   sign-in left behind, and the other things that are dangerous on a public
-   server
-3. `docs/distribution.md` for TestFlight and Play, allowing 2–7 days for review
-4. Read `docs/facilitator-guide.md` properly. It is the actual teaching plan.
+2. `python3 dwell.py ready` — the nine conditions that decide whether this is
+   safe for real people. It refuses to say yes while any of them fails.
+3. **Carry a phone with the app on it for two days**, working through
+   `docs/device-checklist.md`. Nothing run on a computer can tell you whether a
+   particular handset keeps collecting overnight, and that is the part that
+   fails.
+4. `docs/distribution.md` for TestFlight and Play, allowing 2–7 days for review
+5. Read `docs/facilitator-guide.md` properly. It is the actual teaching plan.
+
+`docs/REAL_DEPLOYMENT_STATUS.md` says what is actually proven about this
+software and what is not — including, plainly, that nothing here has yet run on
+a real web host or a real phone.
 
 ---
 

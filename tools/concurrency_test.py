@@ -41,7 +41,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent.parent
 
 WORKERS = 8
-REGISTRATIONS = 30
+REGISTRATIONS = 60
 
 failures: list[str] = []
 
