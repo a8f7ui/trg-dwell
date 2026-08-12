@@ -469,6 +469,23 @@ def check_phone_app() -> None:
     check("the build-upload checks ran", "PASS" in (result.stdout or ""),
           (result.stderr or result.stdout or "").strip()[:400])
 
+    # What the build will be told about permissions, background location and
+    # the foreground service. None of it can be checked by running the app
+    # here, and all of it can be checked by reading the configuration.
+    result = subprocess.run(
+        [sys.executable, str(HERE / "tools" / "app_config_test.py")],
+        capture_output=True, text=True, cwd=HERE)
+    for line in (result.stdout or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PASS  "):
+            passed.append(stripped[6:])
+        elif stripped.startswith("FAIL  "):
+            failed.append((stripped[6:], "tools/app_config_test.py"))
+        elif stripped.startswith("----  "):
+            skipped.append(stripped[6:])
+    check("the app-configuration checks ran", "PASS" in (result.stdout or ""),
+          (result.stderr or result.stdout or "").strip()[:400])
+
     node = shutil.which("node")
     tsc = HERE / "app" / "node_modules" / ".bin" / (
         "tsc.cmd" if os.name == "nt" else "tsc")
