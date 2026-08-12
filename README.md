@@ -165,8 +165,9 @@ run as something to try a week early rather than the morning of:
 ### Before a real course
 
 1. `.venv/bin/python manage.py set-location "Your City, State" --timezone …`
-2. `.venv/bin/python manage.py check-production` — it catches the demo login,
-   which has a published password
+2. `.venv/bin/python manage.py check-production` — it catches a practice
+   sign-in left behind, and the other things that are dangerous on a public
+   server
 3. `docs/distribution.md` for TestFlight and Play, allowing 2–7 days for review
 4. Read `docs/facilitator-guide.md` properly. It is the actual teaching plan.
 
@@ -424,9 +425,15 @@ Before real participants use it, run:
 .venv/bin/python manage.py check-production
 ```
 
-It checks the handful of things that are genuinely dangerous to get wrong — most
-importantly that the demo login, whose password is published in this README, has
-been removed — and tells you the exact command to fix each one.
+It checks the handful of things that are genuinely dangerous to get wrong — that
+there is a real sign-in and no practice one left behind, that no invented
+participants are mixed in with real ones, that the address is HTTPS — and tells
+you the exact command to fix each one.
+
+No password written anywhere in this project works on anything. The practice
+sign-in's password is generated when it is created and shown once. Earlier
+versions used a fixed one published here, and created it by default, which was
+fine on a laptop and serious on a server.
 
 ## Running a course with this
 

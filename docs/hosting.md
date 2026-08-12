@@ -209,9 +209,11 @@ This checks the handful of things that are genuinely dangerous to get wrong. It
 will tell you what to fix and the exact command to fix it. Two you should expect
 to see on a first run:
 
-- **The demo account still exists with its published password.** The password
-  `demo-password` is written in this project's public README, so anybody who has
-  read it could log in and watch your participants. Remove it:
+- **The demo account still exists with its published password.** Current
+  versions never create this — the practice sign-in's password is generated and
+  shown once — but a database prepared by an older version may still have it,
+  and the password is written in this project's public history, so anybody who
+  has read it could log in and watch your participants. Remove it:
   ```bash
   .venv/bin/python manage.py remove-instructor instructor
   ```

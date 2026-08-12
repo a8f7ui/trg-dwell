@@ -29,8 +29,15 @@ python3 start.py
 ```
 
 That is the whole thing. It sets up whatever is missing, skips whatever is
-already done, and prints one address to open. Log in as `instructor` /
-`demo-password`. Ctrl-C stops it.
+already done, and prints one address to open — along with a sign-in. The
+username is `instructor`; the password is generated fresh each time it starts
+and printed on screen, so copy it from there rather than from here. Ctrl-C
+stops it.
+
+No password written in this project works on anything. That used to be untrue:
+the practice sign-in had a fixed password published on GitHub, and every path
+that loaded practice data created it — including on machines with public
+addresses.
 
 Run it again whenever you like — it checks each step rather than repeating it,
 so the second run is instant. It also picks a different port if 5000 is busy,

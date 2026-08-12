@@ -156,6 +156,7 @@ def ensure_loaded(python: Path) -> None:
     step("Loading the practice data...")
     result = subprocess.run([str(python), "-m", "backend.load_sample"],
                             capture_output=True, text=True, cwd=HERE)
+
     if result.returncode != 0:
         detail = (result.stderr or "").strip()
         if "RealDataPresent" in detail:
@@ -165,6 +166,40 @@ def ensure_loaded(python: Path) -> None:
             fail("this looks like a real course, not a practice one.", message)
         fail("could not load the practice data.", detail)
     done("Practice data loaded.")
+
+
+def ensure_login(python: Path) -> str | None:
+    """
+    A working sign-in for the practice dashboard, with a fresh password.
+
+    Generated every time rather than fixed, and shown on screen rather than
+    stored anywhere. The old arrangement printed a password that is written in
+    this project's source on GitHub, which is harmless on a laptop and serious
+    the first time somebody runs this on a machine with a public address — and
+    nothing here can tell those two cases apart.
+
+    Returns None, without creating anything, if the database holds people who
+    registered from real phones. A practice sign-in has no business on a course
+    server, and this is the entry point most likely to be pointed at one by
+    accident.
+    """
+    script = (
+        "import sys\n"
+        "from backend import db, load_sample\n"
+        "conn = db.connect(); db.init_db(conn)\n"
+        "if load_sample.real_participant_count(conn):\n"
+        "    print('REAL'); sys.exit(0)\n"
+        "print('PASSWORD ' + load_sample.make_demo_login(conn))\n"
+        "conn.close()\n"
+    )
+    result = subprocess.run([str(python), "-c", script],
+                            capture_output=True, text=True, cwd=HERE)
+    out = (result.stdout or "").strip()
+    if result.returncode != 0 or not out:
+        return None
+    if out.startswith("REAL"):
+        return None
+    return out.split("PASSWORD ", 1)[-1].strip() or None
 
 
 def in_container() -> bool:
@@ -207,6 +242,7 @@ def main() -> None:
     ensure_dependencies(python)
     ensure_sample_data(python)
     ensure_loaded(python)
+    password = ensure_login(python)
 
     port = free_port(FIRST_PORT)
     if port is None:
@@ -220,7 +256,14 @@ def main() -> None:
     print("\n  " + "-" * 56)
     print("\n  Open this in a browser:\n")
     print(f"      http://127.0.0.1:{port}\n")
-    print("  Log in with:      instructor  /  demo-password\n")
+    if password:
+        print(f"  Log in with:      instructor  /  {password}\n")
+        print("  That password is new every time this starts, and is not")
+        print("  written down anywhere. Copy it now if you need it.\n")
+    else:
+        print("  This database holds real course data, so no practice sign-in")
+        print("  was created. Use the account you already have, or make one:")
+        print("      .venv/bin/python manage.py add-instructor <name>\n")
     if containerised:
         print(f"  (Running in a container. Start it with -p {port}:{port} for")
         print("   that address to work from outside.)\n")

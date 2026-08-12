@@ -71,13 +71,28 @@ def cmd_list_instructors(_args: list[str]) -> None:
         print(f"  {r['username']:20s} created {r['created_at']}")
 
 
-def cmd_load_sample(_args: list[str]) -> None:
+def cmd_load_sample(args: list[str]) -> None:
+    """
+    Load the practice data. A sign-in is created only if asked for, and its
+    password is generated rather than taken from this repository.
+    """
     from backend import load_sample
-    result = load_sample.load()
+    with_login = "--with-login" in args
+    result = load_sample.load(with_demo_login=with_login)
     for key, value in result.items():
+        if key == "demo_password":
+            continue
         print(f"  {key:14s}: {value}")
-    print(f"\nDemo login: {load_sample.DEMO_INSTRUCTOR[0]} / "
-          f"{load_sample.DEMO_INSTRUCTOR[1]}")
+    if with_login:
+        print(f"\nPractice sign-in:  {result['demo_username']}  /  "
+              f"{result['demo_password']}")
+        print("This is the only time it is shown. Before hosting this "
+              "anywhere, make your own:")
+        print("  .venv/bin/python manage.py add-instructor <name>")
+    else:
+        print("\nNo sign-in was created. Add --with-login for a practice one, "
+              "or make your own:")
+        print("  .venv/bin/python manage.py add-instructor <name>")
 
 
 def cmd_status(_args: list[str]) -> None:
@@ -165,13 +180,14 @@ def cmd_check_production(_args: list[str]) -> None:
     # 1. Is there a real instructor account, and is the demo one gone?
     rows = conn.execute("SELECT username FROM instructors").fetchall()
     names = [r["username"] for r in rows]
-    demo_user = load_sample.DEMO_INSTRUCTOR[0]
+    demo_user = load_sample.PUBLISHED_DEMO_LOGIN[0]
     if not names:
         problems.append(
             "There are no instructor accounts, so nobody can log in.\n"
             "     Fix: .venv/bin/python manage.py add-instructor <your-name>")
     if demo_user in names:
-        if auth.check_instructor(conn, demo_user, load_sample.DEMO_INSTRUCTOR[1]):
+        if auth.check_instructor(conn, demo_user,
+                                 load_sample.PUBLISHED_DEMO_LOGIN[1]):
             problems.append(
                 f"The demo account '{demo_user}' still exists WITH ITS PUBLISHED\n"
                 f"     PASSWORD. Anyone who has read this project on GitHub can log in\n"

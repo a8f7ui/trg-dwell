@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import shutil
 import socket
 import subprocess
@@ -47,6 +48,11 @@ from http.cookiejar import CookieJar
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+
+# The instructor password used for this run, on a database that is deleted
+# afterwards. Generated rather than fixed so that no working credential appears
+# in this file, in a log, or in the output of `ps`.
+TEST_PASSWORD = secrets.token_urlsafe(12)
 
 passed: list[str] = []
 failed: list[tuple[str, str]] = []
@@ -170,7 +176,7 @@ def check_instructor_api(client: Client) -> None:
     check("data is refused before logging in", status == 401, f"got HTTP {status}")
 
     status, _ = client.post("/api/instructor/login",
-                            {"username": "instructor", "password": "demo-password"})
+                            {"username": "instructor", "password": TEST_PASSWORD})
     if not check("logging in works", status == 200, f"got HTTP {status}"):
         return
 
@@ -503,7 +509,7 @@ def check_in_browser(base: str, expect_groups: bool) -> None:
 
             page.goto(base, wait_until="domcontentloaded")
             page.fill("#username", "instructor")
-            page.fill("#password", "demo-password")
+            page.fill("#password", TEST_PASSWORD)
             page.click("button[type=submit]")
             check("logging in reaches the dashboard",
                   wait_for("!document.querySelector('#app').hidden"))
@@ -619,7 +625,12 @@ def main() -> int:
     env = dict(os.environ, DWELL_DB=str(workdir / "verify.db"))
 
     group("Server")
-    seed = subprocess.run([str(python), "-m", "backend.load_sample"],
+    # The sign-in is created with a password generated here, handed over on
+    # standard input. Nothing in this repository is a working credential, and
+    # nothing that runs during a check is visible in `ps`.
+    seed = subprocess.run([str(python), "-m", "backend.load_sample",
+                           "--with-login", "--password-stdin"],
+                          input=TEST_PASSWORD + "\n",
                           capture_output=True, text=True, cwd=HERE, env=env)
     if not check("sample data loads into a fresh database", seed.returncode == 0,
                  (seed.stderr or "").strip()[:400]):

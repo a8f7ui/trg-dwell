@@ -2,17 +2,30 @@
 Load the synthetic sample data into a local database, so the backend and
 dashboard can be developed and demonstrated with nothing real involved.
 
-    .venv/bin/python -m backend.load_sample
+    .venv/bin/python -m backend.load_sample                 practice data only
+    .venv/bin/python -m backend.load_sample --with-login    ...and a sign-in
 
-Also creates a demo instructor login. That account uses a well-known password
-and is fine for a laptop demo, but `manage.py add-instructor` should be used to
-create a real one before this is ever hosted anywhere.
+On the sign-in
+--------------
+This used to create an account called `instructor` whose password was written
+in this file, and it did so by default — so every path that loaded practice
+data, including the one-command laptop demo, put a credential published on
+GitHub onto whatever machine it ran on. That is fine on a laptop and quietly
+disastrous on anything reachable from outside, and the difference between the
+two is not visible from inside this function.
+
+Now no password that appears in this repository is ever written to a database.
+`--with-login` generates a fresh random one and prints it once; without the
+flag, no account is created at all. `manage.py add-instructor` remains the way
+to make a real one.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
+import secrets
 import sys
 from pathlib import Path
 
@@ -20,7 +33,30 @@ from . import auth, config, course, db
 
 SAMPLE_DIR = config.BASE_DIR / "data" / "sample"
 
-DEMO_INSTRUCTOR = ("instructor", "demo-password")
+# The username the practice sign-in uses. Generic on purpose — it is meant to
+# be recognisable as "not a real person's account".
+DEMO_USERNAME = "instructor"
+
+# The credential earlier versions of this file created. Never created any more;
+# kept only so `manage.py check-production` can recognise a database made by one
+# of those versions and say so. Removing it would not remove the account from
+# anybody's server — it would only stop us noticing it.
+PUBLISHED_DEMO_LOGIN = ("instructor", "demo-password")
+
+
+def make_demo_login(conn, password: str | None = None) -> str:
+    """
+    Create the practice sign-in with a password nobody else knows.
+
+    Returns the password, which is the only time it exists in readable form —
+    it is stored as a scrypt hash, so it cannot be recovered afterwards. Callers
+    print it; nothing writes it to a file.
+    """
+    password = password or secrets.token_urlsafe(12)
+    auth.create_instructor(conn, DEMO_USERNAME, password)
+    db.audit(conn, "load_sample", "instructor_created",
+             f"{DEMO_USERNAME} (practice sign-in, generated password)")
+    return password
 
 # Every participant invented by the generator carries this, and nothing else
 # ever does. It is the only reliable way to tell a synthetic row from a real
@@ -41,7 +77,7 @@ def real_participant_count(conn) -> int:
 
 
 def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
-         with_demo_login: bool = True) -> dict:
+         with_demo_login: bool = False, demo_password: str | None = None) -> dict:
     """
     Load the synthetic teaching data.
 
@@ -55,6 +91,11 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
     from a real phone. Counting location points was the original test and it is
     not good enough: a participant exists from the moment they consent, which is
     hours before their first upload.
+
+    `with_demo_login` defaults to off, and is the other half of the same story:
+    creating a sign-in should be something a caller asks for, not something that
+    happens because it forgot to say no. When asked for, the password is
+    generated unless one is supplied, and returned under `demo_password`.
     """
     if not (sample_dir / "pings.csv").exists():
         raise SystemExit(
@@ -151,8 +192,7 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
         "UPDATE participants SET last_seen_at = "
         "(SELECT MAX(ts) FROM pings WHERE pings.participant_id = participants.participant_id)")
 
-    if with_demo_login:
-        auth.create_instructor(conn, *DEMO_INSTRUCTOR)
+    created_password = make_demo_login(conn, demo_password) if with_demo_login else None
     conn.commit()
     db.audit(conn, "load_sample", "loaded_sample_data",
              f"{len(rows)} participants, {len(ping_rows)} points — all synthetic")
@@ -163,7 +203,7 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
     token_file = Path(config.DB_PATH).parent / "sample_participant_tokens.json"
     token_file.write_text(json.dumps(tokens, indent=2) + "\n")
 
-    return {
+    summary = {
         "participants": len(rows),
         "pings": len(ping_rows),
         "places": len(pois),
@@ -171,12 +211,52 @@ def load(sample_dir: Path = SAMPLE_DIR, reset: bool = True,
         "db": str(config.DB_PATH),
         "tokens": str(token_file),
     }
+    if created_password:
+        summary["demo_username"] = DEMO_USERNAME
+        summary["demo_password"] = created_password
+    return summary
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Load the synthetic practice data.")
+    parser.add_argument(
+        "--with-login", action="store_true",
+        help="also create a practice sign-in with a generated password, "
+             "printed once. Off by default: loading practice data should not "
+             "silently put an account on a machine that might be public.")
+    parser.add_argument(
+        "--password-stdin", action="store_true",
+        help="with --with-login, read the password from standard input instead "
+             "of generating one. Used by the test harness, which needs to know "
+             "it in advance. Not an argument, because arguments are visible to "
+             "anybody who can run ps.")
+    args = parser.parse_args(argv)
+
+    password = None
+    if args.password_stdin:
+        if not args.with_login:
+            parser.error("--password-stdin only makes sense with --with-login")
+        password = sys.stdin.readline().rstrip("\n")
+
+    result = load(with_demo_login=args.with_login, demo_password=password)
+    print("Loaded synthetic sample data")
+    for key, value in result.items():
+        if key == "demo_password":
+            continue
+        print(f"  {key:14s}: {value}")
+
+    if args.with_login and not args.password_stdin:
+        print(f"\nPractice sign-in:  {result['demo_username']}  /  "
+              f"{result['demo_password']}")
+        print("Written down nowhere else — this is the only time it is shown.")
+        print("Before hosting this anywhere, make your own:")
+        print("  .venv/bin/python manage.py add-instructor <name>")
+    elif not args.with_login:
+        print("\nNo sign-in was created. To make one:")
+        print("  .venv/bin/python manage.py add-instructor <name>")
+    return 0
 
 
 if __name__ == "__main__":
-    result = load()
-    print("Loaded synthetic sample data")
-    for key, value in result.items():
-        print(f"  {key:14s}: {value}")
-    print(f"\nDemo instructor login: {DEMO_INSTRUCTOR[0]} / {DEMO_INSTRUCTOR[1]}")
-    print("Change this before hosting anywhere: .venv/bin/python manage.py add-instructor <name>")
+    raise SystemExit(main())
