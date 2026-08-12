@@ -428,6 +428,27 @@ def check_https() -> None:
           (result.stderr or result.stdout or "").strip()[:400])
 
 
+def check_concurrency() -> None:
+    """
+    A whole room doing the same thing at the same moment.
+
+    Its own server, because both faults this guards against need real
+    processes and real simultaneity, and neither appears with one phone.
+    """
+    group("A whole room at once")
+    result = subprocess.run(
+        [sys.executable, str(HERE / "tools" / "concurrency_test.py")],
+        capture_output=True, text=True, cwd=HERE)
+    for line in (result.stdout or "").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("PASS  "):
+            passed.append(stripped[6:])
+        elif stripped.startswith("FAIL  "):
+            failed.append((stripped[6:], "tools/concurrency_test.py"))
+    check("the concurrency checks ran", "PASS" in (result.stdout or ""),
+          (result.stderr or result.stdout or "").strip()[:400])
+
+
 def check_data_safety() -> None:
     """The things that must not happen to a course that is under way."""
     group("Safe for a course already running")
@@ -781,6 +802,7 @@ def main() -> int:
         check_javascript()
         check_phone_app()
         check_https()
+        check_concurrency()
         check_data_safety()
         if production:
             check_production_safety(python)

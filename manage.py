@@ -182,6 +182,15 @@ def cmd_check_production(args: list[str]) -> None:
 
     results = readiness.run_all(base_url=base, reach_server=reach)
 
+    # Structured output for other commands to consume. Parsing the prose below
+    # loses which fix belongs to which problem, and a fix printed under the
+    # wrong heading is worse than none.
+    if "--json" in args:
+        import json as _json
+        print(_json.dumps([{"verdict": r.verdict, "condition": r.condition,
+                            "detail": r.detail, "fix": r.fix} for r in results]))
+        raise SystemExit(1 if any(r.blocking for r in results) else 0)
+
     for r in results:
         if r.verdict == readiness.OK:
             print(f"  OK       {r.condition}: {r.detail}")

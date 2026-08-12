@@ -5,6 +5,7 @@ Dwell: Privacy Lab.
     python3 dwell.py            what can I do?
     python3 dwell.py start      start the course server
     python3 dwell.py check      is everything still working?
+    python3 dwell.py ready      is this safe for real participants?
     python3 dwell.py deploy     put it on the internet for real phones
     python3 dwell.py app        prepare the phone app for your course
 
@@ -78,6 +79,75 @@ def cmd_check(args: list[str]) -> int:
     require_setup()
     return subprocess.run(
         [str(venv_python()), str(HERE / "verify.py")] + args).returncode
+
+
+def cmd_ready(args: list[str]) -> int:
+    """
+    Is this safe for real participants?
+
+    The last thing to run before install links go out. It answers one question
+    and refuses to answer it optimistically: any single blocking problem means
+    the answer is no, however many other things are fine.
+
+    Kept separate from `check`, which asks whether the software works. This asks
+    whether *this installation* is safe, which is a different question with
+    different answers on the same machine.
+    """
+    require_setup()
+    result = subprocess.run(
+        [str(venv_python()), str(HERE / "manage.py"), "check-production",
+         "--json"] + args,
+        capture_output=True, text=True, cwd=HERE)
+    try:
+        results = json.loads(result.stdout or "[]")
+    except ValueError:
+        print()
+        say("The readiness check could not run.")
+        say((result.stderr or "").strip()[:400])
+        print()
+        return 1
+
+    problems = [r for r in results if r["verdict"] == "BLOCKER"]
+    warnings = [r for r in results if r["verdict"] == "WARNING"]
+    fine = [r for r in results if r["verdict"] == "OK"]
+
+    print()
+    rule()
+    title("Is this ready for real participants?")
+
+    for r in fine:
+        say(f"  ok      {r['condition']}")
+    if warnings:
+        say()
+        say("Worth knowing:")
+        for r in warnings:
+            say(f"  •  {r['detail']}")
+            if r["fix"]:
+                say(f"     Fix: {r['fix']}")
+
+    if problems:
+        say()
+        say(f"NO — {len(problems)} thing(s) must be fixed first:")
+        say()
+        for r in problems:
+            say(f"  •  {r['detail']}")
+            if r["fix"]:
+                say(f"     Fix: {r['fix']}")
+        say()
+        say("Nothing here is a judgement call. Each one is a way this could")
+        say("harm the people taking part, or lose what they contribute.")
+        rule()
+        print()
+        return 1
+
+    say()
+    say("YES — nothing blocking. Before the install links go out, carry a")
+    say("phone with the app on it for two days: docs/device-checklist.md.")
+    say("No check run on this computer can tell you whether a real handset")
+    say("keeps collecting overnight, and that is the part that fails.")
+    rule()
+    print()
+    return 0
 
 
 def cmd_app(_args: list[str]) -> int:
@@ -512,6 +582,7 @@ def cmd_help(_args: list[str]) -> int:
 
     say("  python3 dwell.py start      start the course server")
     say("  python3 dwell.py check      confirm everything still works")
+    say("  python3 dwell.py ready      is this safe for real participants?")
     say("  python3 dwell.py deploy     put it on the internet for real phones")
     say("  python3 dwell.py app        prepare the app for participants' phones")
     say("  python3 dwell.py diagnose   collect a support report if something is wrong")
@@ -528,6 +599,7 @@ def cmd_help(_args: list[str]) -> int:
 COMMANDS = {
     "start": cmd_start,
     "check": cmd_check,
+    "ready": cmd_ready,
     "deploy": cmd_deploy,
     "app": cmd_app,
     "diagnose": cmd_diagnose,

@@ -23,8 +23,6 @@ from pathlib import Path
 from . import config
 
 SCHEMA = """
-PRAGMA journal_mode = WAL;
-
 -- One row per person taking part. No names, no contact details.
 CREATE TABLE IF NOT EXISTS participants (
     participant_id   TEXT PRIMARY KEY,
@@ -150,26 +148,78 @@ def now_iso() -> str:
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
     path = Path(db_path or config.DB_PATH)
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path, detect_types=0)
+    # A generous busy timeout rather than the default five seconds. A whole
+    # room registering at once is the normal case here, not an edge one — the
+    # facilitator's guide tells them to install the app together — and a
+    # participant whose registration fails is a participant who never joins.
+    conn = sqlite3.connect(path, detect_types=0, timeout=30.0)
     conn.row_factory = sqlite3.Row
     # Without this, SQLite silently ignores the cascade deletes that make
     # withdrawal actually remove a participant's location history.
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 30000")
     return conn
 
 
-def init_db(conn: sqlite3.Connection) -> None:
+# Which database files have had their schema checked in this process.
+#
+# Every request opens a connection, and it used to run the whole schema
+# script, the migration and the index creation each time. That is wasted work
+# on almost every request, and worse than wasted on the first few: switching
+# the journal mode needs an exclusive lock, so thirty phones registering
+# together against a new database fought over it and some got "database is
+# locked" — which reaches the participant as a registration that simply failed.
+#
+# Keyed by path rather than a single flag, because the tests open several
+# throwaway databases inside one process and each needs its own first time.
+_SCHEMA_CHECKED: set[str] = set()
+
+
+def init_db(conn: sqlite3.Connection, force: bool = False) -> None:
+    """
+    Make sure this database has the current schema.
+
+    Cheap to call: after the first time for a given file in a given process it
+    does nothing. `force` is for tests that want the work repeated.
+    """
+    path = _path_of(conn)
+    if not force and path in _SCHEMA_CHECKED:
+        return
+
     conn.executescript(SCHEMA)
     added = _migrate(conn)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_pings_local_day "
                  "ON pings(participant_id, local_day)")
     conn.commit()
+
+    # Write-ahead logging lets readers carry on while somebody is writing,
+    # which is what a live map does all day. Set here rather than in the schema
+    # script so it is attempted once, when contention is least likely, and
+    # tolerated if another connection is mid-write.
+    try:
+        conn.execute("PRAGMA journal_mode = WAL")
+    except sqlite3.OperationalError:
+        pass
+
     if "pings.local_day" in added:
         # The column has just appeared on a database that already holds points,
         # so every one of them has a NULL day. Fill them in once, here, rather
         # than leaving the reveal to quietly show nothing for older data.
         from . import course
         backfill_local_days(conn, course.get_location(conn)["timezone"])
+
+    _SCHEMA_CHECKED.add(path)
+
+
+def _path_of(conn: sqlite3.Connection) -> str:
+    """The file a connection is attached to, or "" for in-memory ones."""
+    try:
+        for row in conn.execute("PRAGMA database_list"):
+            if row[1] == "main":
+                return str(row[2] or "")
+    except sqlite3.Error:
+        pass
+    return ""
 
 
 def _migrate(conn: sqlite3.Connection) -> set[str]:
@@ -200,8 +250,19 @@ def _migrate(conn: sqlite3.Connection) -> set[str]:
         present = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
         for name, coltype in columns.items():
             if name not in present:
-                conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {coltype}")
-                added.add(f"{table}.{name}")
+                try:
+                    conn.execute(
+                        f"ALTER TABLE {table} ADD COLUMN {name} {coltype}")
+                except sqlite3.OperationalError as exc:
+                    # Another connection added it between the check and the
+                    # ALTER. Harmless, and it must not be an error: every
+                    # request opens a connection and runs this, so on a fresh
+                    # database a room registering together races here, and the
+                    # losers were answering 500 to people trying to join.
+                    if "duplicate column name" not in str(exc).lower():
+                        raise
+                else:
+                    added.add(f"{table}.{name}")
     return added
 
 
